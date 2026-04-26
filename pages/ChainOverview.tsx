@@ -52,7 +52,7 @@ export const ChainOverview: React.FC = () => {
         <div className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-6">
             <h3 className="font-bold text-white mb-4">Top Protocols on {chain.name}</h3>
             <div className="text-center py-10 text-alphabag-subtext border border-dashed border-alphabag-gray rounded-lg">
-                Protocol list coming soon via API integration.
+                Protocol indexing in progress for Beta phase.
             </div>
         </div>
     </div>

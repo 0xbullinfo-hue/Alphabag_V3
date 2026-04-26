@@ -10,40 +10,20 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: 'localhost',
+      proxy: {
+        '/api': {
+          target: env.VITE_API_URL || 'http://localhost:3003',
+          changeOrigin: true,
+          secure: false,
+        }
+      }
     },
     plugins: [
       react(),
       nodePolyfills({
         protocolImports: true,
       }),
-      VitePWA({
-        registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
-        manifest: {
-          name: 'AlphaBAG Pro',
-          short_name: 'AlphaBAG',
-          description: 'Professional Crypto Intelligence Hub',
-          theme_color: '#0B0E11',
-          background_color: '#0B0E11',
-          display: 'standalone',
-          icons: [
-            {
-              src: 'https://ui-avatars.com/api/?name=BAG&background=FCD535&color=0B0E11&size=192',
-              sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: 'https://ui-avatars.com/api/?name=BAG&background=FCD535&color=0B0E11&size=512',
-              sizes: '512x512',
-              type: 'image/png'
-            }
-          ]
-        },
-        devOptions: {
-          enabled: true,
-          type: 'module',
-        }
-      })
+      // VitePWA({...})
     ],
     resolve: {
       alias: {

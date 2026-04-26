@@ -1,0 +1,52 @@
+[
+  {
+    "id": "t_daily",
+    "title": "Daily Claim",
+    "description": "Initialize your membership once a day to verify connectivity and claim your daily XP allocation.",
+    "rewardXP": 50,
+    "type": "daily",
+    "status": "ACTIVE",
+    "category": "TECHNICAL",
+    "requiresLink": false
+  },
+  {
+    "id": "t_weekly",
+    "title": "Weekly Claim",
+    "description": "Claim your 150 XP weekly allocation. Resets automatically 7 days after your claim.",
+    "rewardXP": 150,
+    "type": "weekly",
+    "status": "ACTIVE",
+    "category": "CONTENT",
+    "requiresLink": false
+  },
+  {
+    "id": "t_admin_1",
+    "title": "Task 1",
+    "description": "Complete the current Admin task on our official X account and paste the link below.",
+    "rewardXP": 100,
+    "type": "once",
+    "status": "ACTIVE",
+    "category": "SOCIAL",
+    "requiresLink": true
+  },
+  {
+    "id": "t_admin_2",
+    "title": "Task 2",
+    "description": "Complete the secondary Admin task on our official X account and paste the link below.",
+    "rewardXP": 100,
+    "type": "once",
+    "status": "ACTIVE",
+    "category": "SOCIAL",
+    "requiresLink": true
+  },
+  {
+    "id": "t_invite",
+    "title": "Invite a Member",
+    "description": "Successfully recruit a new member to the Network using your link.",
+    "rewardXP": 50,
+    "type": "unlimited",
+    "status": "ACTIVE",
+    "category": "GROWTH",
+    "requiresLink": false
+  }
+]

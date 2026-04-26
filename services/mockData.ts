@@ -1,11 +1,22 @@
-import { Coin, NewsItem, PortfolioItem, TradeSignal, SystemService, AuditLog, UserGrowthData } from '../types';
+import { Coin, NewsItem, PortfolioItem, TradeSignal, SystemService, AuditLog, UserGrowthData, Integration, DefiPosition } from '../types';
+import { api } from './api';
 
 // Storage Keys
 const SIGNALS_KEY = 'alphabag_signals_v1';
 const NEWS_KEY = 'alphabag_news_v1';
 const STATS_KEY = 'alphabag_stats_v1';
+const INTEGRATIONS_KEY = 'alphabag_integrations_v1';
 
-const DEFAULT_STATS: GlobalBackendStats = {
+const DEFAULT_INTEGRATIONS: Integration[] = [
+  { id: 'binance', name: 'Binance', description: 'World\'s largest crypto exchange.', icon: 'https://cryptologos.cc/logos/binance-coin-bnb-logo.png', category: 'CEX', status: 'DISCONNECTED', requiresApiKeys: true },
+  { id: 'coinbase', name: 'Coinbase', description: 'Secure and easy-to-use crypto exchange.', icon: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png', category: 'CEX', status: 'DISCONNECTED', requiresApiKeys: true },
+  { id: 'metamask', name: 'MetaMask', description: 'The leading Web3 wallet for Ethereum and EVM chains.', icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg', category: 'WALLET', status: 'DISCONNECTED', requiresApiKeys: false },
+  { id: 'phantom', name: 'Phantom', description: 'A friendly crypto wallet for Solana.', icon: 'https://cryptologos.cc/logos/solana-sol-logo.png', category: 'WALLET', status: 'DISCONNECTED', requiresApiKeys: false },
+  { id: 'nansen', name: 'Nansen', description: 'Premium on-chain analytics and wallet labels.', icon: 'https://cryptologos.cc/logos/neo-neo-logo.png', category: 'ANALYTICS', status: 'DISCONNECTED', requiresApiKeys: true },
+  { id: 'koinly', name: 'Koinly', description: 'Crypto tax software designed for traders.', icon: 'https://cryptologos.cc/logos/cosmos-atom-logo.png', category: 'TAX', status: 'DISCONNECTED', requiresApiKeys: true }
+];
+
+const DEFAULT_STATS = {
   visitors: 12450,
   tierUsers: { FREE: 8500, ULTIMATE: 750 },
   geoData: [
@@ -24,72 +35,77 @@ const DEFAULT_STATS: GlobalBackendStats = {
   ]
 };
 
-export const fetchCoins = async (): Promise<Coin[]> => {
-  try {
-    const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true');
-    if (!response.ok) throw new Error('Market data fetch failed');
-    return await response.json();
-  } catch (e) {
-    console.error("CoinGecko Markets Error:", e);
-    return MOCK_COINS;
-  }
-};
-
-export const fetchPrices = async (ids: string[]): Promise<Record<string, { usd: number, usd_24h_change: number }>> => {
-  try {
-    const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd&include_24hr_change=true`);
-    if (!response.ok) throw new Error('Price fetch failed');
-    return await response.json();
-  } catch (e) {
-    console.error("Price Sync Error:", e);
-    return {};
-  }
-};
-
-export const fetchAiBriefing = async (assets: PortfolioItem[], tier: string): Promise<string> => {
-  await new Promise(r => setTimeout(r, 800));
-  return "Neural links are establishing connection. Historical data suggests a constructive accumulation phase for your primary nodes. Volatility remains high in the degen sector.";
-};
-
 export const fetchHoldingsForAddress = async (address: string, chain: string = 'ETH'): Promise<PortfolioItem[]> => {
-  await new Promise(r => setTimeout(r, 400));
-  const seed = address.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-
-  let coins: string[] = [];
-  if (chain === 'SOL') coins = ['solana', 'bonk', 'wif', 'jupiter'];
-  else if (chain === 'BSC') coins = ['binancecoin', 'pancakeswap-token', 'cake', 'bnb'];
-  else if (chain === 'BASE') coins = ['ethereum', 'base-god', 'aerodrome-finance'];
-  else if (chain === 'AVAX') coins = ['avalanche-2', 'joe'];
-  else if (chain === 'ARB') coins = ['arbitrum', 'gmx'];
-  else coins = ['ethereum', 'shiba-inu', 'pepe', 'uniswap', 'chainlink']; // Default ETH
-
-  const selectedIds = coins.filter((_, idx) => (seed + idx) % (coins.length > 2 ? 2 : 1) === 0 || idx === 0);
-
   try {
-    const markets = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + selectedIds.join(',')).then(r => r.json());
-    if (!Array.isArray(markets)) return []; // Handle API errors
+    const res = await api.get(`/api/portfolio/balances`, { params: { address, chain } });
+    if (!res.data || !res.data.success) throw new Error('Failed to fetch real balances');
 
-    return markets.map((coin: any) => {
-      const amount = ((seed % 10) + 1) * (coin.current_price < 100 ? 1000 : 2);
-      const value = amount * coin.current_price;
-      const pnlPercent = ((seed % 40) - 15);
-      const pnl = value * (pnlPercent / 100);
-      const avgBuy = coin.current_price / (1 + (pnlPercent / 100));
-      return {
+    const rawData = res.data.data;
+    
+    // Map backend data to frontend PortfolioItem format
+    // For simplicity in Beta, we focus on the native asset (ETH/BNB/SOL) balance first
+    // Token details can be added as we expand the UI to show multiple tokens
+    
+    const nativeValue = parseFloat(rawData.nativeBalance) / 1e18; // Default for ETH/EVM
+    if (chain === 'SOL') {
+      const solValue = parseFloat(rawData.nativeBalance) / 1e9; // SOL has 9 decimals
+      return [{
+        coinId: 'solana',
+        symbol: 'SOL',
+        name: 'Solana',
+        image: 'https://cryptologos.cc/logos/solana-sol-logo.png',
+        amount: solValue,
+        avgBuyPrice: 0,
+        currentPrice: 0,
+        priceChange24h: 0,
+        value: 0,
+        pnl: 0,
+        pnlPercent: 0
+      }];
+    }
+
+    return [{
+        coinId: chain.toLowerCase(),
+        symbol: chain,
+        name: chain === 'ETH' ? 'Ethereum' : chain,
+        image: '', // To be populated by price sync
+        amount: nativeValue,
+        avgBuyPrice: 0,
+        currentPrice: 0,
+        priceChange24h: 0,
+        value: 0,
+        pnl: 0,
+        pnlPercent: 0
+    }];
+
+  } catch (e) {
+    console.warn("Falling back to mock data for:", address);
+    // [Previous mock logic remains below as fallback]
+    const seed = address.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    let coins: string[] = [];
+    if (chain === 'SOL') coins = ['solana', 'bonk', 'wif', 'jupiter'];
+    else if (chain === 'BSC') coins = ['binancecoin', 'pancakeswap-token', 'cake', 'bnb'];
+    else if (chain === 'BASE') coins = ['ethereum', 'base-god', 'aerodrome-finance'];
+    else coins = ['ethereum', 'shiba-inu', 'pepe', 'uniswap', 'chainlink'];
+
+    const selectedIds = coins.filter((_, idx) => (seed + idx) % 2 === 0 || idx === 0);
+    const markets = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + selectedIds.join(',')).then(r => r.json());
+    if (!Array.isArray(markets)) return [];
+
+    return markets.map((coin: any) => ({
         coinId: coin.id,
         symbol: coin.symbol.toUpperCase(),
         name: coin.name,
         image: coin.image,
-        amount: amount,
-        avgBuyPrice: avgBuy,
+        amount: ((seed % 10) + 1) * (coin.current_price < 100 ? 1000 : 2),
+        avgBuyPrice: coin.current_price,
         currentPrice: coin.current_price,
         priceChange24h: coin.price_change_24h || 0,
-        value: value,
-        pnl: pnl,
-        pnlPercent: pnlPercent
-      };
-    });
-  } catch (e) { return []; }
+        value: ((seed % 10) + 1) * coin.current_price,
+        pnl: 0,
+        pnlPercent: 0
+    }));
+  }
 };
 
 export const MOCK_COINS: Coin[] = [
@@ -150,8 +166,8 @@ export const recordVisitor = () => {
 export const getPersistentSignals = (): TradeSignal[] => {
   const saved = localStorage.getItem(SIGNALS_KEY);
   return saved ? JSON.parse(saved) : [
-    { id: '1', pair: 'BTC/USDT', category: 'ALPHA', type: 'LONG', entry: '64000', targets: ['68000', '72000'], stopLoss: '62000', timestamp: '2h ago', status: 'ACTIVE', narrative: 'Institutional buying detected at VWAP.' },
-    { id: '2', pair: 'ETH/USDT', category: 'FUTURES', type: 'LONG', entry: '3450', targets: ['3800'], stopLoss: '3300', timestamp: '4h ago', status: 'HIT', narrative: 'Whale accumulation cluster identified on-chain.' }
+    { id: '1', pair: 'BTC/USDT', category: 'ALPHA', type: 'LONG', entry: '64000', targets: ['68000', '72000'], stopLoss: '62000', timestamp: '2h ago', status: 'ACTIVE', narrative: 'Institutional buying detected at VWAP.' } as any,
+    { id: '2', pair: 'ETH/USDT', category: 'FUTURES', type: 'LONG', entry: '3450', targets: ['3800'], stopLoss: '3300', timestamp: '4h ago', status: 'HIT', narrative: 'Whale accumulation cluster identified on-chain.' } as any
   ];
 };
 
@@ -217,8 +233,43 @@ export const fetchGlobalStats = async () => ({ marketCap: 2.42e12, btcDominance:
 export const fetchNews = async () => getPersistentNews();
 export const fetchSignals = async () => getPersistentSignals();
 export const fetchWhaleHoldings = async (address: string, chain: string = 'ETH') => fetchHoldingsForAddress(address, chain);
-export const fetchDefiPositions = async () => [];
-export const fetchIntegrations = async () => [];
+export const fetchDefiPositions = async (): Promise<DefiPosition[]> => [
+  {
+    id: '1', protocol: 'Aave V3', name: 'USDC Lend', icon: 'https://cryptologos.cc/logos/aave-aave-logo.png', chain: 'Base',
+    type: 'Lending', apy: 6.5, balance: 14500.50
+  },
+  {
+    id: '2', protocol: 'Lido', name: 'stETH', icon: 'https://cryptologos.cc/logos/lido-dao-ldo-logo.png', chain: 'Ethereum',
+    type: 'Staking', apy: 3.2, balance: 34500.00
+  },
+  {
+    id: '3', protocol: 'Uniswap V3', name: 'ETH/USDC 0.05%', icon: 'https://cryptologos.cc/logos/uniswap-uni-logo.png', chain: 'Arbitrum',
+    type: 'Liquidity', apy: 24.5, balance: 8000.00
+  },
+  {
+    id: '4', protocol: 'Aave V3', name: 'ETH Borrow', icon: 'https://cryptologos.cc/logos/aave-aave-logo.png', chain: 'Base',
+    type: 'Lending', apy: -4.2, balance: -5000.00, healthFactor: 2.4
+  },
+  {
+    id: '5', protocol: 'Pendle', name: 'eETH PT', icon: 'https://cryptologos.cc/logos/pendle-pendle-logo.png', chain: 'Ethereum',
+    type: 'Farming', apy: 18.2, balance: 12000.00
+  }
+];
+export const getIntegrations = (): Integration[] => {
+  const saved = localStorage.getItem(INTEGRATIONS_KEY);
+  return saved ? JSON.parse(saved) : DEFAULT_INTEGRATIONS;
+};
+
+export const updateIntegration = (id: string, updates: Partial<Integration>) => {
+  const integrations = getIntegrations();
+  const index = integrations.findIndex(i => i.id === id);
+  if (index > -1) {
+    integrations[index] = { ...integrations[index], ...updates };
+    localStorage.setItem(INTEGRATIONS_KEY, JSON.stringify(integrations));
+  }
+};
+
+export const fetchIntegrations = async () => getIntegrations();
 export const fetchEarnOpportunities = async () => [];
 export const fetchBlogPosts = async () => [];
 export const fetchChainInfo = async (i: string) => undefined;

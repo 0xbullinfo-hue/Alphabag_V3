@@ -11,9 +11,9 @@ interface TierConfig {
 
 const getConfigs = (size: 'sm' | 'md' | 'lg'): Record<string, TierConfig> => ({
   FREE: {
-    label: 'Free',
+    label: 'Beta Tester',
     icon: <Shield size={size === 'sm' ? 10 : 14} />,
-    styles: 'bg-alphabag-gray/50 text-alphabag-subtext border-alphabag-gray/30'
+    styles: 'bg-alphabag-yellow/10 text-alphabag-yellow border-alphabag-yellow/30'
   },
   BASIC: {
     label: 'Free',
@@ -37,7 +37,7 @@ export const TierBadge: React.FC<TierBadgeProps> = ({ tier, size = 'md', classNa
   // Explicitly cast to the union type to resolve type narrowing issues in some React/TS environments
   const currentSize = size as 'sm' | 'md' | 'lg';
   const configs = getConfigs(currentSize);
-  
+
   // Robust lookup with multiple fallbacks to ensure config is never undefined
   const activeTier = (tier || 'FREE').toString().toUpperCase();
   const config = configs[activeTier] || configs.FREE;

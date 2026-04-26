@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useWallet } from '../context/WalletContext';
-import { fetchTransactions } from '../services/covalent';
+import { chainData } from '../services/chainData';
 import { Transaction } from '../types';
 import { History, ArrowUpRight, ArrowDownLeft, RefreshCw, ExternalLink, Filter } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+
+const getExplorerLink = (chain: string, hash: string) => {
+    if (chain.includes('bsc')) return `https://bscscan.com/tx/${hash}`;
+    if (chain.includes('sol')) return `https://solscan.io/tx/${hash}`;
+    return `https://etherscan.io/tx/${hash}`;
+};
 
 export const HistoryPage: React.FC = () => {
     const { trackedWallets } = useWallet();
@@ -14,24 +20,22 @@ export const HistoryPage: React.FC = () => {
     useEffect(() => {
         const loadHistory = async () => {
             setLoading(true);
-            let allTx: Transaction[] = [];
+            try {
+                // Deduplicate addresses
+                const uniqueAddresses = Array.from(new Set(trackedWallets.map(w => w.address))).slice(0, 3);
 
-            // Limit to first 3 wallets to avoid rate limits on public API
-            const nodes = trackedWallets.slice(0, 3);
+                // Fetch from all chains (chainData handles multi-chain internally per address)
+                const results = await Promise.all(uniqueAddresses.map(address => chainData.getTransactionHistory(address)));
+                const allTx = results.flat();
 
-            await Promise.all(nodes.map(async (wallet) => {
-                const chainName = wallet.chain === 'BSC' ? 'bsc-mainnet' :
-                    wallet.chain === 'SOL' ? 'solana-mainnet' :
-                        'eth-mainnet'; // Simplified mapping
-
-                const txs = await fetchTransactions(chainName, wallet.address);
-                allTx = [...allTx, ...txs];
-            }));
-
-            // Sort by date desc
-            allTx.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            setTransactions(allTx);
-            setLoading(false);
+                // Sort by date desc
+                allTx.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                setTransactions(allTx);
+            } catch (e) {
+                console.error("Failed to load history", e);
+            } finally {
+                setLoading(false);
+            }
         };
 
         if (trackedWallets.length > 0) {
@@ -102,7 +106,7 @@ export const HistoryPage: React.FC = () => {
                                         <td className="p-6">
                                             <div className="flex items-center space-x-2">
                                                 <span className="font-mono text-alphabag-subtext text-xs">{tx.hash.substring(0, 6)}...{tx.hash.substring(tx.hash.length - 4)}</span>
-                                                <a href="#" className="opacity-0 group-hover:opacity-100 transition-opacity text-alphabag-yellow"><ExternalLink size={12} /></a>
+                                                <a href={getExplorerLink(tx.chain, tx.hash)} target="_blank" rel="noopener noreferrer" className="opacity-0 group-hover:opacity-100 transition-opacity text-alphabag-yellow"><ExternalLink size={12} /></a>
                                             </div>
                                         </td>
                                         <td className="p-6 text-right font-bold text-white">
@@ -116,7 +120,7 @@ export const HistoryPage: React.FC = () => {
                                         </td>
                                         <td className="p-6 text-center">
                                             <span className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${tx.status === 'CONFIRMED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                                    'bg-red-500/10 text-red-500 border-red-500/20'
+                                                'bg-red-500/10 text-red-500 border-red-500/20'
                                                 }`}>
                                                 {tx.status}
                                             </span>

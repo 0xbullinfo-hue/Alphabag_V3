@@ -17,32 +17,31 @@ interface MetricCardProps {
 export const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon, isLoading }) => {
   if (isLoading) {
     return (
-      <div className="bg-alphabag-dark border border-alphabag-gray rounded-2xl p-6 h-32 animate-pulse">
-        <div className="w-1/3 h-3 bg-alphabag-gray rounded mb-4"></div>
-        <div className="w-2/3 h-8 bg-alphabag-gray rounded"></div>
+      <div className="glass-panel p-8 h-32 animate-pulse">
+        <div className="w-1/3 h-3 bg-white/5 rounded mb-4"></div>
+        <div className="w-2/3 h-8 bg-white/5 rounded"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-alphabag-dark border border-alphabag-gray rounded-2xl p-6 relative overflow-hidden group hover:border-alphabag-yellow/30 transition-all shadow-lg">
+    <div className="glass-panel p-8 relative overflow-hidden group hover:border-white/10 transition-all duration-200">
       {icon && (
-        <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 transition-transform">
+        <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-300">
           {icon}
         </div>
       )}
       <div className="relative z-10">
-        <p className="text-[10px] text-alphabag-subtext font-bold uppercase tracking-[0.2em] mb-2">{title}</p>
-        <h3 className="text-3xl font-extrabold text-white tracking-tighter mb-2">{value}</h3>
+        <p className="text-[10px] text-alphabag-muted font-bold uppercase tracking-[0.2em] mb-2">{title}</p>
+        <h3 className="text-3xl font-extrabold text-zinc-50 tracking-tight mb-2 tabular-data drop-shadow-md">{value}</h3>
         {change && (
-          <div className="flex items-center gap-1.5">
-            <span className={`flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
-              change.trend === 'up' ? 'bg-alphabag-green/10 text-alphabag-green' : 'bg-alphabag-red/10 text-alphabag-red'
-            }`}>
-              {change.trend === 'up' ? <TrendingUp size={10} className="mr-1" /> : <TrendingDown size={10} className="mr-1" />}
+          <div className="flex items-center gap-2 mt-2">
+            <span className={`flex items-center px-2 py-1 rounded-md text-[10px] font-bold tabular-nums ${change.trend === 'up' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+              }`}>
+              {change.trend === 'up' ? <TrendingUp size={12} className="mr-1" /> : <TrendingDown size={12} className="mr-1" />}
               {change.value}%
             </span>
-            {change.label && <span className="text-[9px] text-alphabag-subtext font-bold uppercase tracking-widest">{change.label}</span>}
+            {change.label && <span className="text-[9px] text-alphabag-muted font-bold uppercase tracking-widest">{change.label}</span>}
           </div>
         )}
       </div>

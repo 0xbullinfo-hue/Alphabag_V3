@@ -23,6 +23,19 @@ export interface User {
   alphaAiUsageSeconds: number;
   lastAlphaAiReset: string;
   isAdmin: boolean;
+  isPro?: boolean;
+  visits?: number;
+  lastLoginIp?: string;
+  location?: string;
+  bio?: string;
+  website?: string;
+  onboardingComplete: boolean;
+  accountType?: 'FOUNDER' | 'TRADER';
+  airdropPoints?: number;
+  referralCode?: string;
+  referralCount?: number;
+  completedTasks?: string[];
+  lastDailyTaskAt?: string;
 }
 
 export type Chain = 'BSC' | 'ETH' | 'SOL' | 'BASE' | 'AVAX' | 'ARB';
@@ -85,23 +98,34 @@ export interface NewsItem {
   isAiCurated?: boolean;
 }
 
-export type SignalCategory = 'DEGEN' | 'ALPHA' | 'FUTURES';
+export type SignalCategory = 'DEGEN' | 'LONGTERM' | 'AIRDROPS' | 'SCALPS' | 'SWING';
+
+export type SignalStatus = 'ACTIVE' | 'HIT' | 'LOSS' | 'CLOSED' | 'PENDING';
 
 export interface TradeSignal {
   id: string;
   pair: string;
   category: SignalCategory;
-  type: 'LONG' | 'SHORT' | 'BUY';
+  type: 'LONG' | 'SHORT' | 'BUY' | 'AIRDROP';
   entry: string;
   targets: string[];
   stopLoss: string;
   timestamp: string;
-  status: 'ACTIVE' | 'HIT' | 'CLOSED' | 'DRAFT' | 'SCHEDULED';
-  contractAddress?: string;
+  status: SignalStatus;
+  risk: 'LOW' | 'MEDIUM' | 'HIGH';
   chain?: string;
   leverage?: string;
-  tokenInfo?: string;
+  tokenInfo?: string; // Kept as string to match existing, or update if it was any
   narrative?: string;
+  description?: string;
+  socialLinks?: {
+    twitter?: string;
+    telegram?: string;
+    discord?: string;
+    website?: string;
+  };
+  relevantInfo?: string;
+  contractAddress?: string;
   copyCount?: number;
 }
 
@@ -152,13 +176,53 @@ export interface DefiPosition {
   healthFactor?: number;
 }
 
-// Added missing Integration interface
+export interface Project {
+    id: string;
+    ownerId: string;
+    name: string;
+    symbol: string;
+    logoUrl?: string;
+    theHook: string;
+    description: string;
+    contractAddress: string;
+    totalSupply: string;
+    websiteUrl: string;
+    buyLink: string;
+    bannerUrl?: string;
+    heatIndex: number;
+    engagementTotal: number;
+    totalMentions: number;
+    isVerified: boolean;
+    isAd: boolean;
+    adPlacement?: 'SIDEBAR' | 'TIMELINE' | 'BOTH';
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    createdAt: string;
+}
+
+export interface Post {
+    id: string;
+    authorId: string;
+    content: string;
+    projectId?: string;
+    boostMultiplier?: number;
+    isAd?: boolean;
+    likeCount: number;
+    commentCount: number;
+    shareCount: number;
+    createdAt: string;
+    logoUrl?: string;
+    bannerUrl?: string;
+}
+
 export interface Integration {
   id: string;
   name: string;
+  description: string;
   icon: string;
-  type: string;
-  status: 'CONNECTED' | 'DISCONNECTED';
+  category: 'CEX' | 'WALLET' | 'ANALYTICS' | 'TAX';
+  status: 'CONNECTED' | 'DISCONNECTED' | 'SYNCING' | 'ERROR';
+  requiresApiKeys?: boolean;
+  lastSynced?: string;
 }
 
 // Added missing EarnOpportunity interface
@@ -207,4 +271,17 @@ export interface CovalentToken {
   quote: number;
   quote_rate: number;
   quote_24h?: number;
+}
+
+export interface TokenBalance {
+  symbol: string;
+  name: string;
+  decimals: number;
+  balance: string; // Raw balance
+  guiBalance: number; // Human readable
+  price?: number;
+  value?: number;
+  tokenAddress: string;
+  logo?: string;
+  chain?: string; // Added to track source chain
 }

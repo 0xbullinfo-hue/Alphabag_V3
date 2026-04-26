@@ -1,0 +1,56 @@
+import React from 'react';
+import { Lock } from 'lucide-react';
+import { Button } from './Button';
+
+interface ComingSoonOverlayProps {
+  title?: string;
+  description?: string;
+  fullPage?: boolean;
+  onClose?: () => void;
+}
+
+export const ComingSoonOverlay: React.FC<ComingSoonOverlayProps> = ({ 
+  title = "Premium Feature", 
+  description = "Get a sneak peek at our institutional-grade tools and classified alpha streams during the Beta Phase.",
+  fullPage = true,
+  onClose
+}) => {
+  return (
+    <div className={`
+      absolute z-50 flex items-center justify-center p-6 bg-alphabag-black/40 backdrop-blur-2xl overflow-hidden transition-all duration-500
+      ${fullPage ? '-inset-4 md:-inset-6 lg:-inset-8' : 'inset-0 rounded-3xl border border-white/5'}
+    `}>
+      <div className="max-w-md w-full bg-alphabag-dark border border-alphabag-yellow/20 p-8 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] text-center relative overflow-hidden group">
+        {/* Animated Background Glow */}
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-alphabag-yellow/10 rounded-full blur-[80px] group-hover:bg-alphabag-yellow/20 transition-all duration-700"></div>
+        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-alphabag-yellow/10 rounded-full blur-[80px] group-hover:bg-alphabag-yellow/20 transition-all duration-700"></div>
+
+        <div className="relative z-10">
+          <div className="w-16 h-16 bg-alphabag-yellow/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-alphabag-yellow/20 shadow-inner">
+            <Lock className="text-alphabag-yellow animate-pulse" size={32} />
+          </div>
+          
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-3">
+            {title}
+          </h2>
+          
+          <p className="text-alphabag-subtext text-sm font-medium leading-relaxed mb-8">
+            {description}
+          </p>
+
+          <Button 
+            onClick={onClose}
+            className="w-full bg-alphabag-black/50 border border-alphabag-yellow/30 text-alphabag-yellow font-black uppercase tracking-widest py-4 transition-all"
+          >
+            <span className="text-alphabag-yellow">Coming Soon</span>
+          </Button>
+          
+          <div className="mt-6 flex items-center justify-center space-x-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-alphabag-yellow animate-ping"></div>
+            <span className="text-[10px] text-alphabag-subtext font-black uppercase tracking-[0.3em]">Development Phase 2.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

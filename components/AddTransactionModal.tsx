@@ -42,7 +42,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-alphabag-black/70 backdrop-blur-sm">
       <div className="bg-alphabag-dark border border-alphabag-gray rounded-xl w-full max-w-md shadow-2xl animate-fade-in">
         <div className="flex justify-between items-center p-6 border-b border-alphabag-gray">
             <h3 className="text-xl font-bold text-white">Add Transaction</h3>

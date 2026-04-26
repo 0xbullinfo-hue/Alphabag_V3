@@ -11,9 +11,11 @@ interface UpgradeModalProps {
   onClose: () => void;
 }
 
-// Placeholder for the real $BAG token contract on BSC
-const BAG_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000';
-const MIN_HOLDINGS = 1_000_000;
+
+// Token gating environment configuration
+const BAG_TOKEN_ADDRESS = '0x12a5b616d0042456345ec46682cf8c105658e0a1';
+const MIN_HOLDINGS = 0;
+const TOKEN_GATE_ACTIVE = import.meta.env.VITE_TOKEN_GATE_ACTIVE === 'true';
 
 export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) => {
   const { open } = useWeb3Modal();
@@ -28,7 +30,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
   // Fetch token balance
   const { data: tokenBalance } = useBalance({
     address: address,
-    token: BAG_TOKEN_ADDRESS === '0x0000000000000000000000000000000000000000' ? undefined : BAG_TOKEN_ADDRESS as `0x${string}`,
+    token: BAG_TOKEN_ADDRESS as `0x${string}`,
     chainId: bsc.id,
     watch: true,
   });
@@ -42,6 +44,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
   }, [isOpen]);
 
   if (!isOpen) return null;
+
 
   const handleConnect = async () => {
     await open();
@@ -77,14 +80,21 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
       onClose();
     } catch (e: any) {
       console.error("Verification Failed", e);
-      setVerificationError(e.message || "Verification failed. Please try again.");
+      let errorMsg = e.message || "Verification failed. Please try again.";
+      
+      // Specific handling for User Rejections (MetaMask/WalletConnect cancel)
+      if (e.message?.includes("rejected") || e.code === 4001) {
+        errorMsg = "Verification cancelled. Please ensure you approve the network switch and signature request in your wallet.";
+      }
+      
+      setVerificationError(errorMsg);
     } finally {
       setIsVerifying(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-fade-in">
+    <div className="fixed inset-0 z-[50] flex items-center justify-center p-4 bg-alphabag-black/95 backdrop-blur-xl animate-fade-in">
       <div className="bg-alphabag-dark border border-alphabag-gray w-full max-w-md rounded-3xl shadow-[0_0_50px_rgba(252,213,53,0.2)] overflow-hidden relative border-t-alphabag-yellow/50">
         <div className="p-8 text-center">
           <div className="flex justify-between items-center mb-8">
@@ -93,7 +103,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
                 <Crown size={22} fill="currentColor" />
               </div>
               <h2 className="text-2xl font-black text-white tracking-tighter uppercase leading-none text-left">
-                Alpha<span className="text-alphabag-yellow">BAG</span> <span className="block text-[10px] text-alphabag-subtext tracking-[0.2em] mt-1 font-bold">Ultimate Upgrade</span>
+                Alpha<span className="text-alphabag-yellow">XP</span> <span className="block text-[10px] text-alphabag-subtext tracking-[0.2em] mt-1 font-bold">Genesis Node Upgrade</span>
               </h2>
             </div>
             <button onClick={onClose} className="p-2 text-alphabag-subtext hover:text-white transition-colors bg-alphabag-black/50 rounded-lg">
@@ -109,7 +119,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
               Token Proof of Stake
             </p>
             <p className="text-[10px] text-alphabag-subtext font-medium leading-relaxed px-4">
-              Verifying 1,000,000+ $BAG tokens to unlock unlimited neural access.
+              Verifying eligibility to unlock unlimited neural access...
             </p>
           </div>
 
@@ -154,6 +164,20 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
               >
                 {isVerifying ? 'SCANNING HOLDINGS...' : 'INITIATE VERIFICATION'}
               </Button>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-alphabag-gray/50"></span></div>
+                <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest"><span className="bg-alphabag-dark px-4 text-alphabag-subtext">Need Tokens?</span></div>
+              </div>
+
+              <a
+                href="https://pancakeswap.finance/swap"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full block text-center py-3 bg-alphabag-black border border-alphabag-yellow/30 text-alphabag-yellow font-black uppercase tracking-widest rounded-xl hover:bg-alphabag-yellow/10 transition-all hover:shadow-[0_0_15px_rgba(252,213,53,0.2)] text-xs"
+              >
+                Secure Initial Allocation (DEX)
+              </a>
             </div>
           )}
 

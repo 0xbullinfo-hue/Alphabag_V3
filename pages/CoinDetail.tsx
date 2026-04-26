@@ -8,42 +8,92 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianG
 import { GoogleGenAI } from "@google/genai";
 import { useWallet } from '../context/WalletContext';
 
+import { MarketService } from '../services/MarketService';
+
 export const CoinDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { isConnected, portfolioItems, disconnectWallet } = useWallet();
+    const { isConnected, portfolioItems } = useWallet();
     const [coin, setCoin] = useState<Coin | null>(null);
     const [holding, setHolding] = useState<PortfolioItem | undefined>(undefined);
     const [timeframe, setTimeframe] = useState('1D');
     const [aiInsight, setAiInsight] = useState<string | null>(null);
     const [isFetchingAi, setIsFetchingAi] = useState(false);
     const [groundingLinks, setGroundingLinks] = useState<any[]>([]);
+    const [audit, setAudit] = useState({ score: 0, label: 'Loading...', color: 'text-alphabag-gray', bgClass: 'from-gray-500 to-gray-400', shadowClass: 'shadow-none' });
 
     useEffect(() => {
-        const found = MOCK_COINS.find(c => c.id === id);
-        if (found) {
-            setCoin(found);
-            fetchAiInsight(found.name, found.symbol);
-        } else if (id) {
-            setCoin({
-                id: id,
-                symbol: id.substring(0, 3).toUpperCase(),
-                name: id.charAt(0).toUpperCase() + id.slice(1),
-                image: `https://ui-avatars.com/api/?name=${id}&background=2B3139&color=FCD535`,
-                current_price: 100 + Math.random() * 500,
-                market_cap: 1000000000 + Math.random() * 500000000,
-                market_cap_rank: Math.floor(Math.random() * 500),
-                price_change_percentage_24h: Math.random() * 10 - 5,
-                total_volume: 50000000 + Math.random() * 100000000,
-                sparkline_in_7d: { price: Array.from({ length: 10 }, () => Math.random() * 100) }
-            });
-            fetchAiInsight(id, id.substring(0, 3));
-        }
+        const loadCoinData = async () => {
+            if (!id) return;
+
+            // 1. Try fetching real-time data first
+            try {
+                const data = await MarketService.getMarketData([id], true); // Fetch with sparkline
+                if (data && data.length > 0) {
+                    const realCoin = data[0];
+                    setCoin({
+                        ...realCoin,
+                        // Map API response to internal Coin type if needed, or rely on flexible typing
+                        // MarketService returns CoinGecko format which matches most of our Coin interface
+                        sparkline_in_7d: { price: realCoin.sparkline_in_7d?.price || [] }
+                    });
+                    fetchAiInsight(realCoin.name, realCoin.symbol);
+                    return;
+                }
+            } catch (e) {
+                console.warn("Failed to fetch real-time coin details, falling back to mock.");
+            }
+
+            // 2. Fallback to Mock if API fails
+            const found = MOCK_COINS.find(c => c.id === id);
+            if (found) {
+                setCoin(found);
+                fetchAiInsight(found.name, found.symbol);
+            } else {
+                // ... random gen logic ...
+                setCoin({
+                    id: id,
+                    symbol: id.substring(0, 3).toUpperCase(),
+                    name: id.charAt(0).toUpperCase() + id.slice(1),
+                    image: `https://ui-avatars.com/api/?name=${id}&background=2B3139&color=FCD535`,
+                    current_price: 100 + Math.random() * 500,
+                    market_cap: 1000000000 + Math.random() * 500000000,
+                    market_cap_rank: Math.floor(Math.random() * 500),
+                    price_change_percentage_24h: Math.random() * 10 - 5,
+                    total_volume: 50000000 + Math.random() * 100000000,
+                    sparkline_in_7d: { price: Array.from({ length: 10 }, () => Math.random() * 100) }
+                });
+                fetchAiInsight(id, id.substring(0, 3));
+            }
+        };
+        loadCoinData();
     }, [id]);
 
     useEffect(() => {
         if (coin) {
             setHolding(portfolioItems.find(p => p.coinId === coin.id));
+
+            // Generate deterministic mock audit score
+            const baseScore = Math.max(0, 100 - (coin.market_cap_rank || 500) / 10);
+            const score = Math.min(99, Math.max(15, Math.floor(baseScore + (coin.name.length % 10))));
+            let label = 'High Risk';
+            let color = 'text-alphabag-red';
+            let bgClass = 'from-alphabag-red to-red-400';
+            let shadowClass = 'shadow-[0_0_10px_rgba(246,70,93,0.5)]';
+
+            if (score >= 85) {
+                label = 'Professional Grade';
+                color = 'text-alphabag-green';
+                bgClass = 'from-alphabag-green to-emerald-400';
+                shadowClass = 'shadow-[0_0_10px_rgba(14,203,129,0.5)]';
+            } else if (score >= 60) {
+                label = 'Moderate Risk';
+                color = 'text-alphabag-yellow';
+                bgClass = 'from-alphabag-yellow to-yellow-400';
+                shadowClass = 'shadow-[0_0_10px_rgba(252,213,53,0.5)]';
+            }
+
+            setAudit({ score, label, color, bgClass, shadowClass });
         }
     }, [coin, portfolioItems]);
 
@@ -92,7 +142,7 @@ export const CoinDetail: React.FC = () => {
         <div className="space-y-6 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center space-x-4">
-                    <Link to="/analytics" className="p-2 bg-alphabag-dark border border-alphabag-gray hover:text-white rounded-lg transition-all shadow-md">
+                    <Link to="/markets" className="p-2 bg-alphabag-dark border border-alphabag-gray hover:text-white rounded-lg transition-all shadow-md">
                         <ArrowLeft size={20} />
                     </Link>
                     <div className="flex items-center space-x-4">
@@ -195,8 +245,8 @@ export const CoinDetail: React.FC = () => {
                                         key={tf}
                                         onClick={() => setTimeframe(tf)}
                                         className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter ${timeframe === tf
-                                                ? 'bg-alphabag-yellow text-alphabag-black shadow-lg'
-                                                : 'text-alphabag-subtext hover:text-white hover:bg-alphabag-gray'
+                                            ? 'bg-alphabag-yellow text-alphabag-black shadow-lg'
+                                            : 'text-alphabag-subtext hover:text-white hover:bg-alphabag-gray'
                                             }`}
                                     >
                                         {tf}
@@ -277,13 +327,13 @@ export const CoinDetail: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button variant="danger" className="w-full py-3 font-extrabold" onClick={() => navigate('/settings')} title="Remove Node Tracking">Remove Tracking</Button>
+                                    <Button variant="danger" className="w-full py-3 font-extrabold" onClick={() => navigate('/settings')} title="Remove Connection Tracking">Remove Tracking</Button>
                                 </div>
                             </div>
                         ) : (
                             <div className="text-center py-10 relative z-10">
                                 <p className="text-alphabag-subtext text-sm mb-6 leading-relaxed">Connect your wallet to track your <b>{coin.name}</b> holdings and analyze entry performance.</p>
-                                <Button variant="primary" className="w-full font-bold shadow-lg" onClick={() => isConnected ? null : navigate('/')}>Connect & Track</Button>
+                                <Button variant="primary" className="w-full font-bold shadow-lg" onClick={() => navigate('/settings')}>Connect & Track</Button>
                             </div>
                         )}
                     </div>
@@ -312,16 +362,25 @@ export const CoinDetail: React.FC = () => {
 
                     <div className="bg-alphabag-dark border border-alphabag-gray rounded-2xl p-6 shadow-2xl relative">
                         <h3 className="text-xs font-extrabold mb-6 text-alphabag-text uppercase tracking-[0.2em] flex items-center">
-                            <ShieldCheck size={18} className="mr-3 text-alphabag-green" /> Smart Audit Score
+                            <ShieldCheck size={18} className={`mr-3 ${audit.color}`} /> Smart Audit Score
                         </h3>
-                        <div className="flex items-end space-x-3 mb-4">
-                            <div className="text-5xl font-extrabold text-white tracking-tighter">98<span className="text-lg text-alphabag-subtext ml-1">/100</span></div>
-                            <div className="text-[10px] text-alphabag-green font-extrabold uppercase tracking-widest pb-2">Professional Grade</div>
-                        </div>
-                        <div className="w-full bg-alphabag-black h-2 rounded-full overflow-hidden border border-alphabag-gray">
-                            <div className="bg-gradient-to-r from-alphabag-green to-emerald-400 w-[98%] h-full shadow-[0_0_10px_rgba(14,203,129,0.5)]"></div>
-                        </div>
-                        <p className="text-[9px] text-alphabag-subtext mt-6 font-bold leading-relaxed uppercase tracking-widest opacity-60">Verified Liquidity • Multisig Treasury • Audited by Certik</p>
+                        {audit.score > 0 ? (
+                            <>
+                                <div className="flex items-end space-x-3 mb-4">
+                                    <div className="text-5xl font-extrabold text-white tracking-tighter">{audit.score}<span className="text-lg text-alphabag-subtext ml-1">/100</span></div>
+                                    <div className={`text-[10px] ${audit.color} font-extrabold uppercase tracking-widest pb-2`}>{audit.label}</div>
+                                </div>
+                                <div className="w-full bg-alphabag-black h-2 rounded-full overflow-hidden border border-alphabag-gray">
+                                    <div className={`bg-gradient-to-r ${audit.bgClass} w-[${audit.score}%] h-full ${audit.shadowClass}`} style={{ width: `${audit.score}%` }}></div>
+                                </div>
+                                <p className="text-[9px] text-alphabag-subtext mt-6 font-bold leading-relaxed uppercase tracking-widest opacity-60">Verified Liquidity • Multisig Treasury • Audited by Certik</p>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-6">
+                                <div className="w-6 h-6 border-2 border-alphabag-yellow border-t-transparent rounded-full animate-spin mb-3"></div>
+                                <p className="text-[10px] text-alphabag-subtext uppercase font-bold tracking-widest">Scanning Contracts...</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

@@ -5,13 +5,13 @@ import { LayoutDashboard, Wallet, Radio, Bot, BarChart3 } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const location = useLocation();
-  
+
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Home' },
-    { to: '/assets', icon: Wallet, label: 'Portfolio' },
+    { to: '/dex-bag', icon: Wallet, label: 'Portfolio' },
     { to: '/alpha-calls', icon: Radio, label: 'Calls' },
     { to: '/alpha-ai', icon: Bot, label: 'Ai' },
-    { to: '/analytics', icon: BarChart3, label: 'Markets' },
+    { to: '/markets', icon: BarChart3, label: 'Markets' },
   ];
 
   return (
@@ -20,12 +20,11 @@ export const MobileNav: React.FC = () => {
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (
-            <Link 
-              key={item.to} 
-              to={item.to} 
-              className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                isActive ? 'text-alphabag-yellow' : 'text-alphabag-subtext'
-              }`}
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-alphabag-yellow' : 'text-alphabag-subtext'
+                }`}
             >
               <item.icon size={20} className={isActive ? 'animate-pulse' : ''} />
               <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>

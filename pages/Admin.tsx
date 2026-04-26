@@ -1,136 +1,119 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import { Shield, Users, Activity, ExternalLink, RefreshCw } from 'lucide-react';
-import { Button } from '../components/ui/Button';
 
-interface TrackedUser {
-    address: string;
-    lastActive: string;
-    tier: string;
-}
+import React, { useEffect, useState } from 'react';
+import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'react-router-dom';
+import { Shield, RefreshCw } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { AdminSidebar } from '../components/AdminSidebar';
+
+// Sub-components
+import { AdminOverview } from '../components/admin/AdminOverview';
+import { AdminUsers } from '../components/admin/AdminUsers';
+import { AdminNews } from '../components/admin/AdminNews';
+import { AdminSignals } from '../components/admin/AdminSignals';
+import { AdminSystem } from '../components/admin/AdminSystem';
+import { AdminAirdrop } from '../components/admin/AdminAirdrop';
+import { AdminT2E } from '../components/admin/AdminT2E';
+import { AdminWhales } from '../components/admin/AdminWhales';
 
 export const Admin: React.FC = () => {
-    const { user } = useAuth();
-    const [users, setUsers] = useState<TrackedUser[]>([]);
+    const { user, token } = useAuth();
+    const location = useLocation();
+
+    // View State
+    const query = new URLSearchParams(location.search);
+    const currentView = query.get('view') || 'overview';
+
+    // Data State
+    const [stats, setStats] = useState<any>(null);
+    const [users, setUsers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    const fetchUsers = async () => {
+    const fetchAllData = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get('http://localhost:3001/api/admin/users');
-            setUsers(response.data.users);
+            const timestamp = Date.now();
+            const [usersRes, statsRes] = await Promise.all([
+                api.get(`/api/admin/users?_t=${timestamp}`),
+                api.get(`/api/admin/system?_t=${timestamp}`)
+            ]);
+
+            const responseData = usersRes.data.registered || usersRes.data;
+            setUsers(Array.isArray(responseData) ? responseData : []); 
+            setStats(statsRes.data);
         } catch (error) {
-            console.error("Failed to fetch users", error);
+            console.error("Failed to fetch admin data", error);
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchUsers();
-        // Poll every 30 seconds
-        const interval = setInterval(fetchUsers, 30000);
+        fetchAllData();
+        const interval = setInterval(fetchAllData, 30000);
         return () => clearInterval(interval);
     }, []);
 
+    // Active Visitors count (mocked in stats usually, or from usersRes)
+    const activeCount = users.filter(u => u.lastActive && (Date.now() - new Date(u.lastActive).getTime() < 15 * 60 * 1000)).length; // 15m window approx
+
+    const renderContent = () => {
+        switch (currentView) {
+            case 'overview':
+                return <AdminOverview stats={stats} registeredCount={users.length} activeCount={activeCount} />;
+            case 'users':
+                return <AdminUsers users={users} />;
+            case 'news':
+                return <AdminNews />;
+            case 'signals':
+                return <AdminSignals />;
+            case 'airdrop':
+                return <AdminAirdrop />;
+            case 't2e':
+                return <AdminT2E />;
+            case 'whales':
+                return <AdminWhales />;
+            case 'system':
+                return <AdminSystem onReboot={fetchAllData} />;
+            default:
+                return <AdminOverview stats={stats} registeredCount={users.length} activeCount={activeCount} />;
+        }
+    };
+
     return (
-        <div className="space-y-8 animate-fade-in pb-20">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-white uppercase tracking-tighter flex items-center">
-                        <Shield className="mr-3 text-alphabag-yellow" size={32} />
-                        System Admin
-                    </h1>
-                    <p className="text-alphabag-subtext mt-1 text-sm font-medium">
-                        Monitoring active nodes and user sessions.
-                    </p>
-                </div>
-                <Button onClick={fetchUsers} size="sm" variant="secondary" className="border-alphabag-gray">
-                    <RefreshCw size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                    Refresh Data
-                </Button>
-            </div>
+        <div className="flex h-screen bg-alphabag-black">
+            <AdminSidebar />
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-alphabag-dark border border-alphabag-gray rounded-2xl p-6">
-                    <div className="flex justify-between items-start">
+            <div className="flex-1 ml-64 overflow-y-auto custom-scrollbar">
+                <main className="p-8 pb-20 max-w-7xl mx-auto">
+                    {/* Page Header */}
+                    <div className="flex justify-between items-center mb-10">
                         <div>
-                            <p className="text-xs font-bold text-alphabag-subtext uppercase tracking-widest">Active Users</p>
-                            <h3 className="text-3xl font-black text-white mt-2">{users.length}</h3>
+                            <h1 className="text-3xl font-black text-white uppercase tracking-tighter flex items-center">
+                                <Shield className="mr-3 text-alphabag-yellow" size={32} />
+                                {currentView === 'overview' ? 'Admin Center' :
+                                    currentView === 'users' ? 'Member Database' :
+                                        currentView === 'news' ? 'Intelligence Deck' :
+                                            currentView === 'signals' ? 'Alpha Signals' :
+                                                currentView === 'airdrop' ? 'Missions Control' :
+                                                currentView === 't2e' ? 'T2E Infrastructure' :
+                                                    currentView === 'whales' ? 'Whale Watch' :
+                                                        'System Integrity'}
+                            </h1>
+                            <p className="text-alphabag-subtext mt-1 text-sm font-bold tracking-wide">
+                                ADMIN: <span className="text-white">{user?.email}</span> | STATUS: <span className="text-green-500">SECURE</span>
+                            </p>
                         </div>
-                        <div className="bg-alphabag-yellow/10 p-3 rounded-xl">
-                            <Users className="text-alphabag-yellow" size={24} />
-                        </div>
+                        <Button onClick={fetchAllData} size="sm" variant="secondary" className="border-alphabag-gray bg-alphabag-dark hover:bg-white/5">
+                            <RefreshCw size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </Button>
                     </div>
-                </div>
 
-                <div className="bg-alphabag-dark border border-alphabag-gray rounded-2xl p-6">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-xs font-bold text-alphabag-subtext uppercase tracking-widest">System Status</p>
-                            <h3 className="text-3xl font-black text-green-500 mt-2">ONLINE</h3>
-                        </div>
-                        <div className="bg-green-500/10 p-3 rounded-xl">
-                            <Activity className="text-green-500" size={24} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* User Table */}
-            <div className="bg-alphabag-dark border border-alphabag-gray rounded-2xl overflow-hidden">
-                <div className="p-6 border-b border-alphabag-gray">
-                    <h3 className="font-bold text-white uppercase tracking-widest text-sm">Active Sessions</h3>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-black/20">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-alphabag-subtext uppercase tracking-wider">Wallet Address</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-alphabag-subtext uppercase tracking-wider">Tier</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-alphabag-subtext uppercase tracking-wider">Last Active</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-alphabag-subtext uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-alphabag-gray">
-                            {users.map((u, i) => (
-                                <tr key={i} className="hover:bg-white/5 transition-colors">
-                                    <td className="px-6 py-4 text-sm font-mono text-white">
-                                        {u.address}
-                                        {u.address.toLowerCase() === user?.id.toLowerCase() && <span className="ml-2 text-[10px] bg-alphabag-yellow text-black px-2 py-0.5 rounded font-bold">YOU</span>}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="text-xs font-bold px-2 py-1 rounded bg-white/10 text-white border border-white/20">
-                                            {u.tier}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-alphabag-subtext">
-                                        {new Date(u.lastActive).toLocaleString()}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <a
-                                            href={`https://zerion.io/${u.address}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center text-alphabag-yellow hover:text-white text-xs font-bold uppercase tracking-wider transition-colors"
-                                        >
-                                            Inspect <ExternalLink size={12} className="ml-1" />
-                                        </a>
-                                    </td>
-                                </tr>
-                            ))}
-                            {users.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="px-6 py-12 text-center text-alphabag-subtext">
-                                        No active users found recently.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                    {/* Content Area */}
+                    {renderContent()}
+                </main>
             </div>
         </div>
     );

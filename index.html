@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
   <script>
     // Global polyfills for Web3/AI SDKs - Non-destructive augmentation
@@ -51,7 +51,8 @@
     "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@4.36.1?external=react,react-dom",
     "axios": "https://esm.sh/axios@1.6.7",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "framer-motion": "https://esm.sh/framer-motion@11.0.8?external=react,react-dom"
   }
 }
 </script>
@@ -60,7 +61,7 @@
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ['"IBM Plex Sans"', 'sans-serif'] },
+          fontFamily: { sans: ['"Inter"', 'sans-serif'] },
           colors: {
             alphabag: {
               black: '#0B0E11',
@@ -91,20 +92,20 @@
   </script>
   <style>
     :root {
-      --bg-primary: #0B0E11;
-      --bg-secondary: #181A20;
-      --bg-tertiary: #2B3139;
+      --bg-primary: #000000;
+      --bg-secondary: #18181b;
+      --bg-tertiary: rgba(255,255,255,0.05);
       --primary: #FCD535;
-      --text-primary: #EAECEF;
-      --text-secondary: #848E9C;
-      --success: #0ECB81;
-      --danger: #F6465D;
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --success: #10b981;
+      --danger: #f43f5e;
     }
 
     body {
       background-color: var(--bg-primary);
       color: var(--text-primary);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
       overscroll-behavior-y: none;

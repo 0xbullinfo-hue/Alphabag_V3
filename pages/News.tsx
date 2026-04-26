@@ -1,20 +1,33 @@
 
 import React, { useEffect, useState } from 'react';
-import { fetchNews } from '../services/mockData';
+import { api } from '../services/api';
 import { NewsItem } from '../types';
-import { Clock, X, Zap, Newspaper, ArrowRight, Share2, Bookmark } from 'lucide-react';
+import { Clock, X, Zap, Newspaper, ArrowRight, Bookmark, Search, Twitter, Facebook, Instagram, Send } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 export const News: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredNews = news.filter(item => 
+    item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    item.summary.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   useEffect(() => {
-    fetchNews().then(data => {
-      setNews(data);
-      setLoading(false);
-    });
+    const fetchNewsData = async () => {
+      try {
+        const res = await api.get('/api/news');
+        setNews(res.data);
+      } catch (error) {
+        console.error("Failed to fetch news", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNewsData();
   }, []);
 
   if (loading) return (
@@ -34,16 +47,34 @@ export const News: React.FC = () => {
           <h1 className="text-4xl font-extrabold text-white tracking-tighter">Market Pulse</h1>
           <p className="text-alphabag-subtext mt-2 font-medium max-w-md">Expert narratives and real-time intelligence aggregated for BAG holders.</p>
         </div>
-        <div className="mt-6 md:mt-0 bg-alphabag-black border border-alphabag-gray px-6 py-3 rounded-2xl relative z-10">
-          <div className="flex items-center space-x-3">
-            <div className="w-3 h-3 bg-alphabag-green rounded-full animate-pulse"></div>
-            <span className="text-xs text-alphabag-text font-bold uppercase tracking-widest">Global Wire Active</span>
-          </div>
+        <div className="relative z-10 w-full md:w-auto mt-6 md:mt-0 flex flex-col items-end">
+             <div className="relative">
+                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search size={16} className="text-alphabag-subtext" />
+                 </div>
+                 <input 
+                    type="text" 
+                    placeholder="Search historical posts..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-alphabag-black border border-alphabag-gray rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-alphabag-yellow w-full md:w-72 transition-colors shadow-inner"
+                 />
+             </div>
+             <div className="flex items-center space-x-2 mt-3 text-[9px] text-alphabag-green font-bold uppercase tracking-widest text-right">
+                <div className="w-1.5 h-1.5 rounded-full bg-alphabag-green animate-pulse"></div>
+                Live Hub Archive
+             </div>
         </div>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {news.map((item) => (
+        {filteredNews.length === 0 ? (
+            <div className="col-span-full py-20 text-center flex flex-col items-center">
+                <Search size={48} className="text-alphabag-gray mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">No transmissions found</h3>
+                <p className="text-sm text-alphabag-subtext">Adjust your search parameters to comb through the archive.</p>
+            </div>
+        ) : filteredNews.map((item) => (
           <article
             key={item.id}
             className={`
@@ -68,8 +99,8 @@ export const News: React.FC = () => {
                 )}
                 {item.sentiment && (
                   <span className={`px-3 py-1 rounded-lg text-[10px] uppercase font-extrabold text-white tracking-widest border backdrop-blur-md ${item.sentiment === 'POSITIVE' ? 'bg-green-600/80 border-green-400/30' :
-                      item.sentiment === 'NEGATIVE' ? 'bg-red-600/80 border-red-400/30' :
-                        'bg-gray-600/80 border-gray-400/30'
+                    item.sentiment === 'NEGATIVE' ? 'bg-red-600/80 border-red-400/30' :
+                      'bg-gray-600/80 border-gray-400/30'
                     }`}>
                     {item.sentiment}
                   </span>
@@ -100,13 +131,13 @@ export const News: React.FC = () => {
       {selectedArticle && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-fade-in">
           <div
-            className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+            className="absolute inset-0 bg-alphabag-black/90 backdrop-blur-xl"
             onClick={() => setSelectedArticle(null)}
           ></div>
           <div className="bg-alphabag-dark border border-alphabag-gray w-full max-w-4xl h-[85vh] rounded-3xl shadow-2xl relative overflow-hidden flex flex-col animate-slide-up">
             <button
               onClick={() => setSelectedArticle(null)}
-              className="absolute top-6 right-6 z-20 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-alphabag-red transition-colors"
+              className="absolute top-6 right-6 z-20 w-10 h-10 bg-alphabag-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-alphabag-red transition-colors"
             >
               <X size={20} />
             </button>
@@ -130,12 +161,46 @@ export const News: React.FC = () => {
 
               <div className="p-8 md:p-12">
                 <div className="flex items-center justify-between mb-8 pb-8 border-b border-alphabag-gray/30">
-                  <div className="flex items-center space-x-6 text-alphabag-subtext">
-                    <button className="flex items-center hover:text-alphabag-yellow transition-colors font-bold uppercase text-[10px] tracking-widest">
-                      <Share2 size={16} className="mr-2" /> Share Alpha
-                    </button>
-                    <button className="flex items-center hover:text-alphabag-yellow transition-colors font-bold uppercase text-[10px] tracking-widest">
-                      <Bookmark size={16} className="mr-2" /> Save Intel
+                  <div className="flex items-center space-x-4 text-alphabag-subtext">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mr-2">Share Intel:</span>
+                    <a 
+                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(selectedArticle.title + ' shared from alphabagpro')}&url=${encodeURIComponent(window.location.href)}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="hover:text-[#1DA1F2] transition-colors"
+                    >
+                      <Twitter size={18} />
+                    </a>
+                    <a 
+                      href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(selectedArticle.title + ' shared from alphabagpro')}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="hover:text-[#229ED9] transition-colors"
+                    >
+                      <Send size={18} />
+                    </a>
+                    <a 
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="hover:text-[#1877F2] transition-colors"
+                    >
+                      <Facebook size={18} />
+                    </a>
+                    <a 
+                      href="https://instagram.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="hover:text-[#E4405F] transition-colors"
+                      onClick={() => alert("Link copied for Instagram! \n" + window.location.href + "\nshared from alphabagpro")}
+                    >
+                      <Instagram size={18} />
+                    </a>
+
+                    <span className="w-px h-6 bg-alphabag-gray mx-2"></span>
+                    
+                    <button className="flex items-center hover:text-alphabag-yellow transition-colors font-bold uppercase text-[10px] tracking-widest ml-2 border border-alphabag-gray/50 px-3 py-1.5 rounded-lg bg-alphabag-black/30">
+                      <Bookmark size={14} className="mr-2" /> Save
                     </button>
                   </div>
                   {selectedArticle.isPremium && (
@@ -156,7 +221,7 @@ export const News: React.FC = () => {
                         <p key={i}>{para}</p>
                       ))
                     ) : (
-                      <p>Additional intelligence for this report is currently being synchronized from the primary nodes. Full text will be available shortly.</p>
+                      <p>Additional intelligence for this report is currently being synchronized from the primary sources. Full text will be available shortly.</p>
                     )}
                   </div>
                 </div>
@@ -164,7 +229,7 @@ export const News: React.FC = () => {
                 <div className="mt-12 p-8 bg-alphabag-black/50 border border-alphabag-gray rounded-2xl">
                   <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Alpha Intelligence Disclaimer</h4>
                   <p className="text-xs text-alphabag-subtext leading-relaxed font-bold uppercase">
-                    This report is generated by AlphaBAG proprietary intelligence nodes. Narratives are for research purposes only and do not constitute financial advice. Standard protocols suggest 2% risk management.
+                    This report is generated by AlphaXP proprietary intelligence hubs. Narratives are for research purposes only and do not constitute financial advice. Standard risk management suggested.
                   </p>
                 </div>
               </div>

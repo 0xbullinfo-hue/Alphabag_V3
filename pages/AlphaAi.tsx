@@ -1,16 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { api } from '../services/api';
 import { useWallet } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
-import { GoogleGenAI, Modality } from "@google/genai";
-import { Bot, Send, User, Zap, ExternalLink, Mic, MicOff, Clock, AlertTriangle, Sparkles, Briefcase } from 'lucide-react';
+import { Bot, Send, User, Zap, ExternalLink, Mic, MicOff, Clock, AlertTriangle, Sparkles, Briefcase, RefreshCw, ArrowDown, PieChart as PieChartIcon, TrendingUp, BarChart3, Shield, Lightbulb, ChevronRight, Wallet, Check, TerminalSquare, Trash2, Fingerprint } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { MessageRenderer } from '../components/MessageRenderer';
-
-interface Message {
-  role: 'user' | 'ai';
-  content: string;
-  groundingMetadata?: any[];
-}
+import { ChatFeed } from '../components/ui/ChatFeed';
+import { UpgradeCmd } from '../components/UpgradeCmd';
+import { useNeuralCore } from '../components/hooks/useNeuralCore';
 
 const SUGGESTIONS = [
   { label: "Market News", prompt: "Summarize the most important crypto news from the last 24 hours." },
@@ -55,22 +51,53 @@ async function decodeAudioData(
 export const AlphaAi: React.FC = () => {
   const { portfolioItems } = useWallet();
   const { user, updateAiUsage } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'ai', content: "Hello, I am AlphaAi. I can analyze global crypto markets in real-time or look over your portfolio to provide professional insights. What's on your mind?" }
-  ]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [isLiveMode, setIsLiveMode] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const liveSessionRef = useRef<any>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const nextStartTimeRef = useRef<number>(0);
-  const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
-
   const tier = user?.tier || 'FREE';
   const isUltimate = tier === 'ULTIMATE';
+
+  const [cexTotal, setCexTotal] = useState(0);
+  const [cexAssetCount, setCexAssetCount] = useState(0);
+
+  useEffect(() => {
+    const savedCex = localStorage.getItem('alphabag_cex_connections');
+    if (savedCex) {
+        try {
+            const parsed = JSON.parse(savedCex);
+            setCexAssetCount(parsed.length);
+            const total = parsed.reduce((acc: number, item: any) => acc + (item.balance || 0), 0);
+            setCexTotal(total);
+        } catch (e) { console.error("Error parsing CEX data", e); }
+    }
+  }, []);
+
+  const unifiedPortfolio = React.useMemo(() => {
+      const unified: any[] = [...portfolioItems];
+      if (cexTotal > 0) {
+          unified.push({
+              symbol: 'CEX',
+              name: 'CEX Holdings',
+              value: cexTotal,
+              priceChange24h: 0
+          });
+      }
+      return unified;
+  }, [portfolioItems, cexTotal]);
+
+  const {
+    messages,
+    inputText,
+    setInputText,
+    isStreaming,
+    sendMessage,
+    clearChat
+  } = useNeuralCore(unifiedPortfolio, tier);
+
+  const [isLiveMode, setIsLiveMode] = useState(false);
+  const nextStartTimeRef = useRef<number>(0);
+  const liveSessionRef = useRef<any>(null);
+  const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+
   const freeUsageSeconds = user?.alphaAiUsageSeconds || 0;
-  const FREE_LIMIT_SECONDS = 4 * 60 * 60; // 4 hours
+  const FREE_LIMIT_SECONDS = 24 * 60 * 60; // 24 hours (Unlimited for Beta)
   const hasLimitRemaining = isUltimate || freeUsageSeconds < FREE_LIMIT_SECONDS;
 
   useEffect(() => {
@@ -86,10 +113,6 @@ export const AlphaAi: React.FC = () => {
     return () => clearInterval(timer);
   }, [isLiveMode, isUltimate, freeUsageSeconds, updateAiUsage]);
 
-  useEffect(() => {
-    if (scrollRef.current) { scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }
-  }, [messages, isTyping]);
-
   const stopLiveMode = () => {
     if (liveSessionRef.current) {
       try { liveSessionRef.current.close(); } catch (e) { }
@@ -101,136 +124,17 @@ export const AlphaAi: React.FC = () => {
   };
 
   const startLiveMode = async () => {
-    if (!hasLimitRemaining) return;
-
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey || apiKey === 'undefined' || apiKey.length < 10) {
-      setMessages(prev => [...prev, { role: 'ai', content: "Critical: Neural Gateway API Key missing. Interface cannot initialize voice link." }]);
-      return;
-    }
-
-    setIsLiveMode(true);
-    try {
-      const ai = new GoogleGenAI({ apiKey });
-      if (!audioContextRef.current) {
-        try {
-          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        } catch (e) {
-          console.error("AudioContext init failed", e);
-        }
-      }
-      const outputCtx = audioContextRef.current;
-      nextStartTimeRef.current = 0;
-
-      const sessionPromise = ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-12-2025',
-        config: {
-          responseModalities: [Modality.AUDIO],
-          systemInstruction: "You are AlphaAi. Provide tidy, clear professional crypto narratives. Avoid excessive symbols or heavy markdown bolding. Use natural speech.",
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } }
-        },
-        callbacks: {
-          onopen: async () => {
-            try {
-              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-              const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-              const source = inputCtx.createMediaStreamSource(stream);
-              const processor = inputCtx.createScriptProcessor(4096, 1, 1);
-              processor.onaudioprocess = (e) => {
-                const inputData = e.inputBuffer.getChannelData(0);
-                const int16 = new Int16Array(inputData.length);
-                for (let i = 0; i < inputData.length; i++) int16[i] = inputData[i] * 32768;
-                sessionPromise.then((session) => {
-                  if (session) {
-                    session.sendRealtimeInput({
-                      media: { data: encode(new Uint8Array(int16.buffer)), mimeType: 'audio/pcm;rate=16000' }
-                    });
-                  }
-                });
-              };
-              source.connect(processor);
-              processor.connect(inputCtx.destination);
-            } catch (err) {
-              stopLiveMode();
-            }
-          },
-          onmessage: async (message) => {
-            const base64Audio = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-            if (base64Audio) {
-              nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputCtx.currentTime);
-              const bytes = decode(base64Audio);
-              const buffer = await decodeAudioData(bytes, outputCtx, 24000, 1);
-              const source = outputCtx.createBufferSource();
-              source.buffer = buffer;
-              source.connect(outputCtx.destination);
-              source.addEventListener('ended', () => { sourcesRef.current.delete(source); });
-              source.start(nextStartTimeRef.current);
-              nextStartTimeRef.current += buffer.duration;
-              sourcesRef.current.add(source);
-            }
-          },
-          onerror: () => stopLiveMode(),
-          onclose: () => stopLiveMode(),
-        }
-      });
-      sessionPromise.then(session => { liveSessionRef.current = session; });
-    } catch (e) {
-      setIsLiveMode(false);
-    }
+    setIsLiveMode(false);
   };
 
-  const handleSendMessage = async (userMsg: string) => {
-    if (!userMsg.trim() || isTyping || !hasLimitRemaining) return;
-
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
-    setInput('');
-    setIsTyping(true);
-
+  const handleSendMessage = (userMsg: string) => {
+    if (!hasLimitRemaining) return;
     if (!isUltimate) updateAiUsage(10);
+    sendMessage(userMsg);
+  };
 
-    try {
-      // Prepare context safely
-      const safePortfolio = portfolioItems.length > 0
-        ? portfolioItems.map(p => ({
-          symbol: p.symbol,
-          amount: p.amount,
-          value: p.value,
-          pnl: p.pnl,
-          allocation: (p.value / portfolioItems.reduce((a, b) => a + b.value, 0)) * 100
-        }))
-        : [];
-
-      // Call Backend Proxy
-      const response = await fetch('http://localhost:3001/api/ai/briefing', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          assets: safePortfolio, // Renaming for backend compatibility
-          tier: tier,
-          userMessage: userMsg // Ensure backend handles this new field
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Neural connection error.");
-      }
-
-      setMessages(prev => [...prev, {
-        role: 'ai',
-        content: data.briefing || data.response || "Neural analysis complete.",
-        groundingMetadata: [] // Backend can passthrough if needed
-      }]);
-
-    } catch (error) {
-      console.error("AI Error:", error);
-      setMessages(prev => [...prev, { role: 'ai', content: "Neural core gateway connection timed out. Using failover protocol." }]);
-    } finally {
-      setIsTyping(false);
-    }
+  const handleQuickAction = (actionLabel: string) => {
+    handleSendMessage(`Tell me more about ${actionLabel}`);
   };
 
   const formatTime = (sec: number) => {
@@ -239,122 +143,142 @@ export const AlphaAi: React.FC = () => {
     return `${hours}h ${mins}m`;
   };
 
+  const dexTotal = portfolioItems.reduce((acc, item) => acc + item.value, 0);
+  const totalValue = dexTotal + cexTotal;
+  const totalPnL24h = portfolioItems.reduce((acc, item) => acc + (item.value * (item.priceChange24h / 100)), 0);
+  const totalPnLPercent24h = totalValue > 0 ? (totalPnL24h / totalValue) * 100 : 0;
+  const numAssets = portfolioItems.length + cexAssetCount;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] animate-fade-in max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-4 px-2">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-alphabag-yellow text-alphabag-black rounded-xl flex items-center justify-center shadow-lg font-black"><Bot size={24} /></div>
+    <div className="flex flex-col h-[calc(100vh-100px)] animate-fade-in max-w-7xl mx-auto text-alphabag-text mt-4">
+      <div className="flex justify-between items-center mb-6 px-2">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-alphabag-yellow/10 border border-alphabag-yellow/20 text-alphabag-yellow rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(252,213,53,0.15)]"><Fingerprint size={24} /></div>
           <div>
-            <h1 className="text-xl font-black text-white flex items-center tracking-tighter uppercase leading-none">AlphaAi Intelligence</h1>
-            <div className="flex items-center text-[10px] text-alphabag-subtext font-bold tracking-widest mt-1 opacity-70">
-              <Clock size={10} className="mr-1" />
-              {isUltimate ? 'Unlimited neural access' : `${formatTime(FREE_LIMIT_SECONDS - freeUsageSeconds)} capacity remaining`}
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl md:text-3xl font-black text-white flex items-center tracking-tighter leading-none uppercase">Alpha <span className="text-transparent bg-clip-text bg-gradient-to-r from-alphabag-yellow to-yellow-600 drop-shadow-[0_0_15px_rgba(252,213,53,0.3)] ml-2">Analyst</span></h1>
+              <div className="bg-alphabag-green/10 border border-alphabag-green/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-glow-green/5">
+                  <div className="w-1.5 h-1.5 bg-alphabag-green rounded-full animate-pulse shadow-[0_0_8px_rgba(14,203,129,0.8)]"></div>
+                  <span className="text-[9px] text-alphabag-green font-black uppercase tracking-[0.2em] relative top-[0.5px]">Link Active</span>
+              </div>
             </div>
+            <p className="text-xs text-zinc-400 font-medium max-w-xl mt-2 leading-relaxed">
+                Your dedicated intelligence hub for on-chain analytics, unified portfolio modeling, and strategic market forecasting.
+            </p>
           </div>
-        </div>
-        <div className="flex items-center space-x-3">
-          {isUltimate ? (
-            <Button variant="secondary" size="sm" onClick={isLiveMode ? stopLiveMode : startLiveMode} className={`font-black border transition-all ${isLiveMode ? 'border-red-500 bg-red-500/10 text-red-500' : 'border-alphabag-yellow bg-alphabag-yellow/10 text-alphabag-yellow'}`}>
-              {isLiveMode ? <MicOff size={16} className="mr-2" /> : <Mic size={16} className="mr-2" />}
-              {isLiveMode ? 'Terminate Link' : 'Initialize Voice Link'}
-            </Button>
-          ) : (
-            <Button variant="ghost" size="sm" onClick={() => window.dispatchEvent(new CustomEvent('open-upgrade-modal'))} className="text-alphabag-yellow border border-alphabag-yellow/20 text-[10px] font-black uppercase tracking-widest px-4">
-              <Zap size={14} className="mr-2" /> Unlock Voice Pulse
-            </Button>
-          )}
         </div>
       </div>
 
-      {!isUltimate && (
-        <div className="mb-4 mx-2 bg-alphabag-black/50 border border-alphabag-gray rounded-xl p-3 flex items-center justify-between shadow-lg">
-          <div className="flex-1 mr-6">
-            <div className="flex justify-between text-[8px] font-black text-alphabag-subtext uppercase tracking-[0.2em] mb-1">
-              <span>Daily neural allocation</span>
-              <span>{Math.round((freeUsageSeconds / FREE_LIMIT_SECONDS) * 100)}%</span>
-            </div>
-            <div className="w-full bg-alphabag-gray/30 h-1.5 rounded-full overflow-hidden border border-white/5">
-              <div
-                className="bg-alphabag-yellow h-full transition-all duration-1000 shadow-[0_0_10px_rgba(252,213,53,0.5)]"
-                style={{ width: `${(freeUsageSeconds / FREE_LIMIT_SECONDS) * 100}%` }}
-              ></div>
-            </div>
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
+
+        {/* Left Side: Chat Area */}
+        <div className="lg:col-span-2 flex flex-col bg-alphabag-dark/80 backdrop-blur-md rounded-2xl overflow-hidden shadow-glass border border-white/5 relative group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-alphabag-yellow/5 rounded-full blur-[80px] pointer-events-none transition-opacity duration-1000 group-hover:opacity-100 opacity-50"></div>
+          
+          <div className="flex justify-between items-center px-6 py-4 border-b border-white/5 bg-black/20">
+              <span className="text-[10px] text-alphabag-subtext uppercase font-black tracking-widest flex items-center gap-2">
+                 <TerminalSquare size={12} className="text-alphabag-yellow" /> Interaction Terminal
+              </span>
+              <button 
+                  onClick={clearChat}
+                  className="flex items-center gap-1.5 text-[9px] uppercase font-bold tracking-widest text-zinc-500 hover:text-red-400 transition-colors bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-transparent hover:border-red-500/20"
+              >
+                  <Trash2 size={10} /> Clear Cache
+              </button>
           </div>
-          <div className="text-[9px] text-alphabag-subtext font-bold italic opacity-60 uppercase">Auto-reset 00:00 UTC</div>
-        </div>
-      )}
 
-      <div className="flex-1 bg-alphabag-dark border border-alphabag-gray rounded-3xl flex flex-col overflow-hidden shadow-2xl relative">
-        {!hasLimitRemaining && (
-          <div className="absolute inset-0 z-50 bg-alphabag-black/90 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-fade-in">
-            <AlertTriangle size={48} className="text-alphabag-yellow mb-6" />
-            <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Neural link exhausted</h2>
-            <p className="text-alphabag-subtext text-sm max-w-sm mb-8 leading-relaxed font-medium">You have consumed your 4-hour daily quota for the basic intelligence node. Upgrade to ULTIMATE for unlimited priority access.</p>
-            <Button variant="primary" size="lg" className="px-10 font-black uppercase" onClick={() => window.dispatchEvent(new CustomEvent('open-upgrade-modal'))}>Authorize Elite Membership</Button>
+          <div className="flex-1 relative z-10 bg-gradient-to-b from-transparent to-black/20 custom-scrollbar overflow-hidden">
+              <ChatFeed messages={messages} isTyping={isStreaming} />
           </div>
-        )}
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-          {!isLiveMode && messages.map((msg, i) => (
-            <MessageRenderer key={i} message={msg} />
-          ))}
-          {isTyping && (
-            <div className="flex justify-start animate-fade-in">
-              <div className="flex space-x-3">
-                <div className="w-9 h-9 rounded-xl bg-alphabag-yellow text-black flex items-center justify-center animate-pulse"><Bot size={20} /></div>
-                <div className="bg-alphabag-black border border-alphabag-gray p-4 rounded-2xl flex space-x-1.5 items-center">
-                  <div className="w-1.5 h-1.5 bg-alphabag-yellow rounded-full animate-bounce"></div>
-                  <div className="w-1.5 h-1.5 bg-alphabag-yellow rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="w-1.5 h-1.5 bg-alphabag-yellow rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                </div>
-              </div>
-            </div>
-          )}
-          {isLiveMode && (
-            <div className="h-full flex flex-col items-center justify-center space-y-8 animate-fade-in">
-              <div className="relative">
-                <div className="absolute inset-0 bg-alphabag-yellow/20 rounded-full animate-ping"></div>
-                <div className="w-24 h-24 bg-alphabag-yellow text-black rounded-full flex items-center justify-center relative z-10 shadow-[0_0_40px_rgba(252,213,53,0.4)] border border-white/10">
-                  <Mic size={40} />
-                </div>
-              </div>
-              <div className="text-center">
-                <p className="text-white font-black uppercase tracking-[0.4em] mb-2">Voice Transmission Active</p>
-                <p className="text-alphabag-subtext text-xs font-bold tracking-widest opacity-60">Audio protocol engaged for institutional queries</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {!isLiveMode && (
-          <div className="p-4 border-t border-alphabag-gray bg-alphabag-black/50">
-            <div className="flex flex-wrap gap-2 mb-4">
-              {SUGGESTIONS.map((s, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSendMessage(s.prompt)}
-                  className="px-3 py-1.5 rounded-lg bg-alphabag-dark border border-alphabag-gray text-[10px] text-alphabag-subtext hover:text-white hover:border-alphabag-yellow transition-all flex items-center gap-1.5 font-bold uppercase tracking-tighter"
-                >
-                  <Sparkles size={10} className="text-alphabag-yellow" />
-                  {s.label}
-                </button>
-              ))}
-            </div>
-            <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }} className="flex space-x-4">
+          <div className="p-4 bg-black/40 border-t border-white/5 relative z-10">
+            <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputText); }} className="relative flex items-center group/form">
+              <span className="absolute left-4 text-alphabag-yellow font-mono text-sm font-bold opacity-70 cursor-default">{'>_'}</span>
               <input
                 type="text"
-                placeholder={hasLimitRemaining ? "Query AlphaAi Node regarding market sentiment..." : "Daily capacity reached..."}
-                disabled={!hasLimitRemaining}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="flex-1 bg-alphabag-dark border border-alphabag-gray rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow outline-none transition-all placeholder:text-alphabag-subtext/40 font-medium"
+                placeholder={hasLimitRemaining ? "Query the neural core..." : "Daily bandwidth exceeded..."}
+                disabled={!hasLimitRemaining || isStreaming}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                className="w-full bg-[#0c0c0c] border border-white/10 rounded-xl pl-10 pr-12 py-4 text-sm font-mono text-zinc-50 focus:border-alphabag-yellow/50 focus:shadow-[0_0_15px_rgba(252,213,53,0.1)] outline-none transition-all placeholder:text-zinc-600 shadow-inner"
               />
-              <Button type="submit" disabled={!input.trim() || isTyping || !hasLimitRemaining} className="rounded-xl px-6 bg-alphabag-yellow hover:bg-alphabag-yellowHover shadow-lg uppercase font-black">
-                <Send size={18} />
+              <Button
+                type="submit"
+                disabled={!inputText.trim() || isStreaming || !hasLimitRemaining}
+                className={`absolute right-2 top-2 bottom-2 rounded-lg px-3 transition-colors ${!inputText.trim() || isStreaming || !hasLimitRemaining ? 'bg-white/5 text-zinc-500' : 'bg-alphabag-yellow text-black hover:bg-yellow-400 hover:shadow-[0_0_15px_rgba(252,213,53,0.3)]'}`}
+                title="Send Command"
+              >
+                <Send size={14} />
               </Button>
             </form>
           </div>
-        )}
+        </div>
+
+        {/* Right Side: Sidebar */}
+        <div className="lg:col-span-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+
+          {/* Quick Actions (2-Column Dense Grid) */}
+          <div className="bg-alphabag-dark/80 backdrop-blur-md border border-white/5 rounded-2xl p-5 shadow-glass relative overflow-hidden">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-alphabag-subtext mb-4 flex items-center gap-2">
+                <Zap size={12} className="text-alphabag-yellow"/> Neural Prompts
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { icon: <PieChartIcon size={12} />, label: "Analyze Port" },
+                { icon: <TrendingUp size={12} />, label: "Pulse Check" },
+                { icon: <BarChart3 size={12} />, label: "Strategies" },
+                { icon: <Briefcase size={12} />, label: "Whale Moves" },
+                { icon: <Shield size={12} />, label: "Risk Matrix" },
+                { icon: <Lightbulb size={12} />, label: "Alpha Scans" },
+              ].map((action, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleQuickAction(action.label)}
+                  className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-black/40 hover:bg-alphabag-yellow/10 border border-white/5 hover:border-alphabag-yellow/30 transition-all group"
+                >
+                  <div className="text-alphabag-muted group-hover:text-alphabag-yellow transition-colors">
+                    {action.icon}
+                  </div>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 group-hover:text-alphabag-yellow transition-colors">{action.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Your Portfolio Matrix */}
+          <div className="bg-alphabag-dark/80 backdrop-blur-md border border-white/5 rounded-2xl p-6 shadow-glass relative overflow-hidden">
+            
+            <div className="flex items-center justify-between mb-6 relative z-10">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-alphabag-subtext flex items-center gap-2">
+                    <Wallet size={12} className="text-alphabag-green"/> Aggregate Assets
+                </h3>
+            </div>
+
+            <div className="mb-6">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Total Net Worth</p>
+                <div className="flex items-end gap-3">
+                    <span className="text-3xl font-black text-white tracking-tighter tabular-nums leading-none">
+                        ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <div className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1 mb-1 ${totalPnL24h >= 0 ? 'text-alphabag-green' : 'text-red-500'}`}>
+                        {totalPnLPercent24h >= 0 ? '+' : ''}{totalPnLPercent24h.toFixed(2)}% (24H)
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 relative z-10">
+                <div className="bg-black/40 border border-white/5 p-3 rounded-xl flex flex-col">
+                    <span className="text-[8px] text-alphabag-muted font-black uppercase tracking-widest mb-1">Active Connections</span>
+                    <span className="text-lg font-bold text-white tabular-nums leading-none">{numAssets}</span>
+                </div>
+                <div className="bg-black/40 border border-white/5 p-3 rounded-xl flex flex-col">
+                    <span className="text-[8px] text-alphabag-muted font-black uppercase tracking-widest mb-1">Risk Bias</span>
+                    <span className="text-[10px] font-black text-alphabag-yellow uppercase tracking-widest mt-1">Moderate</span>
+                </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

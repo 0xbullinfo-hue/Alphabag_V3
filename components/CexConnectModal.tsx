@@ -29,7 +29,7 @@ export const CexConnectModal: React.FC<CexConnectModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-alphabag-black/80 backdrop-blur-sm animate-fade-in">
             <div className="bg-alphabag-dark border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
                 <button
                     onClick={onClose}
@@ -62,7 +62,7 @@ export const CexConnectModal: React.FC<CexConnectModalProps> = ({
                                 type="text"
                                 value={apiKey}
                                 onChange={(e) => setApiKey(e.target.value)}
-                                className="w-full bg-black/50 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white text-sm focus:border-alphabag-yellow focus:outline-none transition-colors"
+                                className="w-full bg-alphabag-black/50 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white text-sm focus:border-alphabag-yellow focus:outline-none transition-colors"
                                 placeholder="Enter public key..."
                                 required
                             />
@@ -79,7 +79,7 @@ export const CexConnectModal: React.FC<CexConnectModalProps> = ({
                                 type={showSecret ? "text" : "password"}
                                 value={secret}
                                 onChange={(e) => setSecret(e.target.value)}
-                                className="w-full bg-black/50 border border-white/10 rounded-lg py-2 pl-10 pr-10 text-white text-sm focus:border-alphabag-yellow focus:outline-none transition-colors"
+                                className="w-full bg-alphabag-black/50 border border-white/10 rounded-lg py-2 pl-10 pr-10 text-white text-sm focus:border-alphabag-yellow focus:outline-none transition-colors"
                                 placeholder="Enter secret key..."
                                 required
                             />

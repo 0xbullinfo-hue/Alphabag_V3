@@ -17,7 +17,7 @@ export const Widgets: React.FC = () => {
                 <div className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-6">
                     <h3 className="font-bold text-white mb-4">Marquee Widget</h3>
                     {/* Simulated Widget */}
-                    <div className="bg-black border border-alphabag-gray rounded p-3 overflow-hidden whitespace-nowrap flex space-x-8">
+                    <div className="bg-alphabag-black border border-alphabag-gray rounded p-3 overflow-hidden whitespace-nowrap flex space-x-8">
                         <div className="flex items-center space-x-2">
                             <span className="font-bold text-white">BTC</span>
                             <span className="text-alphabag-green">$64,230.50 (+2.5%)</span>

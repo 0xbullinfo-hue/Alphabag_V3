@@ -1,7 +1,10 @@
 
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Bot, User, ExternalLink } from 'lucide-react';
+import { Bot, User, ExternalLink, Copy, Check } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { useState } from 'react';
 
 interface MessageRendererProps {
     message: {
@@ -14,6 +17,14 @@ interface MessageRendererProps {
 const COLORS = ['#FCD535', '#0ECB81', '#3B82F6', '#8B5CF6', '#F6465D', '#848E9C'];
 
 export const MessageRenderer: React.FC<MessageRendererProps> = ({ message }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(message.content);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     // Regex to find <ALPHA_CHART ... /> tags
     const chartRegex = /<ALPHA_CHART\s+type="([^"]+)"\s+data='([^']+)'\s*\/>/g;
 
@@ -79,19 +90,33 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message }) => 
         }
         // Remaining text
         if (lastIndex < message.content.length) {
-            parts.push(<span key={`text-${lastIndex}`} className="whitespace-pre-wrap">{message.content.substring(lastIndex)}</span>);
+            const textToRender = message.content.substring(lastIndex);
+            parts.push(
+                <div key={`text-${lastIndex}`} className="markdown-prose prose prose-invert prose-sm max-w-none text-alphabag-text marker:text-alphabag-yellow">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{textToRender}</ReactMarkdown>
+                </div>
+            );
         }
     } else {
         parts.push(<span key="user-text" className="whitespace-pre-wrap">{message.content}</span>);
     }
 
     return (
-        <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+        <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in group`}>
             <div className={`flex max-w-[85%] space-x-3 ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg ${message.role === 'ai' ? 'bg-alphabag-yellow text-black' : 'bg-alphabag-gray text-white'}`}>
                     {message.role === 'ai' ? <Bot size={20} /> : <User size={20} />}
                 </div>
-                <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-lg ${message.role === 'ai' ? 'bg-alphabag-black border border-alphabag-gray text-alphabag-text' : 'bg-alphabag-yellow text-alphabag-black font-medium'}`}>
+                <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-lg relative ${message.role === 'ai' ? 'bg-alphabag-black border border-alphabag-gray text-alphabag-text w-full max-w-[calc(100vw-8rem)] sm:max-w-2xl overflow-x-auto custom-scrollbar' : 'bg-alphabag-yellow text-alphabag-black font-medium'}`}>
+                    {message.role === 'ai' && (
+                        <button
+                            onClick={handleCopy}
+                            className="absolute top-3 right-3 p-1.5 rounded-lg bg-alphabag-dark/80 text-alphabag-subtext hover:text-white border border-transparent hover:border-alphabag-gray hover:bg-alphabag-gray/50 transition-all opacity-0 group-hover:opacity-100 z-10"
+                            title="Copy output"
+                        >
+                            {copied ? <Check size={14} className="text-alphabag-yellow" /> : <Copy size={14} />}
+                        </button>
+                    )}
                     {parts}
                     {message.groundingMetadata && message.groundingMetadata.length > 0 && (
                         <div className="mt-4 pt-4 border-t border-alphabag-gray/30">
