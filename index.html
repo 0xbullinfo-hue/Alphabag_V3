@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- VERSION 12345 -->
 <html lang="en">
 
 <head>
@@ -8,9 +9,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+  <!-- Inter Font for Sharpness -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
   <script>
     // Global polyfills for Web3/AI SDKs - Non-destructive augmentation
     window.global = window;
@@ -28,119 +32,40 @@
         return str;
       }
     };
-  </script>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
-    "react-router-dom": "https://esm.sh/react-router-dom@6.22.1?external=react,react-dom",
-    "recharts": "https://esm.sh/recharts@2.12.1?external=react,react-dom",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react,react-dom",
-    "@google/genai": "https://esm.sh/@google/genai@1.3.0",
-    "wagmi": "https://esm.sh/wagmi@1.4.13?external=react,react-dom,viem",
-    "wagmi/chains": "https://esm.sh/wagmi@1.4.13/chains?external=react,react-dom,viem",
-    "wagmi/connectors/injected": "https://esm.sh/wagmi@1.4.13/connectors/injected?external=react,react-dom,viem",
-    "wagmi/connectors/walletConnect": "https://esm.sh/wagmi@1.4.13/connectors/walletConnect?external=react,react-dom,viem",
-    "wagmi/providers/public": "https://esm.sh/wagmi@1.4.13/providers/public?external=react,react-dom,viem",
-    "viem": "https://esm.sh/viem@1.21.4",
-    "viem/chains": "https://esm.sh/viem@1.21.4/chains",
-    "@walletconnect/ethereum-provider": "https://esm.sh/@walletconnect/ethereum-provider@2.11.0",
-    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@4.36.1?external=react,react-dom",
-    "axios": "https://esm.sh/axios@1.6.7",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "framer-motion": "https://esm.sh/framer-motion@11.0.8?external=react,react-dom"
-  }
-}
-</script>
-  <script>
+
+    // Tailwind Config
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ['"Inter"', 'sans-serif'] },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
           colors: {
             alphabag: {
-              black: '#0B0E11',
-              dark: '#181A20',
-              gray: '#2B3139',
-              yellow: '#FCD535',
-              yellowHover: '#F0B90B',
-              text: '#EAECEF',
-              subtext: '#848E9C',
-              green: '#0ECB81',
-              red: '#F6465D',
+              black: "#000000",
+              dark: "#0B0E11",
+              darkgray: "#18181B",
+              gray: "#2B3139",
+              yellow: "#FCD535",
+              text: "#EAECEF",
+              subtext: "#848E9C",
+              muted: "#A1A1AA",
+              green: "#10B981",
+              red: "#EF4444",
+              border: "rgba(255, 255, 255, 0.12)",
+              'border-light': "rgba(255, 255, 255, 0.05)",
             }
-          },
-          animation: {
-            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'shimmer': 'shimmer 2s infinite linear',
-            'scan': 'scan 2.5s infinite linear',
-            'slide-in': 'slideIn 0.3s ease-out forwards'
-          },
-          keyframes: {
-            shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
-            slideIn: { '0%': { transform: 'translateX(100%)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
-            scan: { '0%': { top: '0%' }, '100%': { top: '100%' } }
           }
         }
       }
     }
   </script>
-  <style>
-    :root {
-      --bg-primary: #000000;
-      --bg-secondary: #18181b;
-      --bg-tertiary: rgba(255,255,255,0.05);
-      --primary: #FCD535;
-      --text-primary: #fafafa;
-      --text-secondary: #a1a1aa;
-      --success: #10b981;
-      --danger: #f43f5e;
-    }
-
-    body {
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      font-family: 'Inter', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-      overscroll-behavior-y: none;
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: var(--bg-primary);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--bg-tertiary);
-      border-radius: 3px;
-    }
-
-    .glass {
-      background: rgba(24, 26, 32, 0.8);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
-
-    .safe-pb {
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-  </style>
-  <link rel="stylesheet" href="/index.css">
 </head>
 
 <body>
   <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+  <script type="module" src="/src/index.tsx"></script>
 </body>
 
 </html>

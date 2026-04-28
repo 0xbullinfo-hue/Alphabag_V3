@@ -69,7 +69,7 @@ export const getAirdropStatus = async (req, res) => {
 
         if (user) {
             const history = user.claimsHistory || [];
-            const totalPoints = user.airdropPoints || history.reduce((sum, c) => sum + c.points, 0);
+            const totalPoints = user.bagTokens || history.reduce((sum, c) => sum + c.points, 0);
 
             let canClaim = false;
             let lastClaimTime = null;
@@ -145,7 +145,7 @@ export const claimPoints = async (req, res) => {
 
             return {
                 claimsHistory: history,
-                airdropPoints: (user.airdropPoints || 0) + earnedPoints
+                bagTokens: (user.bagTokens || 0) + earnedPoints
             };
         });
 
@@ -157,7 +157,7 @@ export const claimPoints = async (req, res) => {
                 email: req.user.email || `${req.user.id.substring(0, 6)}...`,
                 tier: req.user.tier || 'FREE',
                 aipoints: 0,
-                airdropPoints: earnedPoints,
+                bagTokens: earnedPoints,
                 claimsHistory: [{
                     campaignId: activeCampaign.id,
                     date: now.toISOString(),
@@ -170,7 +170,7 @@ export const claimPoints = async (req, res) => {
 
         res.json({
             success: true,
-            points: updatedUser.airdropPoints,
+            points: updatedUser.bagTokens,
             lastClaimTime: now.toISOString(),
             message: `Claimed ${activeCampaign.pointsPerClaim} points!`
         });
@@ -237,7 +237,7 @@ export const submitWallet = async (req, res) => {
                 projectGoals: founderApproved ? projectGoals : null,
                 founderSocial: founderApproved ? founderSocial : null,
                 airdropSubmittedAt: new Date().toISOString(),
-                airdropPoints: (user.airdropPoints || 0) + 10000 // Verified allocation per plan
+                bagTokens: (user.bagTokens || 0) + 10000 // Verified allocation per plan
             };
         });
 
@@ -373,7 +373,7 @@ export const getSubmittedWallets = async (req, res) => {
                 wallet: u.submittedWallet || 'Not Submitted',
                 xLink: u.xLink || 'Not Provided',
                 reviewComment: u.reviewComment || '',
-                points: u.airdropPoints || 0,
+                points: u.bagTokens || 0,
                 history: u.claimsHistory || [],
                 isFounderAirdrop: u.isFounderAirdrop || false,
                 projectName: u.projectName || null,
@@ -399,7 +399,7 @@ export const resetAirdrop = async (req, res) => {
         const users = await store.read('users');
         const resetUsers = users.map(u => ({
             ...u,
-            airdropPoints: 0,
+            bagTokens: 0,
             claimsHistory: []
         }));
         await store.write('users', resetUsers);
@@ -438,7 +438,7 @@ export const approveFounder = async (req, res) => {
             return {
                 isFounderAirdrop: status === 'APPROVED',
                 founderStatus: status,
-                airdropPoints: (user.airdropPoints || 0) + (status === 'APPROVED' ? 5000 : 0) // Bonus points for approval if needed
+                bagTokens: (user.bagTokens || 0) + (status === 'APPROVED' ? 5000 : 0) // Bonus points for approval if needed
             };
         });
 
@@ -525,14 +525,14 @@ export const completeTask = async (req, res) => {
 
             return {
                 completedTasks: completed,
-                airdropPoints: (u.airdropPoints || 0) + task.rewardXP,
+                bagTokens: (u.bagTokens || 0) + task.rewardTokens,
                 lastDailyTaskAt: u.lastDailyTaskAt,
                 weeklyTasks: u.weeklyTasks,
                 submittedLinks: u.submittedLinks
             };
         });
 
-        res.json({ success: true, points: user.airdropPoints, message: `Mission Complete: +${task.rewardXP} XP` });
+        res.json({ success: true, points: user.bagTokens, message: `Mission Complete: +${task.rewardTokens} $BAG` });
     } catch (error) {
         res.status(400).json({ error: error.message || 'Mission failure' });
     }
@@ -550,12 +550,12 @@ export const processReferralSnapshot = async (req, res) => {
             .sort((a, b) => (b.referralCount || 0) - (a.referralCount || 0))
             .slice(0, 100);
 
-        const bonusXP = 2000;
+        const bonusTokens = 2000;
         let awardedCount = 0;
 
         for (const user of top100) {
             await store.update('users', u => u.id === user.id, r => ({
-                airdropPoints: (r.airdropPoints || 0) + bonusXP,
+                bagTokens: (r.bagTokens || 0) + bonusTokens,
                 hasTopReferrerBonus: true
             }));
             awardedCount++;
@@ -609,31 +609,31 @@ export const deleteTask = async (req, res) => {
     }
 };
 
-export const grantBonusXP = async (req, res) => {
+export const grantbonusTokens = async (req, res) => {
     try {
-        const { userId, bonusXP } = req.body;
-        if (!userId || !bonusXP || isNaN(bonusXP)) {
-            return res.status(400).json({ error: 'Valid Target Member and Bonus XP amount are required' });
+        const { userId, bonusTokens } = req.body;
+        if (!userId || !bonusTokens || isNaN(bonusTokens)) {
+            return res.status(400).json({ error: 'Valid Target Member and Bonus $BAG amount are required' });
         }
 
         const updatedUser = await store.update('users', u => u.id === userId, (user) => {
             return {
-                airdropPoints: (user.airdropPoints || 0) + parseInt(bonusXP)
+                bagTokens: (user.bagTokens || 0) + parseInt(bonusTokens)
             };
         });
 
         if (!updatedUser) return res.status(404).json({ error: 'Member not found' });
         
-        res.json({ success: true, message: `Successfully injected ${bonusXP} XP into member profile.`, newTotal: updatedUser.airdropPoints });
+        res.json({ success: true, message: `Successfully injected ${bonusTokens} $BAG into member profile.`, newTotal: updatedUser.bagTokens });
     } catch (error) {
         console.error("Grant Bonus Error:", error);
-        res.status(500).json({ error: 'Failed to inject bonus XP' });
+        res.status(500).json({ error: 'Failed to inject bonus $BAG' });
     }
 };
 
 // --- MISSION LIFECYCLE ADMIN ---
 
-// PAUSE: freeze the mission so users can't claim XP but data is preserved
+// PAUSE: freeze the mission so users can't claim $BAG but data is preserved
 export const pauseMission = async (req, res) => {
     try {
         const { paused } = req.body; // true = pause, false = resume
@@ -656,24 +656,46 @@ export const pauseMission = async (req, res) => {
 export const getMissionStatus = async (req, res) => {
     try {
         const settings = await store.read('missionSettings') || {};
-        res.json({ isPaused: !!settings.isPaused, pausedAt: settings.pausedAt || null });
+        res.json({ 
+            isPaused: !!settings.isPaused, 
+            pausedAt: settings.pausedAt || null,
+            tgeDate: settings.tgeDate || null
+        });
     } catch (error) {
         res.status(500).json({ error: 'Failed to get mission status' });
     }
 };
 
-// EXPORT: generate downloadable user XP snapshot
+export const updateTgeDate = async (req, res) => {
+    try {
+        const { tgeDate } = req.body;
+        if (!tgeDate) return res.status(400).json({ error: 'TGE Date required' });
+
+        const current = await store.read('missionSettings') || {};
+        const updated = {
+            ...current,
+            tgeDate
+        };
+        await store.write('missionSettings', updated);
+        res.json({ success: true, tgeDate });
+    } catch (error) {
+        console.error('Update TGE Date Error:', error);
+        res.status(500).json({ error: 'Failed to update TGE date' });
+    }
+};
+
+// EXPORT: generate downloadable user $BAG snapshot
 export const exportMissionData = async (req, res) => {
     try {
         const users = await store.read('users');
         const snapshot = users
-            .filter(u => u.airdropPoints || u.submittedWallet)
+            .filter(u => u.bagTokens || u.submittedWallet)
             .map(u => ({
                 id: u.id,
                 email: u.email || '',
                 username: u.username || '',
                 wallet: u.submittedWallet || 'NOT_SET',
-                totalXP: u.airdropPoints || 0,
+                totalXP: u.bagTokens || 0,
                 referralCount: u.referralCount || 0,
                 dailyStreak: u.lastDailyTaskAt || null,
                 completedTasks: (u.completedTasks || []).join(';'),
@@ -696,13 +718,13 @@ export const exportMissionData = async (req, res) => {
     }
 };
 
-// FULL WIPE: wipe all XP, tasks, campaigns - but keep user accounts intact
+// FULL WIPE: wipe all $BAG, tasks, campaigns - but keep user accounts intact
 export const fullMissionWipe = async (req, res) => {
     try {
         const users = await store.read('users');
         const wipedUsers = users.map(u => ({
             ...u,
-            airdropPoints: 0,
+            bagTokens: 0,
             claimsHistory: [],
             completedTasks: [],
             submittedWallet: null,

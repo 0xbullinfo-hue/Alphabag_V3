@@ -1,0 +1,207 @@
+/* ═══════════════════════════════════════════════════════════════════
+   GOOGLE FONTS — Inter + JetBrains Mono
+   ═══════════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════
+   BASE
+   ═══════════════════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    --alphabag-yellow: 252 213 53;
+    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    @apply bg-alphabag-black text-alphabag-text;
+    font-family: 'Inter', 'Satoshi', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  }
+
+  /* ── Typography Hierarchy & Clarity ── */
+  h1, h2, h3, .font-extrabold, b, strong {
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.02em;
+    font-weight: 800 !important;
+  }
+  
+  .micro-label, .text-\[9px\], .text-\[10px\], .text-xs, .tracking-widest {
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Financial Data Alignment ── */
+  .tabular-data, .font-mono,
+  [class*="text-alphabag-yellow"],
+  [class*="text-alphabag-green"],
+  [class*="text-alphabag-red"] {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Selection colour ── */
+  ::selection {
+    background-color: rgba(252, 213, 53, 0.25);
+    color: #fff;
+  }
+
+  /* ── Focus ring ── */
+  :focus-visible {
+    outline: 2px solid rgba(252, 213, 53, 0.7);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR (Webkit)
+   ═══════════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(252, 213, 53, 0.35);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.10) #0a0a0a;
+}
+
+/* No-scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Custom styled scrollbar for panels */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(252, 213, 53, 0.2);
+  border-radius: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(252, 213, 53, 0.45);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPONENTS
+   ═══════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Glass Panels ── */
+  .glass-panel {
+    @apply bg-white/[0.03] backdrop-blur-md border border-white/10;
+  }
+  .glass-panel-heavy {
+    @apply bg-alphabag-dark/80 backdrop-blur-xl border border-white/10;
+  }
+  .glass-card {
+    @apply bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 rounded-2xl;
+    backdrop-filter: blur(12px);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  }
+  .glass-card:hover {
+    @apply border-white/20;
+    box-shadow: 0 0 24px rgba(0,0,0,0.4);
+  }
+
+  /* ── Sidebar Nav Items ── */
+  .nav-item {
+    @apply flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 text-alphabag-subtext hover:text-white hover:bg-white/5 cursor-pointer;
+  }
+  .nav-item-active {
+    @apply flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 bg-alphabag-yellow text-black font-bold;
+  }
+
+  /* ── Status Badges ── */
+  .badge-green  { @apply text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20; }
+  .badge-yellow { @apply text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-alphabag-yellow/10 text-alphabag-yellow border border-alphabag-yellow/20; }
+  .badge-red    { @apply text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20; }
+  .badge-blue   { @apply text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20; }
+  .badge-muted  { @apply text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/5 text-alphabag-muted border border-white/10; }
+
+  /* ── Section Headers ── */
+  .section-label {
+    @apply text-[10px] font-black uppercase tracking-[0.2em] text-alphabag-muted;
+  }
+  .section-title {
+    @apply text-xl font-black text-white uppercase tracking-tighter;
+  }
+
+  /* ── Input Base ── */
+  .input-base {
+    @apply w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-alphabag-muted focus:border-alphabag-yellow/50 focus:outline-none transition-all duration-200;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes progress {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+
+.animate-slide-in { animation: slideIn 0.25s ease-out; }
+.animate-progress { animation: progress 2s ease-in-out infinite; }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════════════════ */
+.mask-image-b {
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+/* datetime-local dark mode */
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"] {
+  color-scheme: dark;
+}

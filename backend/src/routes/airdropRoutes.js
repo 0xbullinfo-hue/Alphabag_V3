@@ -3,7 +3,7 @@ import {
     getAirdropStatus, claimPoints, submitWallet, getCampaigns, createCampaign, updateCampaign, deleteCampaign, 
     getTasks, completeTask, getAdminTasks, upsertTask, deleteTask, processReferralSnapshot,
     getAirdropStats, getSubmittedWallets, resetAirdrop, toggleReveal, approveFounder, grantBonusXP,
-    pauseMission, getMissionStatus, exportMissionData, fullMissionWipe
+    pauseMission, getMissionStatus, exportMissionData, fullMissionWipe, updateTgeDate
 } from '../controllers/airdropController.js';
 import { optionalAuth, verifyToken, verifyAdmin } from '../middleware/authMiddleware.js';
 
@@ -37,6 +37,7 @@ router.post('/admin/bonus-xp', verifyToken, verifyAdmin, grantBonusXP);
 // Admin Routes - Mission Lifecycle
 router.get('/admin/mission-status', verifyToken, verifyAdmin, getMissionStatus);
 router.post('/admin/pause-mission', verifyToken, verifyAdmin, pauseMission);
+router.post('/admin/tge-date', verifyToken, verifyAdmin, updateTgeDate);
 router.get('/admin/export', verifyToken, verifyAdmin, exportMissionData);
 router.post('/admin/full-wipe', verifyToken, verifyAdmin, fullMissionWipe);
 

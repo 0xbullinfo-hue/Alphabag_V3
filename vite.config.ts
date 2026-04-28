@@ -9,7 +9,8 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       port: 3000,
-      host: 'localhost',
+      strictPort: true,
+      host: true,
       proxy: {
         '/api': {
           target: env.VITE_API_URL || 'http://localhost:3003',
@@ -27,7 +28,7 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       }
     }
   };

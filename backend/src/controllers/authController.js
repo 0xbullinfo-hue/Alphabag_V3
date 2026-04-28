@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { verifyMessage } from 'viem';
+import { verifyMessage, getAddress } from 'viem';
 import { store } from '../services/storeService.js';
 import { config } from '../config/env.js';
 
@@ -91,14 +91,15 @@ export const siweAuth = async (req, res) => {
 
         console.log(`[SIWE DEBUG] Attempting Auth for: ${address}`);
         
-        // Normalize and Checksum Address (Required for Viem verifyMessage stability)
-        let checksummedAddress;
+        // Normalize and Checksum Address
+        let checksummedAddress = address;
         try {
-            checksummedAddress = getAddress(address);
-            console.log(`[SIWE DEBUG] Checksummed Address: ${checksummedAddress}`);
+            if (address && address.startsWith('0x')) {
+                checksummedAddress = getAddress(address);
+            }
         } catch (addrErr) {
-            console.error(`[SIWE DEBUG] Address Checksum Failure: ${address}`, addrErr.message);
-            return res.status(400).json({ error: 'Invalid wallet address format' });
+            console.warn(`[SIWE DEBUG] Address Checksum Failure (Proceeding with raw): ${address}`);
+            checksummedAddress = address;
         }
 
         // 1. Verify Signature
@@ -142,7 +143,7 @@ export const siweAuth = async (req, res) => {
                     
                     if (referrerCount < 1000) {
                         await store.update('users', u => u.id === referrer.id, r => ({
-                            airdropPoints: (r.airdropPoints || 0) + 50,
+                            bagTokens: (r.bagTokens || 0) + 50,
                             referralCount: referrerCount + 1
                         }));
                     }
@@ -153,7 +154,7 @@ export const siweAuth = async (req, res) => {
                 id: normalizedId,
                 email: `${address.substring(0, 6)}...${address.substring(address.length - 4)}`,
                 verifiedWallet: address,
-                airdropPoints: 100,
+                bagTokens: 100,
                 referralCode,
                 referredBy,
                 referralCount: 0,
@@ -207,6 +208,7 @@ export const getReferrals = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch network' });
     }
 };
+
 export const getMe = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -221,5 +223,32 @@ export const getMe = async (req, res) => {
     } catch (error) {
         console.error('[AUTH] getMe Error:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+export const updateProfile = async (req, res) => {
+    const { bio, website, location, logoUrl, bannerUrl } = req.body;
+    const userId = req.user.id;
+
+    try {
+        const updatedUser = await store.update('users', 
+            u => u.id.toLowerCase() === userId.toLowerCase(), 
+            u => ({
+                bio: bio !== undefined ? bio : u.bio,
+                website: website !== undefined ? website : u.website,
+                location: location !== undefined ? location : u.location,
+                logoUrl: logoUrl !== undefined ? logoUrl : u.logoUrl,
+                bannerUrl: bannerUrl !== undefined ? bannerUrl : u.bannerUrl,
+                updatedAt: new Date().toISOString()
+            })
+        );
+
+        if (!updatedUser) return res.status(404).json({ error: 'User not found' });
+
+        const { password, salt, ...safeUser } = updatedUser;
+        res.json({ success: true, user: safeUser });
+    } catch (error) {
+        console.error('[AUTH] updateProfile Error:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
     }
 };
