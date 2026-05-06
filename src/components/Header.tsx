@@ -77,11 +77,11 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isSidebarOpen }) 
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 h-16 bg-alphabag-black/60 backdrop-blur-md border-b border-alphabag-border z-50 px-4 flex items-center justify-between shadow-lg">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-alphabag-dark/95 backdrop-blur-xl border-b border-white/10 z-50 px-6 flex items-center justify-between shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
         <div className="flex items-center">
           <button
             onClick={toggleSidebar}
-            className="mr-4 p-2 rounded-md text-alphabag-muted hover:text-zinc-50 hover:bg-white/10 md:hidden transition-all duration-200 active:scale-[0.98]"
+            className="mr-4 p-2 rounded-2xl text-alphabag-muted hover:text-white hover:bg-white/10 md:hidden transition-all duration-200 active:scale-[0.98]"
           >
             {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -95,19 +95,19 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isSidebarOpen }) 
 
           <nav className="hidden md:flex items-center ml-10 space-x-8">
 
-            <Link to="/markets" className="text-[10px] font-black uppercase tracking-[0.2em] text-alphabag-muted hover:text-white transition-colors">
+            <Link to="/markets" className="text-[11px] font-semibold uppercase tracking-[0.18em] text-alphabag-muted hover:text-white transition-colors">
               Markets
             </Link>
-            <Link to="/airdrop" className="text-[10px] font-black uppercase tracking-[0.2em] text-alphabag-muted hover:text-white transition-colors">
-              Airdrop
+            <Link to="/airdrop" className="text-[11px] font-semibold uppercase tracking-[0.18em] text-alphabag-muted hover:text-white transition-colors">
+              EARN
             </Link>
           </nav>
 
           {isAuthenticated && (
-            <div className="hidden lg:flex items-center space-x-6 ml-8 text-xs text-alphabag-muted border-l border-alphabag-border pl-6">
-              <div className="flex flex-col">
-                <span className="uppercase tracking-wider font-bold opacity-70 text-[9px] flex items-center gap-1"><Briefcase size={10} className="text-alphabag-yellow"/> Total Holding Assets</span>
-                <span className="text-zinc-50 font-bold tabular-data text-[13px]">${totalAssets.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <div className="hidden lg:flex items-center space-x-6 ml-8 text-xs text-alphabag-subtext border-l border-white/10 pl-6">
+              <div className="flex flex-col bg-alphabag-black/50 rounded-2xl px-4 py-2 border border-white/10 shadow-glow-yellow">
+                <span className="uppercase tracking-[0.2em] font-semibold opacity-80 text-[9px] flex items-center gap-1"><Briefcase size={10} className="text-alphabag-yellow"/> Total Holding Assets</span>
+                <span className="text-white font-bold tabular-nums text-[13px]">${totalAssets.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           )}
@@ -122,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isSidebarOpen }) 
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder="Search coin, pair, or contract..."
-            className="w-full bg-alphabag-black border border-alphabag-border text-zinc-50 text-sm rounded-lg focus:ring-1 focus:ring-alphabag-yellow focus:border-alphabag-yellow block pl-10 p-2.5 placeholder:text-alphabag-muted/50 outline-none transition-all duration-200"
+            className="w-full bg-alphabag-dark border border-white/10 text-white text-sm rounded-2xl focus:ring-1 focus:ring-alphabag-yellow focus:border-alphabag-yellow block pl-10 p-2.5 placeholder:text-alphabag-muted/50 outline-none transition-all duration-200 shadow-inner"
           />
         </form>
 

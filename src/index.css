@@ -116,13 +116,21 @@
     @apply bg-alphabag-dark/80 backdrop-blur-xl border border-white/10;
   }
   .glass-card {
-    @apply bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 rounded-2xl;
+    @apply bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 rounded-xl;
     backdrop-filter: blur(12px);
     transition: border-color var(--transition-base), box-shadow var(--transition-base);
   }
   .glass-card:hover {
     @apply border-white/20;
     box-shadow: 0 0 24px rgba(0,0,0,0.4);
+  }
+
+  .card-panel {
+    @apply bg-alphabag-dark border border-alphabag-gray rounded-xl shadow-panel;
+  }
+
+  .card-panel-soft {
+    @apply bg-black/40 border border-white/10 rounded-xl;
   }
 
   /* ── Sidebar Nav Items ── */

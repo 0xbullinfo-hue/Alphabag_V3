@@ -12,7 +12,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { toasts, removeToast } = useWallet();
 
   return (
-    <div className="min-h-screen bg-alphabag-black text-zinc-50 font-sans selection:bg-alphabag-yellow selection:text-black">
+    <div className="min-h-screen bg-gradient-to-b from-alphabag-black via-[#050505] to-black text-zinc-50 font-sans selection:bg-alphabag-yellow selection:text-black">
       <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} />
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />

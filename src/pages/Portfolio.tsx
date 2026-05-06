@@ -46,10 +46,16 @@ export const Portfolio: React.FC = () => {
     useEffect(() => {
         if (activeWallets.length > 0) {
             setLoadingHistory(true);
-            fetchPortfolioHistory(timeframe === '90D' ? 'ALL' : timeframe as any).then((historyData) => {
-                setHistory(historyData);
-                setLoadingHistory(false);
-            });
+            fetchPortfolioHistory(timeframe === '90D' ? 'ALL' : timeframe as any)
+                .then((historyData) => {
+                    setHistory(historyData);
+                    setLoadingHistory(false);
+                })
+                .catch((err) => {
+                    console.error('[Portfolio] Error fetching history:', err);
+                    setLoadingHistory(false);
+                    // Continue with empty history rather than crashing
+                });
         }
     }, [activeWallets.length, timeframe]);
 

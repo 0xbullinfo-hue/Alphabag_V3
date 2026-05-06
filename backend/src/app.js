@@ -40,9 +40,10 @@ app.use(helmet({
     contentSecurityPolicy: false,
 }));
 app.use(cors({
-    origin: '*', // Allow all for development simplicity; in prod limit to frontend domain
+    origin: process.env.FRONTEND_URL || '*', 
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
 app.use(express.json());
 
@@ -83,6 +84,14 @@ app.get('/api/health', (req, res) => {
         port: config.port,
         timestamp: new Date().toISOString() 
     });
+});
+
+app.get('/api', (req, res) => {
+    res.json({ message: 'AlphaBAG API Root', status: 'ACTIVE' });
+});
+
+app.get('/', (req, res) => {
+    res.json({ message: 'AlphaBAG Infrastructure Active', version: '2.0.0' });
 });
 
 export default app;

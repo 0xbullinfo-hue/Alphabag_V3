@@ -32,14 +32,14 @@ export const AirdropOnboarding: React.FC = () => {
     const steps = [
         {
             title: "Genesis Phase: AlphaBAG",
-            description: "Welcome to the core community. We are reward our earliest supporters with $BAG tokens through our Genesis Airdrop Protocol.",
+            description: "Welcome to the core community. We reward our earliest supporters with ITEMS through our Genesis Airdrop Protocol.",
             icon: <Rocket className="text-alphabag-yellow" size={32} />,
             color: "from-alphabag-yellow to-yellow-600",
             bg: "bg-alphabag-yellow/10"
         },
         {
-            title: "Accumulate $BAG Daily",
-            description: "Execute missions in the Mission Hub to earn $BAG. Every action brings you closer to the elite Syndicate tier and higher $BAG allocations.",
+            title: "Accumulate ITEMS Daily",
+            description: "Execute missions in the Mission Hub to earn ITEMS. Every action brings you closer to the elite Syndicate tier and higher ITEMS allocations.",
             icon: <Zap className="text-blue-400" size={32} />,
             color: "from-blue-400 to-indigo-600",
             bg: "bg-blue-400/10"
@@ -53,7 +53,7 @@ export const AirdropOnboarding: React.FC = () => {
         },
         {
             title: "TGE Final Sync",
-            description: "Once missions are complete, perform the Final Sync by submitting your BSC wallet. Your $BAG will be converted at TGE.",
+            description: "Once missions are complete, perform the Final Sync by submitting your BSC wallet. Your ITEMS will be collected for future utility reward conversion during the campaign.",
             icon: <Send className="text-purple-400" size={32} />,
             color: "from-purple-400 to-pink-600",
             bg: "bg-purple-400/10"
@@ -63,8 +63,8 @@ export const AirdropOnboarding: React.FC = () => {
     const currentStep = steps[step];
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in duration-500">
-            <div className="w-full max-w-xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.8)] overflow-hidden relative group">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl animate-in fade-in duration-500">
+            <div className="w-full max-w-xl bg-alphabag-dark/95 border border-white/10 rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.85)] overflow-hidden relative group">
                 {/* Decorative Elements */}
                 <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${currentStep.color} transition-all duration-700`} style={{width: `${(step + 1) * 25}%`}}></div>
                 <div className={`absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-20 transition-all duration-700 bg-gradient-to-br ${currentStep.color}`}></div>
@@ -98,7 +98,7 @@ export const AirdropOnboarding: React.FC = () => {
                     <div className="flex flex-col gap-3">
                         <Button 
                             onClick={nextStep}
-                            className={`w-full py-4 bg-gradient-to-r ${currentStep.color} text-black font-black uppercase tracking-[0.3em] rounded-2xl transition-all shadow-lg text-xs`}
+                            className={`w-full py-4 bg-gradient-to-r ${currentStep.color} text-black font-black uppercase tracking-[0.3em] rounded-3xl transition-all shadow-[0_20px_80px_rgba(252,213,53,0.18)] text-xs`}
                         >
                             {step < 3 ? 'Initiate Next Phase' : 'Access Control Deck'}
                         </Button>

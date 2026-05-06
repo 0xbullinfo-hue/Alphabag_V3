@@ -45,8 +45,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-alphabag-black/95 backdrop-blur-xl animate-fade-in overflow-y-auto">
-            <div className="w-full max-w-2xl bg-alphabag-dark border border-white/10 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-alphabag-black/95 backdrop-blur-2xl animate-fade-in overflow-y-auto">
+            <div className="w-full max-w-2xl bg-alphabag-dark/95 border border-white/10 rounded-[2rem] shadow-[0_0_70px_rgba(0,0,0,0.65)] overflow-hidden">
                 <div className="p-6 md:p-10">
                     {step === 'ROLE' ? (
                         <div className="text-center relative">
@@ -71,7 +71,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <button 
                                     onClick={() => handleRoleSelect('FOUNDER')}
-                                    className="group relative p-6 bg-white/5 border border-white/10 rounded-2xl text-left transition-all hover:bg-alphabag-yellow/5 hover:border-alphabag-yellow/40 hover:shadow-glow-yellow/20"
+                                    className="group relative p-6 bg-white/5 border border-white/10 rounded-3xl text-left transition-all hover:bg-alphabag-yellow/5 hover:border-alphabag-yellow/40 shadow-[0_0_30px_rgba(252,213,53,0.1)]"
                                 >
                                     <div className="w-12 h-12 bg-alphabag-yellow/10 border border-alphabag-yellow/20 rounded-xl flex items-center justify-center text-alphabag-yellow mb-4">
                                         <Shield size={24} />
@@ -87,7 +87,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
 
                                 <button 
                                     onClick={() => handleRoleSelect('TRADER')}
-                                    className="group relative p-6 bg-white/5 border border-white/10 rounded-2xl text-left transition-all hover:bg-blue-500/5 hover:border-blue-500/40 hover:shadow-glow-blue/20"
+                                    className="group relative p-6 bg-white/5 border border-white/10 rounded-3xl text-left transition-all hover:bg-blue-500/5 hover:border-blue-500/40 shadow-[0_0_30px_rgba(96,165,250,0.12)]"
                                 >
                                     <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center text-blue-400 mb-4">
                                         <Target size={24} />
@@ -124,7 +124,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                                                 <Rocket className="absolute left-4 top-1/2 -translate-y-1/2 text-alphabag-muted" size={16} />
                                                 <input 
                                                     required
-                                                    className="w-full bg-zinc-100 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-black font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors placeholder:text-zinc-400"
+                                                    className="w-full bg-alphabag-black/70 border border-white/10 rounded-2xl py-3 pl-11 pr-4 text-white font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors placeholder:text-alphabag-muted"
                                                     placeholder="e.g. My Project Name"
                                                     value={founderData.projectName}
                                                     onChange={e => setFounderData({...founderData, projectName: e.target.value})}
@@ -137,7 +137,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                                                 <Zap className="absolute left-4 top-1/2 -translate-y-1/2 text-alphabag-muted" size={16} />
                                                 <input 
                                                     required
-                                                    className="w-full bg-zinc-100 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-black font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors uppercase placeholder:text-zinc-400"
+                                                    className="w-full bg-alphabag-black/70 border border-white/10 rounded-2xl py-3 pl-11 pr-4 text-white font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors uppercase placeholder:text-alphabag-muted"
                                                     placeholder="TBA"
                                                     value={founderData.symbol}
                                                     onChange={e => setFounderData({...founderData, symbol: e.target.value})}
@@ -152,7 +152,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                                             <Code className="absolute left-4 top-1/2 -translate-y-1/2 text-alphabag-muted" size={16} />
                                             <input 
                                                 required
-                                                className="w-full bg-zinc-100 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-black font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors font-mono placeholder:text-zinc-400"
+                                                className="w-full bg-alphabag-black/70 border border-white/10 rounded-2xl py-3 pl-11 pr-4 text-white font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors font-mono placeholder:text-alphabag-muted"
                                                 placeholder="0x..."
                                                 value={founderData.contractAddress}
                                                 onChange={e => setFounderData({...founderData, contractAddress: e.target.value})}
@@ -165,7 +165,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                                         <textarea 
                                             required
                                             rows={2}
-                                            className="w-full bg-zinc-100 border border-white/10 rounded-xl p-3 text-black font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors resize-none placeholder:text-zinc-400"
+                                            className="w-full bg-alphabag-black/70 border border-white/10 rounded-2xl p-3 text-white font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors resize-none placeholder:text-alphabag-muted"
                                             placeholder="What makes your project the next big thing?"
                                             value={founderData.hook}
                                             onChange={e => setFounderData({...founderData, hook: e.target.value})}
@@ -179,7 +179,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                                             <input 
                                                 required
                                                 type="url"
-                                                className="w-full bg-zinc-100 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-black font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors placeholder:text-zinc-400"
+                                                className="w-full bg-alphabag-black/70 border border-white/10 rounded-2xl py-3 pl-11 pr-4 text-white font-semibold text-sm focus:outline-none focus:border-alphabag-yellow/50 transition-colors placeholder:text-alphabag-muted"
                                                 placeholder="https://..."
                                                 value={founderData.website}
                                                 onChange={e => setFounderData({...founderData, website: e.target.value})}
@@ -199,7 +199,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                                             <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-alphabag-muted" size={16} />
                                             <input 
                                                 required
-                                                className="w-full bg-zinc-100 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-black font-semibold text-sm focus:outline-none focus:border-blue-500/50 transition-colors placeholder:text-zinc-400"
+                                                className="w-full bg-alphabag-black/70 border border-white/10 rounded-2xl py-3 pl-11 pr-4 text-white font-semibold text-sm focus:outline-none focus:border-blue-500/50 transition-colors placeholder:text-alphabag-muted"
                                                 placeholder="e.g. Degen_99"
                                                 value={traderData.username}
                                                 onChange={e => setTraderData({...traderData, username: e.target.value})}
@@ -213,7 +213,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                                             required
                                             maxLength={160}
                                             rows={2}
-                                            className="w-full bg-zinc-100 border border-white/10 rounded-xl p-3 text-black font-semibold text-sm focus:outline-none focus:border-blue-500/50 transition-colors resize-none placeholder:text-zinc-400"
+                                            className="w-full bg-alphabag-black/70 border border-white/10 rounded-2xl p-3 text-white font-semibold text-sm focus:outline-none focus:border-blue-500/50 transition-colors resize-none placeholder:text-alphabag-muted"
                                             placeholder="Tell the community about your trading style..."
                                             value={traderData.bio}
                                             onChange={e => setTraderData({...traderData, bio: e.target.value})}
@@ -226,7 +226,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                                     <div className="space-y-1.5">
                                         <label className="text-[9px] text-alphabag-muted font-black uppercase tracking-widest ml-1">Favorite Sector</label>
                                         <select 
-                                            className="w-full bg-zinc-100 border border-white/10 rounded-xl py-3 px-3 text-black font-semibold text-sm focus:outline-none focus:border-blue-500/50 transition-colors appearance-none"
+                                            className="w-full bg-alphabag-black/70 border border-white/10 rounded-2xl py-3 px-3 text-white font-semibold text-sm focus:outline-none focus:border-blue-500/50 transition-colors appearance-none"
                                             value={traderData.sector}
                                             onChange={e => setTraderData({...traderData, sector: e.target.value})}
                                         >
@@ -238,7 +238,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
                                         </select>
                                     </div>
 
-                                    <Button className="w-full py-4 bg-blue-500 text-white font-black uppercase tracking-[0.2em] rounded-xl shadow-glow-blue text-xs">
+                                    <Button className="w-full py-4 bg-blue-500 text-white font-black uppercase tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(96,165,250,0.18)] text-xs">
                                         Join Hub
                                     </Button>
                                 </form>

@@ -72,11 +72,13 @@
       }
     ],
     "createdAt": "2026-02-25T03:15:10.485Z",
-    "lastActive": "2026-04-27T12:40:09.212Z",
-    "lastDailyTaskAt": "2026-04-27",
+    "lastActive": "2026-05-05T16:37:51.414Z",
+    "lastDailyTaskAt": "2026-05-03",
     "completedTasks": [
       "t_daily",
       "t_weekly",
+      "t_daily",
+      "t_daily",
       "t_daily",
       "t_daily",
       "t_daily"
@@ -85,7 +87,9 @@
       "t_weekly": {
         "date": "2026-04-27T23:10:40.892Z"
       }
-    }
+    },
+    "items": 100,
+    "isAdmin": true
   },
   {
     "email": "tester@alphabag.pro",
@@ -157,7 +161,7 @@
     "referralCount": 0,
     "tier": "ULTIMATE",
     "isAdmin": false,
-    "lastActive": "2026-04-18T08:47:49.716Z",
+    "lastActive": "2026-05-06T13:16:40.886Z",
     "createdAt": "2026-04-15T15:28:22.399Z"
   }
 ]

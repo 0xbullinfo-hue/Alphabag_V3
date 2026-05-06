@@ -32,14 +32,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const carouselSteps = [
     {
       title: "Genesis Phase: AlphaBAG",
-      description: "Welcome to the core community. We seek early testers of our utility and we have rewards for all initial supporters with our utility tokens through our Genesis Airdrop Protocol.",
+      description: "Welcome to the core community. We seek early testers of our utility and we have rewards for all initial supporters with ITEMS through our Genesis Airdrop Protocol.",
       icon: <Rocket className="text-alphabag-yellow" size={32} />,
       color: "from-alphabag-yellow to-yellow-600",
       bg: "bg-alphabag-yellow/10"
     },
     {
-      title: "Accumulate $BAG Daily",
-      description: "Execute missions in the Mission Hub to earn $BAG. Every action brings you closer to the elite Syndicate tier and higher token allocations. Ensure to claim daily/weekly $BAG.",
+      title: "Accumulate ITEMS Daily",
+      description: "Execute missions in the Mission Hub to earn ITEMS. Every action brings you closer to the elite Syndicate tier and higher token allocations. Ensure to claim daily/weekly ITEMS.",
       icon: <Zap className="text-blue-400" size={32} />,
       color: "from-blue-400 to-indigo-600",
       bg: "bg-blue-400/10"
@@ -53,7 +53,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     },
     {
       title: "TGE Final Sync",
-      description: "Once missions are complete, perform the Final Sync by submitting your BSC wallet. Your $BAG will be converted at TGE.",
+      description: "Once missions are complete, perform the Final Sync by submitting your BSC wallet. Your ITEMS will be collected for future utility reward conversion during the campaign.",
       icon: <Send className="text-purple-400" size={32} />,
       color: "from-purple-400 to-pink-600",
       bg: "bg-purple-400/10"

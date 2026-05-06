@@ -111,12 +111,12 @@ export const Landing: React.FC = () => {
                 <span className="text-xs font-semibold text-alphabag-subtext uppercase tracking-wider">v2.0 Multi-Chain Live</span>
               </div>
 
-              <h1 className="text-5xl md:text-7xl md:text-[80px] font-black mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-100 to-zinc-500 leading-tight animate-fade-in-up">
+              <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-100 to-zinc-500 leading-tight">
                 Track Your Crypto <span className="text-transparent bg-clip-text bg-gradient-to-b from-alphabag-yellow to-[#B45309]">Total Stealth</span>
               </h1>
 
               <p className="text-lg md:text-xl text-alphabag-subtext max-w-2xl mx-auto mb-10 leading-relaxed font-normal animate-fade-in-up delay-100">
-                Manage diverse Web3 portfolios, track whale movements, and execute institutional-grade strategies from a single, AI-powered command center.
+                Manage diverse Web3 portfolios, track whale movements, access Alpha-grade trade signals, and explore ways to earn.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 animate-fade-in-up delay-200">
@@ -232,31 +232,42 @@ export const Landing: React.FC = () => {
                     phase="PHASE_01"
                     title="CORE_INITIALIZATION"
                     status="VERIFIED"
-                    points={["System core architecture defined", "Smart contract beta deployment", "Internal AlphaAi agent logic initialized", "V1 platform launch and stress testing"]}
+                    points={[
+                      "System Core Architecture Defined: Finalize full-stack infrastructure for high-frequency data.",
+                      "Smart Contract Beta Deployment: Develop 21M fixed-supply $BAG contract with internal auto-tax logic.",
+                      "Internal AlphaAi Logic Initialized: Develop core tracking and SocialFi algorithms for the Alpha Radar.",
+                      "V1 Platform Launch & Stress Testing: Conduct internal testing of dashboard performance and security."
+                    ]}
                   />
                   <RoadmapStep
                     phase="PHASE_02"
-                    title="USER_ACQUISITION"
+                    title="SYSTEM_EXPANSION & DEPLOYMENT"
                     status="EXECUTING"
-                    points={["Community onboarding & genesis campaign", "Beta member feedback integration", "Performance optimization Hub", "Bug bounty program initiation"]}
+                    points={[
+                      "Community Onboarding & Genesis Campaign: Launch initial marketing to acquire high-conviction holders.",
+                      "Beta Member Feedback Integration: Release V1 Web App for community review and UI/UX optimization.",
+                      "V2 Beta Deployment: Implement upgraded SocialFi mechanics and premium dashboard features.",
+                      "Smart Contract Finalization: Final audit of the automated protection and renounce logic.",
+                      "Utility Token Launch: Deploy $BAG on BSC with pre-set allocations."
+                    ]}
                   />
                   <RoadmapStep
                     phase="PHASE_03"
-                    title="SYSTEM_EXPANSION"
+                    title="LIQUIDITY_DEPLOYMENT"
                     status="PENDING"
-                    points={["Multi-network indexing expansion", "Advanced AlphaAi predictive models", "Third-party Hub API integrations", "Enhanced security & audit compliance"]}
+                    points={[
+                      "Synthetic Utility Token Implementation: Integrate $BAG as the primary engine for platform access.",
+                      "Liquidity Generation Event (LGE): Official PancakeSwap listing with 2-year liquidity lock.",
+                      "Protocol Renunciation: Execute contract renouncement post-launch for immutable security.",
+                      "Strategic Community Collaborations: Partner with institutional data providers to scale the Alpha Radar.",
+                      "Pro-Terminal Release: Launch institutional-grade whale-tracking and SocialFi premium tiers."
+                    ]}
                   />
                   <RoadmapStep
                     phase="PHASE_04"
-                    title="LIQUIDITY_DEPLOYMENT"
-                    status="PENDING"
-                    points={["Synthetic utility token implementation", "Liquidity generation event (LGE)", "Strategic community collaborations", "Institutional network partnerships"]}
-                  />
-                  <RoadmapStep
-                    phase="PHASE_05"
                     title="GLOBAL_DOMINANCE"
                     status="QUEUED"
-                    points={["Mobile Hub release", "Non-EVM blockchain support (Solana, Ton)", "International market localization", "Real-world asset (RWA) tracking integration"]}
+                    points={["Global Scaling: Expand narrative reach and platform infrastructure to international markets."]}
                   />
                 </div>
               </div>
@@ -286,7 +297,7 @@ export const Landing: React.FC = () => {
                   />
                   <FaqItem
                     question="How does AlphaBAG conversion work?"
-                    answer="AlphaBAG is the synthetic utility metric powering the hub ecosystem during the Genesis Phase. Upon official launch, top-tier AlphaBAG members who have verified their wallets will be eligible for proportional allocations of the native utility token."
+                    answer="AlphaBAG is the synthetic utility metric powering the hub ecosystem during the Genesis Phase. Upon official launch, top-tier AlphaBAG members who have verified their wallets holdings will be eligible to access Alphabag feature."
                   />
                 </div>
 

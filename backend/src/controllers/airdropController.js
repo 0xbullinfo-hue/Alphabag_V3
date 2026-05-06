@@ -479,6 +479,8 @@ export const completeTask = async (req, res) => {
         }
 
         const user = await store.update('users', u => u.id === req.user.id, (u) => {
+            if (u.isBanned) throw new Error('Your account has been permanently suspended from the T2E program due to protocol violations.');
+            
             const completed = u.completedTasks || [];
             
             // Handle limits
@@ -525,14 +527,14 @@ export const completeTask = async (req, res) => {
 
             return {
                 completedTasks: completed,
-                bagTokens: (u.bagTokens || 0) + task.rewardTokens,
+                items: (u.items || 0) + task.rewardTokens,
                 lastDailyTaskAt: u.lastDailyTaskAt,
                 weeklyTasks: u.weeklyTasks,
                 submittedLinks: u.submittedLinks
             };
         });
 
-        res.json({ success: true, points: user.bagTokens, message: `Mission Complete: +${task.rewardTokens} $BAG` });
+        res.json({ success: true, points: user.bagTokens, items: user.items, message: `Mission Complete: +${task.rewardTokens} ITEMS` });
     } catch (error) {
         res.status(400).json({ error: error.message || 'Mission failure' });
     }
@@ -542,6 +544,8 @@ export const completeTask = async (req, res) => {
 
 export const processReferralSnapshot = async (req, res) => {
     try {
+        const { reward } = req.body;
+        const bonusTokens = parseInt(reward) || 2000;
         const users = await store.read('users');
         
         // Find top 100 referrers
@@ -550,18 +554,17 @@ export const processReferralSnapshot = async (req, res) => {
             .sort((a, b) => (b.referralCount || 0) - (a.referralCount || 0))
             .slice(0, 100);
 
-        const bonusTokens = 2000;
         let awardedCount = 0;
 
         for (const user of top100) {
             await store.update('users', u => u.id === user.id, r => ({
-                bagTokens: (r.bagTokens || 0) + bonusTokens,
+                items: (r.items || 0) + bonusTokens,
                 hasTopReferrerBonus: true
             }));
             awardedCount++;
         }
 
-        res.json({ success: true, message: `Processed Elite Bonus for ${awardedCount} members.` });
+        res.json({ success: true, count: awardedCount, message: `Processed Elite Bonus for ${awardedCount} members.` });
     } catch (error) {
         res.status(500).json({ error: 'Snapshot processing failed' });
     }
@@ -609,25 +612,41 @@ export const deleteTask = async (req, res) => {
     }
 };
 
-export const grantbonusTokens = async (req, res) => {
+export const grantBonusXP = async (req, res) => {
     try {
         const { userId, bonusTokens } = req.body;
-        if (!userId || !bonusTokens || isNaN(bonusTokens)) {
-            return res.status(400).json({ error: 'Valid Target Member and Bonus $BAG amount are required' });
+        if (!userId || bonusTokens === undefined || isNaN(bonusTokens)) {
+            return res.status(400).json({ error: 'Valid Target Member and amount are required' });
         }
 
+        const amount = parseInt(bonusTokens);
         const updatedUser = await store.update('users', u => u.id === userId, (user) => {
+            const newStrikes = amount < 0 ? (user.strikes || 0) + 1 : (user.strikes || 0);
             return {
-                bagTokens: (user.bagTokens || 0) + parseInt(bonusTokens)
+                items: (user.items || 0) + amount,
+                strikes: newStrikes,
+                isBanned: newStrikes >= 5
             };
         });
 
         if (!updatedUser) return res.status(404).json({ error: 'Member not found' });
         
-        res.json({ success: true, message: `Successfully injected ${bonusTokens} $BAG into member profile.`, newTotal: updatedUser.bagTokens });
+        let message = amount >= 0 
+            ? `Successfully injected ${amount} ITEMS into member profile.`
+            : `Deducted ${Math.abs(amount)} ITEMS. Strike count: ${updatedUser.strikes}/5.`;
+        
+        if (updatedUser.isBanned) message += " MEMBER PERMANENTLY BANNED.";
+
+        res.json({ 
+            success: true, 
+            message, 
+            newTotal: updatedUser.items, 
+            strikes: updatedUser.strikes,
+            isBanned: updatedUser.isBanned 
+        });
     } catch (error) {
         console.error("Grant Bonus Error:", error);
-        res.status(500).json({ error: 'Failed to inject bonus $BAG' });
+        res.status(500).json({ error: 'Failed to process balance correction' });
     }
 };
 
@@ -708,7 +727,6 @@ export const exportMissionData = async (req, res) => {
             headers.join(','),
             ...snapshot.map(row => headers.map(h => JSON.stringify(row[h] ?? '')).join(','))
         ].join('\n');
-
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="alphabag_snapshot_${new Date().toISOString().split('T')[0]}.csv"`);
         return res.send(csv);

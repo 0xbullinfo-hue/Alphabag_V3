@@ -53,5 +53,14 @@
     "status": "ACTIVE",
     "category": "GROWTH",
     "requiresLink": false
+  },
+  {
+    "title": "Daily Checkin",
+    "description": "checking daily to earn",
+    "rewardTokens": 50,
+    "actionUrl": "",
+    "type": "daily",
+    "status": "ACTIVE",
+    "id": "t92o1i"
   }
 ]

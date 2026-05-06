@@ -10,7 +10,7 @@
     "requiresLink": true,
     "requiredCount": 0,
     "actionUrl": "https://x.com/alphabagpro",
-    "rewardTokens": 50,
+    "rewardTokens": 100,
     "createdAt": "2026-04-15T15:44:59.977Z"
   },
   {
@@ -43,16 +43,16 @@
   },
   {
     "id": "t2e_social_004",
-    "title": "Share AlphaBAG on X",
-    "description": "Write and post a tweet about AlphaBAG using #AlphaBAG and paste the link below.",
-    "rewardXP": 75,
-    "type": "SOCIAL",
+    "title": "Weekly ITEMS Allocation",
+    "description": "Claim your 400 ITEMS weekly allocation. Resets automatically 7 days after your claim.",
+    "rewardXP": 0,
+    "type": "GROWTH",
     "frequency": "WEEKLY",
     "status": "ACTIVE",
-    "requiresLink": true,
+    "requiresLink": false,
     "requiredCount": 0,
     "actionUrl": null,
-    "rewardTokens": 75,
+    "rewardTokens": 400,
     "createdAt": "2026-04-15T15:44:59.980Z"
   },
   {
@@ -80,7 +80,7 @@
     "requiresLink": true,
     "requiredCount": 0,
     "actionUrl": "https://t.me/alphabagpro",
-    "rewardTokens": 50,
+    "rewardTokens": 100,
     "createdAt": "2026-04-15T15:44:59.980Z"
   },
   {
@@ -292,5 +292,17 @@
     "actionUrl": "/settings",
     "rewardTokens": 75,
     "createdAt": "2026-04-15T15:44:59.980Z"
+  },
+  {
+    "id": "t2e_2l7vuaj4m",
+    "title": "rttt",
+    "description": "rthrtyrteytryrtyrtey",
+    "rewardTokens": 150,
+    "type": "GROWTH",
+    "frequency": "ONCE",
+    "requiresLink": true,
+    "actionUrl": "",
+    "status": "ACTIVE",
+    "createdAt": "2026-05-03T16:15:50.096Z"
   }
 ]

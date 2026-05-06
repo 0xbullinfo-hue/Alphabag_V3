@@ -13,8 +13,8 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, active }) => (
   <Link
     to={to}
-    className={`flex items-center justify-between px-4 py-2.5 rounded-lg transition-all duration-200 active:scale-[0.98] mb-1 mx-2 ${active
-      ? 'bg-alphabag-yellow/10 text-alphabag-yellow'
+    className={`flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-200 active:scale-[0.98] mb-1 mx-2 ${active
+      ? 'bg-alphabag-yellow/10 text-alphabag-yellow shadow-glow-yellow'
       : 'text-alphabag-muted hover:bg-white/5 hover:text-zinc-50'
       }`}
   >
@@ -56,7 +56,7 @@ const NavDropdown: React.FC<{ icon: any, label: string, activePaths: string[], c
 
 const NavGroup: React.FC<{ title: string, children: React.ReactNode }> = ({ title, children }) => (
   <div className="mb-6">
-    <div className="px-8 mb-2 text-[10px] font-bold text-alphabag-muted uppercase tracking-widest opacity-70">
+    <div className="px-8 mb-2 text-[9px] font-semibold text-alphabag-subtext uppercase tracking-[0.28em] opacity-80">
       {title}
     </div>
     <div className="space-y-1">
@@ -83,8 +83,8 @@ export const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ is
       )}
 
       <aside className={`
-        fixed top-0 left-0 h-full w-64 bg-alphabag-darkgray border-r border-alphabag-border z-30 transition-transform duration-300 ease-in-out
-        md:translate-x-0 pt-24 pb-8 flex flex-col justify-between overflow-y-auto custom-scrollbar shadow-2xl shadow-black/50
+        fixed top-0 left-0 h-full w-64 bg-[#0d0d11] border-r border-white/10 z-30 transition-transform duration-300 ease-in-out
+        md:translate-x-0 pt-24 pb-8 flex flex-col justify-between overflow-y-auto custom-scrollbar shadow-[0_60px_120px_rgba(0,0,0,0.4)]
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="py-2">

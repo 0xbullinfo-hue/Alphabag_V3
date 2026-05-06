@@ -1,9 +1,10 @@
 import express from 'express';
 import { 
     getTreasuryStatus, getUserEarnProfile, getMissions, 
-    getActivityFeed, streamActivity, getLeaderboard, 
-    claimMission, requestBagPayout, updatePreferredWallet, adjustTreasuryBalance,
-    createMission, getAdminTokenRequests, approveTokenRequest, getAdminActivity
+    getActivityFeed, streamActivity, getLeaderboard, claimMission,
+    requestBagPayout, updatePreferredWallet,
+    adjustTreasuryBalance, getAdminMissions, upsertMission, deleteMission,
+    getAdminTokenRequests, approveTokenRequest, getAdminActivity
 } from '../controllers/t2eController.js';
 import { verifyToken, verifyAdmin, optionalAuth } from '../middleware/authMiddleware.js';
 const router = express.Router();
@@ -23,7 +24,9 @@ router.patch('/user/wallet',  verifyToken, updatePreferredWallet);
 
 // Admin Routes
 router.patch('/admin/adjust-balance', verifyToken, verifyAdmin, adjustTreasuryBalance);
-router.post('/admin/missions',        verifyToken, verifyAdmin, createMission);
+router.get('/admin/missions',        verifyToken, verifyAdmin, getAdminMissions);
+router.post('/admin/missions',       verifyToken, verifyAdmin, upsertMission);
+router.delete('/admin/missions/:id', verifyToken, verifyAdmin, deleteMission);
 router.get('/admin/token-requests',   verifyToken, verifyAdmin, getAdminTokenRequests);
 router.post('/admin/token-requests/:id/approve', verifyToken, verifyAdmin, approveTokenRequest);
 router.get('/admin/activity',         verifyToken, verifyAdmin, getAdminActivity);

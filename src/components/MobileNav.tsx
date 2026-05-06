@@ -23,12 +23,12 @@ export const MobileNav: React.FC = () => {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-alphabag-yellow' : 'text-alphabag-subtext'
+              className={`relative flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-alphabag-yellow' : 'text-alphabag-subtext'
                 }`}
             >
               <item.icon size={20} className={isActive ? 'animate-pulse' : ''} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
-              {isActive && <div className="w-1 h-1 bg-alphabag-yellow rounded-full absolute bottom-1"></div>}
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">{item.label}</span>
+              {isActive && <div className="absolute bottom-2 w-2 h-2 bg-alphabag-yellow rounded-full"></div>}
             </Link>
           );
         })}

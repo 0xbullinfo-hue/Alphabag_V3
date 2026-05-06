@@ -1,10 +1,14 @@
 import express from 'express';
 import { 
     getAirdropStatus, claimPoints, submitWallet, getCampaigns, createCampaign, updateCampaign, deleteCampaign, 
-    getTasks, completeTask, getAdminTasks, upsertTask, deleteTask, processReferralSnapshot,
+    getAdminTasks, upsertTask, deleteTask, processReferralSnapshot,
     getAirdropStats, getSubmittedWallets, resetAirdrop, toggleReveal, approveFounder, grantBonusXP,
     pauseMission, getMissionStatus, exportMissionData, fullMissionWipe, updateTgeDate
 } from '../controllers/airdropController.js';
+import { 
+    getMissions, claimMission, requestBagPayout,
+    getAdminMissions, upsertMission, deleteMission
+} from '../controllers/t2eController.js';
 import { optionalAuth, verifyToken, verifyAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -14,8 +18,9 @@ router.get('/status', optionalAuth, getAirdropStatus);
 router.get('/stats', optionalAuth, getAirdropStats);
 router.post('/claim', verifyToken, claimPoints);
 router.post('/submit-wallet', verifyToken, submitWallet);
-router.get('/tasks', optionalAuth, getTasks);
-router.post('/tasks/complete', verifyToken, completeTask);
+router.post('/payout', verifyToken, requestBagPayout);
+router.get('/tasks', optionalAuth, getMissions);
+router.post('/tasks/complete', verifyToken, claimMission);
 
 // Admin Routes - Campaigns
 router.get('/admin/campaigns', verifyToken, verifyAdmin, getCampaigns);
@@ -27,9 +32,9 @@ router.delete('/admin/campaigns/:id', verifyToken, verifyAdmin, deleteCampaign);
 router.get('/admin/wallets', verifyToken, verifyAdmin, getSubmittedWallets);
 router.post('/admin/reset', verifyToken, verifyAdmin, resetAirdrop);
 router.post('/admin/reveal', verifyToken, verifyAdmin, toggleReveal);
-router.get('/admin/tasks', verifyToken, verifyAdmin, getAdminTasks);
-router.post('/admin/tasks', verifyToken, verifyAdmin, upsertTask);
-router.delete('/admin/tasks/:id', verifyToken, verifyAdmin, deleteTask);
+router.get('/admin/tasks', verifyToken, verifyAdmin, getAdminMissions);
+router.post('/admin/tasks', verifyToken, verifyAdmin, upsertMission);
+router.delete('/admin/tasks/:id', verifyToken, verifyAdmin, deleteMission);
 router.post('/admin/snapshot-referrals', verifyToken, verifyAdmin, processReferralSnapshot);
 router.post('/admin/approve-founder', verifyToken, verifyAdmin, approveFounder);
 router.post('/admin/bonus-xp', verifyToken, verifyAdmin, grantBonusXP);

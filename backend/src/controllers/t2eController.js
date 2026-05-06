@@ -59,9 +59,9 @@ export const getUserEarnProfile = async (req, res) => {
 
         res.json({
             id: user.id,
-            alphaXpBalance: user.alphaXpBalance || 0,
+            items: user.items || 0,
             lifetimeEarned: user.lifetimeEarned || 0,
-            t2eBagBalance: user.t2eBagBalance || 0,
+            bagTokens: user.bagTokens || 0,
             preferredWallet: user.preferredWallet || user.verifiedWallet || '',
             syndicateRank: user.syndicateRank || 'RECRUIT',
             referralCount: user.referralCount || 0,
@@ -205,7 +205,11 @@ export const getLeaderboard = async (req, res) => {
 export const claimMission = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { missionId, proofLink, feedback } = req.body;
+        let { missionId, proofLink, feedback, taskId, taskLink } = req.body;
+        
+        // Aliases for backward compatibility with Airdrop.tsx
+        missionId = missionId || taskId;
+        proofLink = proofLink || taskLink;
 
         const [mission, config] = await Promise.all([
             store.findOne('t2e_missions', { id: missionId }),
@@ -260,12 +264,29 @@ export const claimMission = async (req, res) => {
         };
         await store.create('t2e_claims', newClaim);
 
-        // Update User Balance (Both $BAG and XP)
-        await store.update('users', u => u.id.toLowerCase() === userId.toLowerCase(), (u) => ({
-            t2eBagBalance: (Number(u.t2eBagBalance) || 0) + Number(mission.rewardTokens),
-            alphaXpBalance: (Number(u.alphaXpBalance) || 0) + (Number(mission.rewardXP) || Number(mission.rewardTokens)),
-            lifetimeEarned: (Number(u.lifetimeEarned) || 0) + Number(mission.rewardTokens)
-        }));
+        // Update User Balance (ITEMS) & Legacy Fields for Frontend
+        const nowStr = new Date().toISOString().split('T')[0];
+        await store.update('users', u => u.id.toLowerCase() === userId.toLowerCase(), (u) => {
+            const updates = {
+                items: (Number(u.items) || 0) + Number(mission.rewardTokens),
+                lifetimeEarned: (Number(u.lifetimeEarned) || 0) + Number(mission.rewardTokens)
+            };
+
+            // Legacy support for Airdrop.tsx UI
+            if (mission.frequency === 'DAILY') {
+                updates.lastDailyTaskAt = nowStr;
+            }
+            if (mission.frequency === 'ONCE') {
+                updates.completedTasks = [...(u.completedTasks || []), mission.id];
+            }
+            if (mission.frequency === 'WEEKLY') {
+                const weeklyTasks = u.weeklyTasks || {};
+                weeklyTasks[mission.id] = { date: now.toISOString() };
+                updates.weeklyTasks = weeklyTasks;
+            }
+
+            return updates;
+        });
 
         const users = await store.read('users');
         const user = users.find(u => u.id.toLowerCase() === userId.toLowerCase());
@@ -300,17 +321,16 @@ export const requestBagPayout = async (req, res) => {
         const user = users.find(u => u.id.toLowerCase() === userId.toLowerCase());
         if (!user) return res.status(404).json({ error: 'User not found in T2E Registry' });
 
-        if ((Number(user.t2eBagBalance) || 0) < minimum) {
-            return res.status(400).json({ error: `Minimum payout of ${minimum.toLocaleString()} $BAG required.` });
+        if ((Number(user.items) || 0) < minimum) {
+            return res.status(400).json({ error: `Minimum payout of ${minimum.toLocaleString()} ITEMS required.` });
         }
 
-        const amount = user.t2eBagBalance;
+        const amount = user.items;
         const payoutWallet = user.preferredWallet || user.verifiedWallet || userId;
 
         const request = {
             id: Math.random().toString(36).substr(2, 9),
             userId,
-            amountXP: 0,
             expectedTokens: Number(amount),
             walletAddress: payoutWallet,
             status: 'PENDING',
@@ -319,7 +339,7 @@ export const requestBagPayout = async (req, res) => {
         await store.create('t2e_payout_requests', request);
 
         // Deduct from Balance
-        await store.update('users', u => u.id === userId, () => ({ t2eBagBalance: 0 }));
+        await store.update('users', u => u.id === userId, () => ({ items: 0 }));
 
         t2eEmitter.emit('activityUpdate', {
             type: 'TOKEN_PAYOUT_REQUEST',
@@ -350,39 +370,75 @@ export const updatePreferredWallet = async (req, res) => {
 
 export const adjustTreasuryBalance = async (req, res) => {
     try {
-        const { minimumClaimBalance } = req.body;
+        const { minimumClaimBalance, itemsToBagRate, campaignEnded } = req.body;
         const current = await store.findOne('t2e_config', { id: 'global_config' }) || { id: 'global_config', minimumClaimBalance: 500 };
         
         const data = { ...current };
         if (minimumClaimBalance !== undefined) data.minimumClaimBalance = parseInt(minimumClaimBalance);
+        if (itemsToBagRate !== undefined) data.itemsToBagRate = itemsToBagRate;
+        if (campaignEnded !== undefined) data.campaignEnded = campaignEnded;
 
-        await store.write('t2e_config', [data]); // Only one config allowed
+        // Store config is likely an object or an array with one item based on write call
+        await store.write('t2e_config', [data]); 
         res.json({ success: true, config: data });
     } catch (error) {
         res.status(500).json({ error: 'Adjust failed' });
     }
 };
 
-export const createMission = async (req, res) => {
+export const getAdminMissions = async (req, res) => {
     try {
-        const { title, description, rewardTokens, type, frequency, requiresLink, actionUrl } = req.body;
+        const missions = await store.read('t2e_missions') || [];
+        res.json(missions);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch admin missions' });
+    }
+};
+
+export const upsertMission = async (req, res) => {
+    try {
+        const { id, title, description, rewardTokens, type, frequency, requiresLink, actionUrl, platform, category } = req.body;
+        let missions = await store.read('t2e_missions') || [];
+
         const mission = {
-            id: 't2e_' + Math.random().toString(36).substr(2, 9),
+            id: id || 't2e_' + Math.random().toString(36).substr(2, 9),
             title,
             description,
             rewardTokens: parseFloat(rewardTokens),
-            type,
-            frequency,
+            type: (type || frequency || 'ONCE').toUpperCase(),
+            frequency: (frequency || type || 'ONCE').toUpperCase(),
             requiresLink: !!requiresLink,
-            actionUrl,
+            actionUrl: actionUrl || '',
+            platform: platform || 'SOCIAL',
+            category: category || 'GENERAL',
             status: 'ACTIVE',
             createdAt: new Date().toISOString()
         };
-        await store.create('t2e_missions', mission);
+
+        const index = missions.findIndex(m => m.id === mission.id);
+        if (index !== -1) {
+            missions[index] = { ...missions[index], ...mission };
+        } else {
+            missions.push(mission);
+        }
+
+        await store.write('t2e_missions', missions);
         res.json({ success: true, mission });
     } catch (error) {
-        console.error('[T2E] Create Mission Error:', error);
-        res.status(500).json({ error: 'Failed to create mission' });
+        console.error('[T2E] Upsert Mission Error:', error);
+        res.status(500).json({ error: 'Failed to deploy mission' });
+    }
+};
+
+export const deleteMission = async (req, res) => {
+    try {
+        const { id } = req.params;
+        let missions = await store.read('t2e_missions') || [];
+        missions = missions.filter(m => m.id !== id);
+        await store.write('t2e_missions', missions);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete mission' });
     }
 };
 

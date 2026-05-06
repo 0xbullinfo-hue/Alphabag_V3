@@ -52,6 +52,12 @@ export default {
                 extrabold: '800',
                 black: '800',
             },
+            borderRadius: {
+                xl: '1rem',
+                '2xl': '1rem',
+                '3xl': '1rem',
+                '4xl': '1.25rem',
+            },
             boxShadow: {
                 'glow-yellow': '0 0 20px rgba(252,213,53,0.15)',
                 'glow-yellow-lg': '0 0 40px rgba(252,213,53,0.25)',

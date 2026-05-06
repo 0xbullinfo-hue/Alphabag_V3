@@ -143,7 +143,7 @@ export const siweAuth = async (req, res) => {
                     
                     if (referrerCount < 1000) {
                         await store.update('users', u => u.id === referrer.id, r => ({
-                            bagTokens: (r.bagTokens || 0) + 50,
+                            items: (r.items || 0) + 100,
                             referralCount: referrerCount + 1
                         }));
                     }
@@ -154,7 +154,8 @@ export const siweAuth = async (req, res) => {
                 id: normalizedId,
                 email: `${address.substring(0, 6)}...${address.substring(address.length - 4)}`,
                 verifiedWallet: address,
-                bagTokens: 100,
+                items: 5000,
+                bagTokens: 0,
                 referralCode,
                 referredBy,
                 referralCount: 0,

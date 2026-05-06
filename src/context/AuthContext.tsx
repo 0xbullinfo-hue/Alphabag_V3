@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { useAccount, useDisconnect, useBalance } from 'wagmi';
 import { bsc } from 'wagmi/chains';
+import { TOKEN_GATING_CONFIG } from '../services/config';
 
 interface AuthContextType {
   user: User | null;
@@ -18,10 +19,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Configuration for eligibility access
-const BAG_TOKEN_ADDRESS = '0x12a5b616d0042456345ec46682cf8c105658e0a1'; // Placeholder address
-const PRO_THRESHOLD = 10000;
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const [user, setUser] = useState<User | null>(null);
@@ -32,9 +29,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { disconnect } = useDisconnect();
 
   // Token Balance check for Pro status
+  const tokenAddress = TOKEN_GATING_CONFIG.BAG_TOKEN_ADDRESS_TESTNET || TOKEN_GATING_CONFIG.BAG_TOKEN_ADDRESS_MAINNET || '0x0000000000000000000000000000000000000000';
+  
   const { data: bagBalance } = useBalance({
     address: address,
-    token: BAG_TOKEN_ADDRESS as `0x${string}`,
+    token: tokenAddress as `0x${string}`,
     chainId: bsc.id,
     watch: true
   });
@@ -48,11 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user?.id]); // Only re-run when the user identity changes, not every state update
 
-  // Admin Allowlist (Strict Wallet Access)
-  const ADMIN_WALLETS = [
-    '0x1234567890123456789012345678901234567890', // Placeholder
-    // Add User's Wallet Here
-  ];
+  // Admin Allowlist - Loaded from Config (Production-Safe)
+  const ADMIN_WALLETS = TOKEN_GATING_CONFIG.ADMIN_WALLETS;
 
   const siweLogin = async (address: string, signature: string, message: string) => {
     try {
@@ -89,59 +85,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw e;
     }
   };
-
-  // Auto-login with wallet disabled in favor of SIWE as per new mandate
-  useEffect(() => {
-    if (!address && user && user.id.startsWith('0x')) {
-      console.log("Wallet disconnected, logging out.");
-      logout();
-    }
-  }, [address]);
-
-  // Auto-logout on Inactivity (Security)
-  useEffect(() => {
-    const TIMEOUT_MS = 4 * 60 * 60 * 1000; // 4 Hours
-
-    // Key for local storage to persist activity across tabs
-    const STORAGE_KEY = 'alphabag_last_active';
-
-    const updateActivity = () => {
-      localStorage.setItem(STORAGE_KEY, Date.now().toString());
-    };
-
-    const checkActivity = () => {
-      if (!user) return; // Only track if logged in
-
-      const lastActiveStr = localStorage.getItem(STORAGE_KEY);
-      const lastActive = lastActiveStr ? parseInt(lastActiveStr) : Date.now();
-      const now = Date.now();
-
-      if (now - lastActive > TIMEOUT_MS) {
-        console.warn("Session expired due to inactivity.");
-        logout();
-      }
-    };
-
-    // Listeners for user activity
-    window.addEventListener('mousemove', updateActivity);
-    window.addEventListener('keydown', updateActivity);
-    window.addEventListener('click', updateActivity);
-    window.addEventListener('scroll', updateActivity);
-
-    // Initial set
-    updateActivity();
-
-    // Check every minute
-    const interval = setInterval(checkActivity, 60000);
-
-    return () => {
-      window.removeEventListener('mousemove', updateActivity);
-      window.removeEventListener('keydown', updateActivity);
-      window.removeEventListener('click', updateActivity);
-      window.removeEventListener('scroll', updateActivity);
-      clearInterval(interval);
-    };
-  }, [user]);
 
   // Session Restoration — runs once on mount to restore user state from sessionStorage
   useEffect(() => {

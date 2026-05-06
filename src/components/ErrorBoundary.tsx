@@ -8,6 +8,7 @@ interface Props {
 
 interface State {
   hasError: boolean;
+  errorMessage?: string;
 }
 
 /**
@@ -17,7 +18,8 @@ interface State {
 export class ErrorBoundary extends React.Component<Props, State> {
   // Use property initializer for state to resolve "Property 'state' does not exist" errors
   public state: State = {
-    hasError: false
+    hasError: false,
+    errorMessage: undefined,
   };
 
   // Explicitly declaring props to ensure it's recognized by the compiler in strict environments
@@ -28,9 +30,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
     this.props = props;
   }
 
-  public static getDerivedStateFromError(_: Error): State {
+  public static getDerivedStateFromError(error: Error): State {
     // Update state so the next render will show the fallback UI.
-    return { hasError: true };
+    return { hasError: true, errorMessage: error.message };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
@@ -43,17 +45,20 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-alphabag-black flex items-center justify-center p-6 text-center">
-          <div className="bg-alphabag-dark border border-alphabag-red/30 p-10 rounded-3xl shadow-2xl max-w-md">
+          <div className="card-panel max-w-md">
             <div className="w-16 h-16 bg-alphabag-red/10 rounded-full flex items-center justify-center mx-auto mb-6 text-alphabag-red">
               <ShieldAlert size={32} />
             </div>
             <h1 className="text-2xl font-bold text-white mb-2 uppercase tracking-tighter">System Node Failure</h1>
-            <p className="text-alphabag-subtext text-sm mb-8">
+            <p className="text-alphabag-subtext text-sm mb-3">
               An unexpected exception occurred in the application layer. The intelligence stream has been interrupted.
             </p>
+            {this.state.errorMessage && (
+              <p className="text-xs text-alphabag-muted mb-6 break-words">Error: {this.state.errorMessage}</p>
+            )}
             <Button 
                 onClick={() => window.location.reload()} 
-                className="w-full font-bold uppercase tracking-widest bg-alphabag-red hover:bg-alphabag-red/80 text-white"
+                className="w-full font-bold uppercase tracking-widest bg-alphabag-red hover:bg-alphabag-red/80 text-white rounded-xl"
             >
               <RefreshCw size={16} className="mr-2" /> Reboot Interface
             </Button>

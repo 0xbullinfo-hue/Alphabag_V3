@@ -32,6 +32,7 @@ export const AdminT2E: React.FC = () => {
 
     // Protocol Form state
     const [minClaim, setMinClaim] = useState('');
+    const [itemsToBagRate, setItemsToBagRate] = useState<string>('');
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -40,9 +41,10 @@ export const AdminT2E: React.FC = () => {
                 const res = await api.get('/api/v1/t2e/treasury-status');
                 setConfig(res.data);
                 setMinClaim(res.data?.minimumClaimBalance ?? 500);
+                setItemsToBagRate(res.data?.itemsToBagRate?.toString() || '');
             } else if (view === 'tasks') {
-                const res = await api.get('/api/v1/t2e/missions?status=ALL&limit=100');
-                setMissions(res.data.missions || []);
+                const res = await api.get('/api/v1/t2e/admin/missions');
+                setMissions(res.data || []);
             } else if (view === 'verification') {
                 const res = await api.get('/api/v1/t2e/admin/activity');
                 setActivity(res.data || []);
@@ -59,10 +61,15 @@ export const AdminT2E: React.FC = () => {
 
     useEffect(() => { fetchData(); }, [view]);
 
-    const handleSaveConfig = async () => {
+    const handleSaveConfig = async (overrideRate?: string, overrideCampaignStatus?: boolean) => {
         try {
+            const finalRate = overrideRate !== undefined ? overrideRate : itemsToBagRate;
+            const finalCampaignEnded = overrideCampaignStatus !== undefined ? overrideCampaignStatus : config?.campaignEnded;
+            
             const res = await api.patch('/api/v1/t2e/admin/adjust-balance', {
-                minimumClaimBalance: parseInt(minClaim)
+                minimumClaimBalance: parseInt(minClaim),
+                itemsToBagRate: finalRate === '' ? null : parseFloat(finalRate),
+                campaignEnded: finalCampaignEnded
             });
             if (res.data.success) {
                 Swal.fire({ title: 'CONFIG SYNCED', text: 'Protocol parameters updated.', icon: 'success', background: '#0a0a0a', color: '#fff' });
@@ -108,6 +115,28 @@ export const AdminT2E: React.FC = () => {
             Swal.fire('Error', 'Failed to deploy mission.', 'error');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleDeleteMission = async (id: string) => {
+        const result = await Swal.fire({
+            title: 'TERMINATE MISSION?',
+            text: "This entry will be removed from the Reward Hub.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'CONFIRM DELETE',
+            background: '#0a0a0a',
+            color: '#fff'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await api.delete(`/api/v1/t2e/admin/missions/${id}`);
+                fetchData();
+            } catch (e) {
+                Swal.fire('Error', 'Deletion failed.', 'error');
+            }
         }
     };
 
@@ -168,30 +197,44 @@ export const AdminT2E: React.FC = () => {
 
             {/* ── View: Protocol/Network Hub ─── */}
             {view === 'protocol' && (
-                <div className="grid grid-cols-1 gap-6">
-                    <div className="glass-panel p-8 bg-gradient-to-br from-[#0a0a0a] to-black border border-alphabag-yellow/20 rounded-3xl">
-                        <div className="flex items-center gap-3 mb-8">
-                            <BarChart3 size={20} className="text-alphabag-yellow" />
-                            <h3 className="text-xl font-black text-white uppercase tracking-tight">System Intelligence</h3>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div className="p-5 bg-white/5 border border-white/5 rounded-2xl">
-                                <p className="text-[9px] text-alphabag-muted uppercase font-bold tracking-widest mb-1">Total $BAG Earned</p>
-                                <h4 className="text-2xl font-black text-white font-mono">{Number(config?.intelligence?.totalEarned || 0).toLocaleString()} <span className="text-[10px] text-zinc-500">BAG</span></h4>
+                <div className="space-y-6">
+                    <div className="glass-panel p-8 bg-gradient-to-br from-[#0a0a0a] via-[#0d0d0d] to-black border border-alphabag-yellow/10 rounded-[2rem] shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-alphabag-yellow/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-alphabag-yellow/10 transition-all duration-1000"></div>
+                        
+                        <div className="flex items-center justify-between mb-10">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-alphabag-yellow/10 rounded-2xl border border-alphabag-yellow/20">
+                                    <BarChart3 size={24} className="text-alphabag-yellow" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter">System Intelligence</h3>
+                                    <p className="text-[10px] text-alphabag-muted font-bold uppercase tracking-widest mt-1">Real-time Protocol Dynamics</p>
+                                </div>
                             </div>
-                            <div className="p-5 bg-white/5 border border-white/5 rounded-2xl">
-                                <p className="text-[9px] text-alphabag-muted uppercase font-bold tracking-widest mb-1">Pending Liability</p>
-                                <h4 className="text-2xl font-black text-alphabag-yellow font-mono">{Number(config?.intelligence?.totalPending || 0).toLocaleString()} <span className="text-[10px] text-zinc-500">BAG</span></h4>
-                            </div>
-                            <div className="p-5 bg-white/5 border border-white/5 rounded-2xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-1 bg-alphabag-green/20 text-alphabag-green text-[7px] font-black uppercase tracking-tighter rounded-bl">Live Distro</div>
-                                <p className="text-[9px] text-alphabag-muted uppercase font-bold tracking-widest mb-1">Total Disbursed</p>
-                                <h4 className="text-2xl font-black text-alphabag-green font-mono">{Number(config?.intelligence?.totalDisbursed || 0).toLocaleString()} <span className="text-[10px] text-zinc-500">BAG</span></h4>
+                            <div className="flex gap-2">
+                                <Button onClick={fetchData} className="bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl p-3 transition-all">
+                                    <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
+                                </Button>
                             </div>
                         </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                            <div className="p-6 bg-white/[0.03] border border-white/5 rounded-[1.5rem] hover:border-alphabag-yellow/30 transition-all group/card">
+                                <p className="text-[10px] text-alphabag-muted uppercase font-black tracking-widest mb-2 opacity-60">Total ITEMS Earned</p>
+                                <h4 className="text-3xl font-black text-white font-mono group-hover/card:scale-105 transition-transform origin-left">{Number(config?.intelligence?.totalEarned || 0).toLocaleString()} <span className="text-[12px] text-zinc-500 font-bold ml-1">ITEMS</span></h4>
+                            </div>
+                            <div className="p-6 bg-white/[0.03] border border-white/5 rounded-[1.5rem] hover:border-alphabag-yellow/30 transition-all group/card">
+                                <p className="text-[10px] text-alphabag-muted uppercase font-black tracking-widest mb-2 opacity-60">BAG Conversion Liability</p>
+                                <h4 className="text-3xl font-black text-alphabag-yellow font-mono group-hover/card:scale-105 transition-transform origin-left">{Number(config?.intelligence?.totalPending || 0).toLocaleString()} <span className="text-[12px] text-alphabag-yellow/50 font-bold ml-1">BAG</span></h4>
+                            </div>
+                            <div className="p-6 bg-white/[0.03] border border-white/5 rounded-[1.5rem] relative overflow-hidden hover:border-alphabag-green/30 transition-all group/card">
+                                <div className="absolute top-0 right-0 px-3 py-1 bg-alphabag-green/20 text-alphabag-green text-[8px] font-black uppercase tracking-tighter rounded-bl-xl border-l border-b border-alphabag-green/30">Live Distro</div>
+                                <p className="text-[10px] text-alphabag-muted uppercase font-black tracking-widest mb-2 opacity-60">Total Disbursed</p>
+                                <h4 className="text-3xl font-black text-alphabag-green font-mono group-hover/card:scale-105 transition-transform origin-left">{Number(config?.intelligence?.totalDisbursed || 0).toLocaleString()} <span className="text-[12px] text-alphabag-green/50 font-bold ml-1">BAG</span></h4>
+                            </div>
+                        </div>
 
-                        <div className="max-w-md space-y-4 pt-6 border-t border-white/5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-white/5">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-alphabag-muted uppercase tracking-widest block">Minimum User Payout Floor ($BAG)</label>
                                 <div className="flex gap-3">
@@ -201,11 +244,48 @@ export const AdminT2E: React.FC = () => {
                                         onChange={e => setMinClaim(e.target.value)} 
                                         className="flex-1 bg-black border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm focus:border-alphabag-yellow outline-none transition-all" 
                                     />
-                                    <Button onClick={handleSaveConfig} isLoading={isLoading} className="bg-alphabag-yellow text-black font-black uppercase tracking-widest py-3 px-6 rounded-xl hover:scale-105 transition-all">
-                                        Update Floor
+                                    <Button onClick={handleSaveConfig} isLoading={isLoading} className="bg-alphabag-yellow text-[#000] font-black uppercase tracking-widest py-3 px-8 rounded-xl hover:scale-105 transition-all text-[10px] shadow-lg shadow-alphabag-yellow/5">
+                                        SYNC FLOOR
                                     </Button>
                                 </div>
-                                <p className="text-[9px] text-alphabag-muted italic">Users cannot request an airdrop until their earned balance reaches this amount.</p>
+                                <p className="text-[9px] text-alphabag-muted italic">Threshold required for airdrop requests.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-alphabag-muted uppercase tracking-widest block">Campaign Status Control</label>
+                                <div className="flex gap-3">
+                                    <div className="flex-1 bg-black border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm flex items-center">
+                                        <span className="text-[10px] text-alphabag-muted mr-2">STATE:</span>
+                                        <span className={config?.campaignEnded ? 'text-red-500 font-black' : 'text-alphabag-green font-black'}>
+                                            {config?.campaignEnded ? 'HALTED' : 'OPERATIONAL'}
+                                        </span>
+                                    </div>
+                                    <Button 
+                                        onClick={() => handleSaveConfig(undefined, !config?.campaignEnded)} 
+                                        className={`${config?.campaignEnded ? 'bg-alphabag-green' : 'bg-red-600'} text-[#000] font-black uppercase tracking-widest py-3 px-8 rounded-xl hover:scale-105 transition-all text-[10px] min-w-[140px] shadow-lg`}
+                                    >
+                                        {config?.campaignEnded ? 'START CAMPAIGN' : 'END CAMPAIGN'}
+                                    </Button>
+                                </div>
+                                <p className="text-[9px] text-alphabag-muted italic">Manual override for protocol conversion state.</p>
+                            </div>
+                            <div className="space-y-2 pt-4 border-t border-white/5">
+                                <label className="text-[10px] font-bold text-alphabag-muted uppercase tracking-widest block">Conversion Rate (ITEMS per 1 $BAG)</label>
+                                <div className="flex gap-3">
+                                    <input 
+                                        type="number" 
+                                        value={itemsToBagRate} 
+                                        onChange={e => setItemsToBagRate(e.target.value)} 
+                                        placeholder="e.g. 10"
+                                        className="flex-1 bg-black border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm focus:border-alphabag-yellow outline-none transition-all" 
+                                    />
+                                    <Button onClick={() => handleSaveConfig()} isLoading={isLoading} className="bg-alphabag-yellow !text-black font-black uppercase tracking-widest py-3 px-8 rounded-xl hover:scale-105 transition-all text-[10px] shadow-lg shadow-alphabag-yellow/5">
+                                        SYNC RATE
+                                    </Button>
+                                    <Button onClick={() => { setItemsToBagRate(''); handleSaveConfig(''); }} isLoading={isLoading} className="bg-alphabag-yellow !text-black font-black uppercase tracking-widest py-3 px-8 rounded-xl hover:scale-105 transition-all text-[10px] shadow-lg shadow-alphabag-yellow/5">
+                                        RESET
+                                    </Button>
+                                </div>
+                                <p className="text-[9px] text-alphabag-muted italic">Set the rate for ITEMS to $BAG conversion. Leave empty to close conversions.</p>
                             </div>
                         </div>
                     </div>
@@ -239,7 +319,7 @@ export const AdminT2E: React.FC = () => {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-alphabag-muted uppercase tracking-widest pl-1">Reward $BAG</label>
+                                    <label className="text-[10px] font-black text-alphabag-muted uppercase tracking-widest pl-1">ITEMS Reward</label>
                                     <input 
                                         required type="number" 
                                         value={newTask.rewardTokens} 
@@ -310,7 +390,11 @@ export const AdminT2E: React.FC = () => {
                                 <label htmlFor="requiresLink" className="text-xs font-bold text-white uppercase tracking-widest cursor-pointer">Require Proof Link for validation</label>
                             </div>
 
-                            <Button type="submit" isLoading={isLoading} className="bg-alphabag-yellow text-black uppercase font-black w-full h-14 tracking-[0.2em] shadow-[0_0_30px_rgba(252,213,53,0.2)]">DEPLOY MISSION</Button>
+                            <div className="flex justify-center pt-4">
+                                <Button type="submit" isLoading={isLoading} className="bg-alphabag-yellow text-black uppercase font-black px-12 h-12 tracking-[0.2em] shadow-[0_0_30px_rgba(252,213,53,0.2)] hover:scale-105 transition-all text-[11px] rounded-xl">
+                                    DEPLOY MISSION
+                                </Button>
+                            </div>
                         </form>
                     )}
 
@@ -327,12 +411,12 @@ export const AdminT2E: React.FC = () => {
                                         <div className="text-[8px] text-alphabag-muted flex items-center gap-3 mt-1.5 font-bold uppercase tracking-widest">
                                             <span className="bg-white/5 px-2 py-0.5 rounded text-alphabag-blue">{m.type}</span>
                                             <span>{m.frequency}</span>
-                                            <span className="text-alphabag-green">{Number(m.rewardTokens).toLocaleString()} $BAG</span>
+                                            <span className="text-alphabag-green">{Number(m.rewardTokens).toLocaleString()} ITEMS</span>
                                             {m.requiresLink && <span className="text-alphabag-yellow border border-alphabag-yellow/20 px-1.5 rounded">PROOF REQ</span>}
                                         </div>
                                     </div>
                                 </div>
-                                <button className="p-2 text-alphabag-muted hover:text-red-500 transition-colors">
+                                <button onClick={() => handleDeleteMission(m.id)} className="p-2 text-alphabag-muted hover:text-red-500 transition-colors">
                                     <Trash2 size={16} />
                                 </button>
                             </div>
@@ -374,7 +458,7 @@ export const AdminT2E: React.FC = () => {
                                             <div className="text-[10px] font-bold text-white uppercase mb-0.5">{a.mission?.title}</div>
                                             <div className="text-[8px] text-alphabag-muted uppercase font-bold">{a.mission?.type}</div>
                                         </td>
-                                        <td className="px-4 py-4 border-t border-b border-white/5 font-mono text-alphabag-green text-[10px] font-bold">+{Number(a.rewardTokens).toLocaleString()} $BAG</td>
+                                        <td className="px-4 py-4 border-t border-b border-white/5 font-mono text-alphabag-green text-[10px] font-bold">+{Number(a.rewardTokens).toLocaleString()} ITEMS</td>
                                         <td className="px-4 py-4 border-t border-b border-white/5">
                                             {a.proofLink ? (
                                                 <a href={a.proofLink} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-alphabag-yellow hover:underline text-[9px] font-bold uppercase">
@@ -429,7 +513,7 @@ export const AdminT2E: React.FC = () => {
                                             </button>
                                             <button 
                                                 onClick={() => handleApprovePayout(r.id)}
-                                                className="flex items-center gap-2 px-8 py-3 bg-alphabag-yellow text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(252,213,53,0.3)]"
+                                                className="flex items-center gap-2 px-8 py-4 bg-alphabag-yellow text-[#000] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(252,213,53,0.4)]"
                                             >
                                                 <RefreshCw size={14} /> Authorize Airdrop
                                             </button>
