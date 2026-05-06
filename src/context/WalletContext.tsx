@@ -308,7 +308,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [user, trackedWallets.length, refreshBalances]);
 
   const addTrackedWallet = async (address: string, label: string, chain: Chain, type: 'PORTFOLIO' | 'WHALE'): Promise<{ success: boolean; error?: string }> => {
-    const limits = LIMITS[tier as keyof typeof LIMITS] || LIMITS.FREE;
+    const limits = TIER_LIMITS[tier as keyof typeof TIER_LIMITS] || TIER_LIMITS.FREE;
     const currentCount = trackedWallets.filter(w => w.type === type).length;
     const max = type === 'PORTFOLIO' ? limits.maxPortfolios : limits.maxWhales;
 
@@ -365,7 +365,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       },
       addTrackedWallet,
       removeTrackedWallet: (id) => setTrackedWallets(p => p.filter(w => w.id !== id)),
-      getLimits: () => LIMITS[tier as keyof typeof LIMITS] || LIMITS.FREE,
+      getLimits: () => TIER_LIMITS[tier as keyof typeof TIER_LIMITS] || TIER_LIMITS.FREE,
       refreshBalances,
       addToast,
       removeToast,
