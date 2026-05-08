@@ -20,7 +20,7 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, active }) => (
   >
     <div className="flex items-center space-x-3">
       {Icon && <Icon size={18} />}
-      <span className="font-medium text-sm">{label}</span>
+      <span className="font-black text-[11px] uppercase tracking-[0.2em]">{label}</span>
     </div>
   </Link>
 );
@@ -41,7 +41,7 @@ const NavDropdown: React.FC<{ icon: any, label: string, activePaths: string[], c
       >
         <div className="flex items-center space-x-3">
           <Icon size={18} />
-          <span className="font-medium text-sm">{label}</span>
+          <span className="font-black text-[11px] uppercase tracking-[0.2em]">{label}</span>
         </div>
         <ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>

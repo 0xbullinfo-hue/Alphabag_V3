@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
-import { Activity, Trash2, ArrowUpRight, ArrowDownRight, RefreshCcw, ShieldCheck, Plus, Key } from 'lucide-react';
+import { Activity, Trash2, ArrowUpRight, ArrowDownRight, RefreshCcw, ShieldCheck, Plus, Key, Zap } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { CexConnectModal } from '../components/CexConnectModal';
 import { useWallet } from '../context/WalletContext';
@@ -129,10 +129,17 @@ export const CexBag: React.FC = () => {
                 <div className="absolute top-0 right-0 p-12 opacity-[0.02] rotate-12 pointer-events-none"><Activity size={250} /></div>
                 
                 {/* Header Title Row */}
-                <div className="relative z-10 flex items-center gap-3">
-                    <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase relative">CEX <span className="text-transparent bg-clip-text bg-gradient-to-r from-alphabag-yellow to-yellow-600 drop-shadow-[0_0_15px_rgba(252,213,53,0.3)]">HUB</span></h1>
-                    <div className="px-2.5 py-1 rounded bg-alphabag-black border border-alphabag-gray text-[10px] font-black uppercase text-alphabag-subtext tracking-widest flex items-center gap-1.5">
-                        <ShieldCheck size={12} className="text-alphabag-yellow" /> Read-Only Tracking
+                <div className="relative z-10 space-y-4">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-alphabag-yellow/10 border border-alphabag-yellow/30 rounded-full text-[10px] text-alphabag-yellow font-black uppercase tracking-[0.3em] shadow-[0_0_15px_rgba(252,213,53,0.2)]">
+                        <Zap size={12} fill="currentColor" className="animate-pulse" /> Phase 1: AlphaBAG Genesis
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase relative">
+                            CEX <span className="text-transparent bg-clip-text bg-gradient-to-r from-alphabag-yellow to-yellow-600 drop-shadow-[0_0_15px_rgba(252,213,53,0.3)]">HUB</span>
+                        </h1>
+                        <div className="px-2.5 py-1 rounded bg-alphabag-black border border-alphabag-gray text-[10px] font-black uppercase text-alphabag-subtext tracking-widest flex items-center gap-1.5">
+                            <ShieldCheck size={12} className="text-alphabag-yellow" /> Read-Only Tracking
+                        </div>
                     </div>
                 </div>
 

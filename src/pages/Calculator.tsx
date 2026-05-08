@@ -264,17 +264,10 @@ export const Calculator: React.FC = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Results */}
+                            {/* Results */}
                 <div className="glass-panel bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 hover:border-alphabag-yellow/30 transition-all group relative overflow-hidden rounded-xl p-5 shadow-2xl flex flex-col justify-between">
                     <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-alphabag-yellow/5 rounded-full blur-3xl group-hover:bg-alphabag-yellow/10 transition-all duration-700"></div>
                     <div className="relative z-10">
-                        <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-                            <h3 className="text-alphabag-muted text-[10px] font-black uppercase tracking-[0.2em]">Live Modeling</h3>
-                            <div className="flex items-center gap-1.5 text-[10px] text-alphabag-yellow font-black uppercase tracking-widest">
-                                <div className="w-1.5 h-1.5 rounded-full bg-alphabag-yellow animate-pulse"></div> REALTIME
-                            </div>
-                        </div>
                         <div className="flex flex-col">
                             <ResultRow label="Position Size" resultObj={formatCurrency(positionSize)} />
                             <ResultRow label="Margin Used" resultObj={formatCurrency(margin)} />
@@ -292,25 +285,6 @@ export const Calculator: React.FC = () => {
                                     resultObj={sl > 0 && hasCalc ? formatPnL(slPnL, false, ` (-${formatNum(Math.abs(slROE), 1)}%)`) : { value: '—', status: 'neutral' }}
                                 />
                             </div>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 className="text-alphabag-muted text-[11px] font-bold tracking-widest mb-4">RESULTS</h3>
-                        <div className="flex flex-col">
-                            <ResultRow label="Position Size" resultObj={formatCurrency(positionSize)} />
-                            <ResultRow label="Margin Used" resultObj={formatCurrency(margin)} />
-                            <ResultTextRow label="Leverage" value={hasCalc ? `${levSlider}x` : '—'} valueColor={hasCalc ? "text-white font-semibold" : "text-[#ADB5BD]"} />
-                            <ResultTextRow label="Liquidation Price" value={hasCalc ? `$${formatNum(liqPrice, 2)}` : '—'} valueColor={hasCalc ? "text-[#F6465D] font-semibold" : "text-[#ADB5BD]"} />
-
-                            {/* TP / SL Rows */}
-                            <ResultRow
-                                label={`TP P&L @ ${tp > 0 ? '$' + formatNum(tp) : '—'}`}
-                                resultObj={tp > 0 && hasCalc ? formatPnL(tpPnL, true, ` (+${formatNum(tpROE, 1)}%)`) : { value: '—', status: 'neutral' }}
-                            />
-                            <ResultRow
-                                label={`SL P&L @ ${sl > 0 ? '$' + formatNum(sl) : '—'}`}
-                                resultObj={sl > 0 && hasCalc ? formatPnL(slPnL, false, ` (-${formatNum(Math.abs(slROE), 1)}%)`) : { value: '—', status: 'neutral' }}
-                            />
                         </div>
                     </div>
 
@@ -336,7 +310,7 @@ export const Calculator: React.FC = () => {
         let totalFees = 0;
         let gross = 0;
         let net = 0;
-        let netROE = 0;
+        let netROEPercent = 0;
         let breakEven = 0;
 
         let hasCalc = false;
@@ -349,11 +323,11 @@ export const Calculator: React.FC = () => {
                 totalFees = (totalCost + totalRev) * fee;
                 gross = totalRev - totalCost;
                 net = gross - totalFees;
-                netROE = (net / totalCost) * 100;
+                netROEPercent = (net / totalCost) * 100;
             } else {
                 totalFees = totalCost * fee;
                 net = -totalFees;
-                netROE = (net / totalCost) * 100;
+                netROEPercent = (net / totalCost) * 100;
             }
             breakEven = buy * (1 + fee) / (1 - fee);
         }
@@ -397,32 +371,15 @@ export const Calculator: React.FC = () => {
                 <div className="glass-panel bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 hover:border-alphabag-yellow/30 transition-all group relative overflow-hidden rounded-xl p-5 shadow-2xl flex flex-col justify-between">
                     <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-alphabag-yellow/5 rounded-full blur-3xl group-hover:bg-alphabag-yellow/10 transition-all duration-700"></div>
                     <div className="relative z-10">
-                        <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-                            <h3 className="text-alphabag-muted text-[10px] font-black uppercase tracking-[0.2em]">Modeling Result</h3>
-                            <div className="flex items-center gap-1.5 text-[10px] text-alphabag-yellow font-black uppercase tracking-widest">
-                                <div className="w-1.5 h-1.5 rounded-full bg-alphabag-yellow animate-pulse"></div> CALCULATED
-                            </div>
-                        </div>
                         <div className="flex flex-col">
                             <ResultRow label="Total Cost" resultObj={formatCurrency(totalCost)} />
                             <ResultRow label="Total Revenue" resultObj={formatCurrency(totalRev)} />
                             <ResultTextRow label="Total Fees" value={hasCalc ? `$${formatNum(totalFees)}` : '—'} valueColor={hasCalc ? "text-alphabag-red font-black" : "text-alphabag-muted"} />
                             <ResultRow label="Gross P&L" resultObj={gross !== 0 && hasCalc ? formatPnL(gross) : { value: '—', status: 'neutral' }} />
                             <div className="mt-4 pt-4 border-t border-white/5">
-                                <ResultRow label="Net P&L (after fees)" resultObj={net !== 0 && hasCalc ? formatPnL(net, true, ` (+${formatNum(netROE)}%)`) : { value: '—', status: 'neutral' }} />
+                                <ResultRow label="Net P&L (after fees)" resultObj={net !== 0 && hasCalc ? formatPnL(net, true, ` (+${formatNum(netROEPercent)}%)`) : { value: '—', status: 'neutral' }} />
                                 <ResultRow label="Break-even Price" resultObj={formatCurrency(breakEven)} />
                             </div>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 className="text-alphabag-muted text-[11px] font-bold tracking-widest mb-4">RESULTS</h3>
-                        <div className="flex flex-col">
-                            <ResultRow label="Total Cost" resultObj={formatCurrency(totalCost)} />
-                            <ResultRow label="Total Revenue" resultObj={formatCurrency(totalRev)} />
-                            <ResultTextRow label="Total Fees" value={hasCalc ? `$${formatNum(totalFees)}` : '—'} valueColor={hasCalc ? "text-[#F6465D] font-semibold" : "text-[#ADB5BD]"} />
-                            <ResultRow label="Gross P&L" resultObj={gross !== 0 && hasCalc ? formatPnL(gross) : { value: '—', status: 'neutral' }} />
-                            <ResultRow label="Net P&L (after fees)" resultObj={net !== 0 && hasCalc ? formatPnL(net, true, ` (+${formatNum(netROE)}%)`) : { value: '—', status: 'neutral' }} />
-                            <ResultRow label="Break-even Price" resultObj={formatCurrency(breakEven)} />
                         </div>
                     </div>
 
@@ -432,7 +389,7 @@ export const Calculator: React.FC = () => {
                                 +${formatNum(net)}
                             </div>
                             <div className="text-[#0ECB81] opacity-70 text-[13px] font-medium">
-                                +{formatNum(netROE)}% net return
+                                +{formatNum(netROEPercent)}% net return
                             </div>
                         </div>
                     )}
@@ -469,11 +426,10 @@ export const Calculator: React.FC = () => {
                 <div className="glass-panel bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 hover:border-alphabag-yellow/30 transition-all group relative overflow-hidden rounded-xl p-5 shadow-2xl flex flex-col justify-center items-center text-center">
                     <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-alphabag-yellow/5 rounded-full blur-3xl group-hover:bg-alphabag-yellow/10 transition-all duration-700"></div>
                     <div className="relative z-10">
-                        <h3 className="text-alphabag-muted text-[10px] font-black uppercase tracking-widest mb-4">ESTIMATED LOSS</h3>
                         <div className={`text-5xl font-black tracking-tighter ${ilPercent > 5 ? 'text-alphabag-red' : 'text-alphabag-yellow'}`}>
                             {ilPercent.toFixed(2)}%
                         </div>
-                        <p className="text-[10px] text-alphabag-muted mt-3 max-w-[200px] font-bold uppercase tracking-widest opacity-60">Compared to holding both assets outside the pool.</p>
+                        <p className="text-[10px] text-alphabag-muted mt-3 max-w-[200px] font-bold uppercase tracking-widest opacity-60">Estimated Loss</p>
                     </div>
                 </div>
             </div>
@@ -523,10 +479,10 @@ export const Calculator: React.FC = () => {
                 <div className="glass-panel bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 hover:border-alphabag-yellow/30 transition-all group relative overflow-hidden rounded-xl p-5 shadow-2xl flex flex-col justify-center items-center text-center">
                     <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-alphabag-yellow/5 rounded-full blur-3xl group-hover:bg-alphabag-yellow/10 transition-all duration-700"></div>
                     <div className="relative z-10">
-                        <h3 className="text-alphabag-muted text-[10px] font-black uppercase tracking-widest mb-3">QUICK RATE</h3>
                         <div className="text-3xl font-black text-alphabag-yellow tracking-tighter">
                             1 {convFrom} ≈ {(rates[convFrom] / rates[convTo]).toLocaleString(undefined, { maximumFractionDigits: 4 })} {convTo}
                         </div>
+                        <p className="text-[10px] text-alphabag-muted mt-2 font-black uppercase tracking-widest opacity-60">Quick Conversion Rate</p>
                     </div>
                 </div>
             </div>
@@ -600,12 +556,6 @@ export const Calculator: React.FC = () => {
                     <div className="glass-panel bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 hover:border-alphabag-yellow/30 transition-all group relative overflow-hidden rounded-xl p-5 shadow-2xl flex flex-col justify-between">
                         <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-alphabag-yellow/5 rounded-full blur-3xl group-hover:bg-alphabag-yellow/10 transition-all duration-700"></div>
                         <div className="relative z-10">
-                            <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-                                <h3 className="text-alphabag-muted text-[10px] font-black uppercase tracking-[0.2em]">Exit Projections</h3>
-                                <div className="flex items-center gap-1.5 text-[10px] text-alphabag-yellow font-black uppercase tracking-widest">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-alphabag-yellow animate-pulse"></div> MOONSHOT
-                                </div>
-                            </div>
                             <div className="flex flex-col">
                                 <ResultRow label="Investment" resultObj={formatCurrency(inv)} />
                                 <ResultTextRow label="Target Multiple" value={hasCalc ? `${multiplier.toFixed(2)}x` : '—'} valueColor={hasCalc ? "text-[#D8B4FE] font-black" : "text-alphabag-muted"} />

@@ -730,24 +730,34 @@ export const Airdrop: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Allocation Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-                        {[
-                            { label: 'Liquidity Pool', pct: '30%', tokens: '6.3M', color: 'from-alphabag-yellow to-yellow-600', desc: 'Locked Forever. Stable trading pool.' },
-                            { label: 'Task-to-Earn', pct: '35%', tokens: '7.35M', color: 'from-blue-500 to-blue-700', desc: 'Mined through engagement (4-5y)' },
-                            { label: 'Dev & Ecosystem', pct: '15%', pctTokens: '3.15M', color: 'from-alphabag-green to-emerald-700', desc: '6m cliff + 24m linear release' },
-                            { label: 'Marketing', pct: '10%', tokens: '2.1M', color: 'from-orange-400 to-orange-600', desc: 'Partnerships & Growth milestones' },
-                            { label: 'Team & Advisors', pct: '10%', tokens: '2.1M', color: 'from-purple-500 to-purple-700', desc: '12m cliff + 36m linear release' },
-                        ].map((item) => (
-                            <div key={item.label} className="flex flex-col items-center p-4 bg-black/40 border border-white/5 rounded-xl hover:border-alphabag-yellow/30 transition-all group text-center">
-                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex flex-col items-center justify-center mb-3 shadow-lg`}>
-                                    <span className="text-black font-black text-xs leading-none">{item.pct}</span>
-                                    <span className="text-black/70 font-bold text-[8px] leading-none mt-0.5">{item.tokens || (item as any).pctTokens}</span>
+                    {/* Allocation Grid with Mask */}
+                    <div className="relative group/allocation">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6 filter blur-[2px] transition-all duration-700 group-hover/allocation:blur-[1px] opacity-40">
+                            {[
+                                { label: 'Liquidity Pool', pct: '30%', tokens: '6.3M', color: 'from-alphabag-yellow to-yellow-600', desc: 'Locked Forever. Stable trading pool.' },
+                                { label: 'Task-to-Earn', pct: '35%', tokens: '7.35M', color: 'from-blue-500 to-blue-700', desc: 'Mined through engagement (4-5y)' },
+                                { label: 'Dev & Ecosystem', pct: '15%', tokens: '3.15M', color: 'from-alphabag-green to-emerald-700', desc: '6m cliff + 24m linear release' },
+                                { label: 'Marketing', pct: '10%', tokens: '2.1M', color: 'from-orange-400 to-orange-600', desc: 'Partnerships & Growth milestones' },
+                                { label: 'Team & Advisors', pct: '10%', tokens: '2.1M', color: 'from-purple-500 to-purple-700', desc: '12m cliff + 36m linear release' },
+                            ].map((item) => (
+                                <div key={item.label} className="flex flex-col items-center p-4 bg-black/40 border border-white/5 rounded-xl text-center">
+                                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex flex-col items-center justify-center mb-3 shadow-lg`}>
+                                        <span className="text-black font-black text-xs leading-none">{item.pct}</span>
+                                        <span className="text-black/70 font-bold text-[8px] leading-none mt-0.5">{item.tokens}</span>
+                                    </div>
+                                    <div className="text-white font-black text-xs uppercase tracking-tight leading-tight mb-1">{item.label}</div>
+                                    <div className="text-alphabag-muted text-[8px] font-medium leading-snug">{item.desc}</div>
                                 </div>
-                                <div className="text-white font-black text-xs uppercase tracking-tight leading-tight mb-1">{item.label}</div>
-                                <div className="text-alphabag-muted text-[8px] font-medium leading-snug">{item.desc}</div>
+                            ))}
+                        </div>
+                        
+                        {/* Translucent Mask Overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                            <div className="bg-alphabag-black/20 backdrop-blur-sm border border-white/5 px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl">
+                                <Lock size={16} className="text-alphabag-yellow animate-pulse" />
+                                <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Allocation Locked • Verification in Progress</span>
                             </div>
-                        ))}
+                        </div>
                     </div>
 
 

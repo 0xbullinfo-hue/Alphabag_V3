@@ -418,11 +418,21 @@ export const Settings: React.FC = () => {
             <ManualHoldingsSection />
 
             {/* ─── Membership Status ─── */}
-            <section>
+            <section className="relative">
                 <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Crown className="text-alphabag-yellow" size={20} /> Membership Status</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <TierCard level="FREE" minTokens="0" current={tier === 'FREE'} />
-                    <TierCard level="ULTIMATE" minTokens="100k" current={tier === 'ULTIMATE'} />
+                <div className="relative group/membership">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 filter blur-[2px] opacity-40 transition-all duration-700 group-hover/membership:blur-[1px]">
+                        <TierCard level="FREE" minTokens="0" current={tier === 'FREE'} />
+                        <TierCard level="ULTIMATE" minTokens="100k" current={tier === 'ULTIMATE'} />
+                    </div>
+                    
+                    {/* Membership Mask */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                        <div className="bg-alphabag-black/20 backdrop-blur-sm border border-white/5 px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl">
+                            <ShieldCheck size={16} className="text-alphabag-yellow animate-pulse" />
+                            <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Syncing Status via Network</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
