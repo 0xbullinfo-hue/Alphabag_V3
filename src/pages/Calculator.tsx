@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, ShoppingCart, Rocket, Skull, AlertTriangle, Activity, Calculator as CalculatorIcon, ArrowRightLeft, Percent, DollarSign } from 'lucide-react';
+import { Rocket, Skull, AlertTriangle, Activity, Calculator as CalculatorIcon, ArrowRightLeft, Percent } from 'lucide-react';
 
 type CalcMode = 'LEVERAGE' | 'SPOT' | 'DEGEN' | 'IL' | 'CONVERTER';
 type Direction = 'LONG' | 'SHORT';
@@ -23,7 +23,7 @@ const ResultRow = ({ label, resultObj, isBoldLabel = false }: { label: string, r
 
     return (
         <div className="flex justify-between items-center py-[12px] border-b border-[#232832] last:border-0 relative">
-            <span className={`text-[#848E9C] text-[13px] ${isBoldLabel ? 'font-semibold text-white' : 'font-medium'}`}>{label}</span>
+            <span className={`text-alphabag-muted text-[13px] ${isBoldLabel ? 'font-semibold text-white' : 'font-medium'}`}>{label}</span>
             <span className={colorClass}>{resultObj.value}</span>
         </div>
     );
@@ -31,14 +31,14 @@ const ResultRow = ({ label, resultObj, isBoldLabel = false }: { label: string, r
 
 const ResultTextRow = ({ label, value, valueColor = 'text-white font-semibold' }: { label: string, value: string, valueColor?: string }) => (
     <div className="flex justify-between items-center py-[12px] border-b border-[#232832] last:border-0">
-        <span className="text-[#848E9C] text-[13px] font-medium">{label}</span>
+        <span className="text-alphabag-muted text-[13px] font-medium">{label}</span>
         <span className={valueColor}>{value}</span>
     </div>
 );
 
-const InputField = ({ label, value, onChange, placeholder = '', borderClass = 'border-[#2B3139]', labelSub = '' }: any) => (
+const InputField = ({ label, value, onChange, placeholder = '', borderClass = 'border-white/10', labelSub = '' }: any) => (
     <div className="flex flex-col gap-1 w-full">
-        <label className="text-[#848E9C] text-[13px] font-bold">{label}</label>
+        <label className="text-alphabag-muted text-[12px] font-black uppercase tracking-[0.2em]">{label}</label>
         <input
             type="text"
             inputMode="decimal"
@@ -50,10 +50,10 @@ const InputField = ({ label, value, onChange, placeholder = '', borderClass = 'b
                 }
             }}
             placeholder={placeholder}
-            className={`bg-[#181C25] border ${borderClass} text-white text-[15px] font-medium rounded-[10px] px-4 py-2.5 focus:outline-none focus:border-[#4B5563] focus:ring-1 focus:ring-[#4B5563] transition-colors shadow-inner shadow-black/20 text-left`}
+            className={`bg-alphabag-black/50 border ${borderClass} text-white text-[15px] font-medium rounded-xl px-4 py-3 focus:outline-none focus:border-alphabag-yellow/40 focus:ring-1 focus:ring-alphabag-yellow/20 transition-colors shadow-[inset_0_1px_10px_rgba(0,0,0,0.25)] text-left`}
             autoComplete="off"
         />
-        {labelSub && <span className="text-[#5E6673] text-[11px] font-medium h-4">{labelSub}</span>}
+        {labelSub && <span className="text-alphabag-muted text-[11px] font-medium h-4">{labelSub}</span>}
     </div>
 );
 
@@ -225,14 +225,14 @@ export const Calculator: React.FC = () => {
         return (
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_500px] gap-8">
                 {/* Inputs */}
-                <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5">
+                <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20">
                     <div className="flex flex-col gap-3 mb-5">
-                        <label className="text-[#848E9C] text-xs font-bold uppercase tracking-widest">DIRECTION</label>
+                        <label className="text-alphabag-muted text-xs font-bold uppercase tracking-widest">DIRECTION</label>
                         <div className="flex gap-4">
-                            <button onClick={() => setDirection('LONG')} className={`flex-1 py-3 rounded-xl flex justify-center items-center gap-2 text-[15px] font-bold transition-all ${direction === 'LONG' ? 'bg-[#102B21] text-[#0ECB81] border border-[#0ECB81] border-opacity-[0.25]' : 'bg-[#1C202A] text-[#848E9C] border border-[#2B3139] hover:bg-[#202531]'}`}>
+                            <button onClick={() => setDirection('LONG')} className={`flex-1 py-3 rounded-xl flex justify-center items-center gap-2 text-[15px] font-bold transition-all ${direction === 'LONG' ? 'bg-[#102B21] text-[#0ECB81] border border-[#0ECB81] border-opacity-[0.25]' : 'bg-alphabag-black/50 text-alphabag-muted border border-white/10 hover:bg-white/5 hover:border-alphabag-yellow/40'}`}>
                                 ↑ Long
                             </button>
-                            <button onClick={() => setDirection('SHORT')} className={`flex-1 py-3 rounded-xl flex justify-center items-center gap-2 text-[15px] font-bold transition-all ${direction === 'SHORT' ? 'bg-[#2A1519] text-[#F6465D] border border-[#F6465D] border-opacity-30' : 'bg-[#1C202A] text-[#848E9C] border border-[#2B3139] hover:bg-[#202531]'}`}>
+                            <button onClick={() => setDirection('SHORT')} className={`flex-1 py-3 rounded-xl flex justify-center items-center gap-2 text-[15px] font-bold transition-all ${direction === 'SHORT' ? 'bg-[#2A1519] text-[#F6465D] border border-[#F6465D] border-opacity-30' : 'bg-alphabag-black/50 text-alphabag-muted border border-white/10 hover:bg-white/5 hover:border-alphabag-yellow/40'}`}>
                                 ↓ Short
                             </button>
                         </div>
@@ -245,27 +245,27 @@ export const Calculator: React.FC = () => {
 
                     <div className="flex flex-col gap-5 mb-10">
                         <div className="flex justify-between items-center">
-                            <label className="text-[#848E9C] text-[13px] font-bold">Leverage</label>
+                            <label className="text-alphabag-muted text-[13px] font-bold">Leverage</label>
                             <span className="text-[#FCD535] font-bold bg-[#FCD535] bg-opacity-[0.15] px-3 py-1.5 rounded-md text-[13px] tracking-wide">{levSlider}x</span>
                         </div>
                         <div className="relative pt-2">
-                            <input type="range" min="1" max="125" value={levSlider} onChange={e => setLevSlider(Number(e.target.value))} className="w-full h-[3px] bg-[#232832] rounded-lg appearance-none cursor-pointer accent-[#FCD535]" />
+                            <input type="range" min="1" max="125" value={levSlider} onChange={e => setLevSlider(Number(e.target.value))} className="w-full h-[3px] bg-alphabag-black/50 rounded-lg appearance-none cursor-pointer accent-alphabag-yellow" />
                         </div>
-                        <div className="flex justify-between text-[#5E6673] text-[11px] font-semibold px-0.5 mt-[-6px]">
+                        <div className="flex justify-between text-alphabag-muted text-[11px] font-semibold px-0.5 mt-[-6px]">
                             <span>1x</span><span>25x</span><span>50x</span><span>100x</span><span>125x</span>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
-                        <InputField label="Take Profit ($)" value={levTP} onChange={setLevTP} placeholder="" borderClass={levTP ? 'border-[#1E3A2F]' : 'border-[#2B3139]'} />
-                        <InputField label="Stop Loss ($)" value={levSL} onChange={setLevSL} placeholder="" borderClass={levSL ? 'border-[#4A252A]' : 'border-[#2B3139]'} />
+                        <InputField label="Take Profit ($)" value={levTP} onChange={setLevTP} placeholder="" borderClass={levTP ? 'border-alphabag-green/40' : 'border-white/10'} />
+                        <InputField label="Stop Loss ($)" value={levSL} onChange={setLevSL} placeholder="" borderClass={levSL ? 'border-alphabag-red/40' : 'border-white/10'} />
                     </div>
                 </div>
 
                 {/* Results */}
-                <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5 flex flex-col justify-between">
+                <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20 flex flex-col justify-between">
                     <div>
-                        <h3 className="text-[#51596A] text-[11px] font-bold tracking-widest mb-4">RESULTS</h3>
+                        <h3 className="text-alphabag-muted text-[11px] font-bold tracking-widest mb-4">RESULTS</h3>
                         <div className="flex flex-col">
                             <ResultRow label="Position Size" resultObj={formatCurrency(positionSize)} />
                             <ResultRow label="Margin Used" resultObj={formatCurrency(margin)} />
@@ -285,7 +285,7 @@ export const Calculator: React.FC = () => {
                     </div>
 
                     {isSlBelowLiq && (
-                        <div className="mt-6 bg-[#2A1519] border border-[#4A252A] rounded-[10px] p-4 flex items-center gap-3">
+                        <div className="mt-6 glass-panel bg-[#2A1519]/90 border border-[#4A252A] rounded-xl p-4 flex items-center gap-3">
                             <AlertTriangle size={16} className="text-[#F6465D]" />
                             <span className="text-[#F6465D] text-[13px] font-medium">Your SL is below the liquidation price — you'd be liquidated first!</span>
                         </div>
@@ -331,7 +331,7 @@ export const Calculator: React.FC = () => {
         return (
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_500px] gap-8">
                 {/* Inputs */}
-                <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5">
+                <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20">
                     <div className="grid grid-cols-2 gap-6 mb-5">
                         <InputField label="Buy Price ($)" value={spotBuy} onChange={setSpotBuy} placeholder="" />
                         <InputField label="Sell Price ($)" value={spotSell} onChange={setSpotSell} placeholder="" />
@@ -341,7 +341,7 @@ export const Calculator: React.FC = () => {
                         <InputField label="Trading Fee (%)" value={spotFee} onChange={setSpotFee} placeholder="" />
                     </div>
                     <div className="flex flex-col gap-3">
-                        <label className="text-[#848E9C] text-[13px] font-bold">Fee Presets</label>
+                        <label className="text-alphabag-muted text-[13px] font-bold">Fee Presets</label>
                         <div className="flex flex-wrap gap-2.5">
                             {['Binance 0.1%', 'Coinbase 0.6%', 'Kraken 0.26%', 'Custom'].map(preset => {
                                 const val = preset === 'Custom' ? '' : preset.split(' ')[1].replace('%', '');
@@ -350,7 +350,7 @@ export const Calculator: React.FC = () => {
                                     <button
                                         key={preset}
                                         onClick={() => { if (val) setSpotFee(val); }}
-                                        className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${isActive ? 'bg-[#2A303C] text-white border border-[#374151]' : 'bg-transparent text-[#848E9C] border border-[#232832] hover:bg-[#202531]'}`}
+                                        className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${isActive ? 'bg-alphabag-black/70 text-white border border-alphabag-yellow/40' : 'bg-transparent text-alphabag-muted border border-white/10 hover:bg-white/5 hover:border-alphabag-yellow/40'}`}
                                     >
                                         {preset}
                                     </button>
@@ -361,9 +361,9 @@ export const Calculator: React.FC = () => {
                 </div>
 
                 {/* Results */}
-                <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5 flex flex-col justify-between">
+                <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20 flex flex-col justify-between">
                     <div>
-                        <h3 className="text-[#51596A] text-[11px] font-bold tracking-widest mb-4">RESULTS</h3>
+                        <h3 className="text-alphabag-muted text-[11px] font-bold tracking-widest mb-4">RESULTS</h3>
                         <div className="flex flex-col">
                             <ResultRow label="Total Cost" resultObj={formatCurrency(totalCost)} />
                             <ResultRow label="Total Revenue" resultObj={formatCurrency(totalRev)} />
@@ -401,7 +401,7 @@ export const Calculator: React.FC = () => {
 
         return (
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_500px] gap-8">
-                <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5">
+                <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20">
                     <div className="flex items-center gap-2.5 mb-6">
                         <Percent size={18} className="text-alphabag-yellow" />
                         <h2 className="text-white font-bold text-[15px]">IL Risk Assessment</h2>
@@ -411,12 +411,12 @@ export const Calculator: React.FC = () => {
                         <InputField label="Asset B Price Change (%)" value={ilPriceB} onChange={setIlPriceB} placeholder="e.g. 10" />
                     </div>
                 </div>
-                <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5 flex flex-col justify-center items-center text-center">
-                    <h3 className="text-[#51596A] text-[11px] font-bold tracking-widest mb-4">ESTIMATED LOSS</h3>
+                <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20 flex flex-col justify-center items-center text-center">
+                    <h3 className="text-alphabag-muted text-[11px] font-bold tracking-widest mb-4">ESTIMATED LOSS</h3>
                     <div className={`text-4xl font-black ${ilPercent > 5 ? 'text-[#F6465D]' : 'text-alphabag-yellow'}`}>
                         {ilPercent.toFixed(2)}%
                     </div>
-                    <p className="text-[10px] text-[#848E9C] mt-2 max-w-[200px]">Compared to holding both assets outside the pool.</p>
+                    <p className="text-[10px] text-alphabag-muted mt-2 max-w-[200px]">Compared to holding both assets outside the pool.</p>
                 </div>
             </div>
         );
@@ -428,7 +428,7 @@ export const Calculator: React.FC = () => {
 
         return (
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_500px] gap-8">
-                <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5">
+                <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20">
                     <div className="flex items-center gap-2.5 mb-6">
                         <ArrowRightLeft size={18} className="text-alphabag-yellow" />
                         <h2 className="text-white font-bold text-[15px]">Instant Rate Converter</h2>
@@ -437,30 +437,30 @@ export const Calculator: React.FC = () => {
                         <div className="grid grid-cols-[1fr_100px] gap-3">
                             <InputField label="From" value={convAmount} onChange={setConvAmount} />
                             <div className="flex flex-col gap-1">
-                                <label className="text-[#848E9C] text-[13px] font-bold">Token</label>
-                                <select value={convFrom} onChange={e => setConvFrom(e.target.value)} className="bg-[#181C25] border border-[#232832] text-white rounded-[10px] h-11 px-2 outline-none">
+                                <label className="text-alphabag-muted text-[12px] font-black uppercase tracking-[0.2em]">Token</label>
+                                <select value={convFrom} onChange={e => setConvFrom(e.target.value)} className="bg-alphabag-black/50 border border-white/10 text-white rounded-xl h-11 px-3 outline-none focus:border-alphabag-yellow/40 focus:ring-1 focus:ring-alphabag-yellow/20">
                                     {Object.keys(rates).map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
                             </div>
                         </div>
                         <div className="grid grid-cols-[1fr_100px] gap-3">
                             <div className="flex flex-col gap-1 w-full">
-                                <label className="text-[#848E9C] text-[13px] font-bold">Converted Value</label>
-                                <div className="bg-[#181C25] border border-[#232832] text-white text-[15px] font-medium rounded-[10px] px-4 py-2.5 h-11 flex items-center">
+                                <label className="text-alphabag-muted text-[12px] font-black uppercase tracking-[0.2em]">Converted Value</label>
+                                <div className="bg-alphabag-black/50 border border-white/10 text-white text-[15px] font-medium rounded-xl px-4 py-2.5 h-11 flex items-center">
                                     {result.toLocaleString(undefined, { maximumFractionDigits: 6 })}
                                 </div>
                             </div>
                             <div className="flex flex-col gap-1">
-                                <label className="text-[#848E9C] text-[13px] font-bold">Token</label>
-                                <select value={convTo} onChange={e => setConvTo(e.target.value)} className="bg-[#181C25] border border-[#232832] text-white rounded-[10px] h-11 px-2 outline-none">
+                                <label className="text-alphabag-muted text-[12px] font-black uppercase tracking-[0.2em]">Token</label>
+                                <select value={convTo} onChange={e => setConvTo(e.target.value)} className="bg-alphabag-black/50 border border-white/10 text-white rounded-xl h-11 px-3 outline-none focus:border-alphabag-yellow/40 focus:ring-1 focus:ring-alphabag-yellow/20">
                                     {Object.keys(rates).map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5 flex flex-col justify-center items-center text-center">
-                    <h3 className="text-[#51596A] text-[11px] font-bold tracking-widest mb-2">QUICK RATE</h3>
+                <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20 flex flex-col justify-center items-center text-center">
+                    <h3 className="text-alphabag-muted text-[11px] font-bold tracking-widest mb-2">QUICK RATE</h3>
                     <div className="text-2xl font-black text-alphabag-yellow">
                         1 {convFrom} ≈ {(rates[convFrom] / rates[convTo]).toLocaleString(undefined, { maximumFractionDigits: 4 })} {convTo}
                     </div>
@@ -496,7 +496,7 @@ export const Calculator: React.FC = () => {
             <div className="flex flex-col gap-8">
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_500px] gap-8">
                     {/* Inputs */}
-                    <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5">
+                    <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20">
                         <div className="flex items-center gap-2.5 mb-6">
                             <Rocket size={18} className="text-[#D8B4FE]" />
                             <h2 className="text-white font-bold text-[15px]">Degen Entry Calculator</h2>
@@ -511,7 +511,7 @@ export const Calculator: React.FC = () => {
 
                             <div className="flex flex-col gap-4 mt-2">
                                 <div className="flex justify-between items-center">
-                                    <label className="text-[#848E9C] font-semibold text-[13px] flex items-center gap-2">
+                                    <label className="text-alphabag-muted font-semibold text-[13px] flex items-center gap-2">
                                         <Skull size={15} className="text-[#F6465D]" /> Rug / Loss Probability
                                     </label>
                                     <span className="font-bold text-[#0ECB81] bg-[#0ECB81]/10 px-2.5 py-1 rounded-md text-[13px] tracking-wide">
@@ -519,9 +519,9 @@ export const Calculator: React.FC = () => {
                                     </span>
                                 </div>
                                 <div className="relative pt-1">
-                                    <input type="range" min="0" max="100" value={degenRugProb} onChange={e => setDegenRugProb(Number(e.target.value))} className="w-full h-[4px] bg-[#232832] rounded-lg appearance-none cursor-pointer accent-[#FCD535]" />
+                                    <input type="range" min="0" max="100" value={degenRugProb} onChange={e => setDegenRugProb(Number(e.target.value))} className="w-full h-[4px] bg-alphabag-black/50 rounded-lg appearance-none cursor-pointer accent-alphabag-yellow" />
                                 </div>
-                                <div className="flex justify-between text-[#5E6673] text-[11px] font-semibold mt-1 px-0.5">
+                                <div className="flex justify-between text-alphabag-muted text-[11px] font-semibold mt-1 px-0.5">
                                     <span>Safe</span>
                                     <span>Risky</span>
                                     <span className="flex items-center gap-1.5 text-[#D8B4FE]"><Rocket size={12} className="text-[#D8B4FE]" /> Degen</span>
@@ -531,9 +531,9 @@ export const Calculator: React.FC = () => {
                     </div>
 
                     {/* Results */}
-                    <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5 flex flex-col justify-between">
+                    <div className="glass-panel p-5 rounded-xl transition-all hover:border-white/20 flex flex-col justify-between">
                         <div>
-                            <h3 className="text-[#51596A] text-[11px] font-bold tracking-widest mb-4">RESULTS</h3>
+                            <h3 className="text-alphabag-muted text-[11px] font-bold tracking-widest mb-4">RESULTS</h3>
                             <div className="flex flex-col">
                                 <ResultTextRow label="Multiplier" value={hasCalc ? `${formatNum(multiplier, 1)}x` : '—'} valueColor={hasCalc ? "text-[#0ECB81] font-semibold" : "text-[#ADB5BD]"} />
                                 <ResultRow label="Target Value" resultObj={hasCalc ? { value: formatKMBValue(targetVal), status: 'positive' } : { value: '—', status: 'neutral' }} />
@@ -558,10 +558,10 @@ export const Calculator: React.FC = () => {
                 </div>
 
                 {/* Moonbag Scenarios */}
-                <div className="bg-[#181C25] border border-[#232832] rounded-[16px] p-5 lg:p-6 w-full overflow-hidden mt-2">
+                <div className="glass-panel p-5 lg:p-6 w-full overflow-hidden mt-2 rounded-xl transition-all hover:border-white/20">
                     <div className="flex items-center gap-2 mb-4">
                         <Activity size={18} className="text-[#F97316]" />
-                        <h2 className="text-white font-bold text-[14px]">Moonbag Scenarios <span className="text-[#5E6673] font-medium ml-1"> — if ${formatNum(inv || 1000, 0)} 🚀</span></h2>
+                        <h2 className="text-white font-bold text-[14px]">Moonbag Scenarios <span className="text-alphabag-muted font-medium ml-1"> — if ${formatNum(inv || 1000, 0)} 🚀</span></h2>
                     </div>
 
                     <div className="flex flex-wrap gap-4 overflow-x-auto pb-2 scrollbar-hide">
@@ -570,10 +570,10 @@ export const Calculator: React.FC = () => {
                             const scenarioTarget = baseInv * mult;
                             const scenarioProfit = scenarioTarget - baseInv;
                             return (
-                                <div key={mult} className="bg-[#1C202A] border border-[#2B3139] rounded-xl p-5 flex-1 min-w-[140px] flex flex-col items-center justify-center text-center shadow-inner shadow-black/10">
+                                <div key={mult} className="glass-panel border border-white/10 rounded-xl p-5 flex-1 min-w-[140px] flex flex-col items-center justify-center text-center shadow-inner shadow-black/10">
                                     <div className="text-[#A78BFA] font-bold text-[15px] mb-2">{mult}x</div>
                                     <div className="text-white font-bold text-[15px] mb-1">{formatKMBValue(scenarioTarget)}</div>
-                                    <div className="text-[#848E9C] text-[11px] font-semibold">+{formatKMBValue(scenarioProfit)}</div>
+                                    <div className="text-alphabag-muted text-[11px] font-semibold">+{formatKMBValue(scenarioProfit)}</div>
                                 </div>
                             );
                         })}
@@ -584,33 +584,54 @@ export const Calculator: React.FC = () => {
     };
 
     return (
-        <div className="animate-fade-in pb-8 max-w-6xl mx-auto pt-0 px-4">
-            <div className="mb-8">
-                <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3">
-                    <CalculatorIcon size={28} className="text-alphabag-yellow" />
-                    ALPHA<span className="text-alphabag-yellow">CALCULATOR</span>
-                </h1>
-                <p className="text-[#848E9C] text-sm font-medium mt-2 max-w-2xl">
-                    Model your spot entries, calculate exact futures margins and liquidations, or analyze low-cap degen ROI and implied risk with our precise profitability tools.
-                </p>
+        <div className="animate-fade-in pb-12 max-w-7xl mx-auto px-4 md:px-8">
+            <div className="relative mb-10 overflow-hidden rounded-[2rem] bg-alphabag-black/50 border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
+                <div className="absolute inset-0 bg-gradient-to-br from-alphabag-yellow/10 via-transparent to-transparent blur-3xl pointer-events-none"></div>
+                <div className="relative p-8 md:p-10">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-alphabag-yellow/10 rounded-lg border border-alphabag-yellow/20">
+                                    <CalculatorIcon className="text-alphabag-yellow" size={20} />
+                                </div>
+                                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase relative">
+                                    Alpha <span className="text-transparent bg-clip-text bg-gradient-to-r from-alphabag-yellow to-yellow-600 drop-shadow-[0_0_15px_rgba(252,213,53,0.3)]">Calculator</span>
+                                </h1>
+                            </div>
+                            <p className="text-alphabag-subtext text-xs font-bold uppercase tracking-widest pl-1">
+                                Precise trade modeling • futures, spot, degen, and risk tools
+                            </p>
+                        </div>
+                        <div className="bg-alphabag-yellow/10 border border-alphabag-yellow/20 px-4 py-2 rounded-xl flex items-center gap-2 shadow-glow-yellow/5">
+                            <span className="text-[10px] text-alphabag-yellow font-black uppercase tracking-[0.2em] relative top-px">Premium Analytics</span>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <div className="flex flex-wrap gap-1.5 p-1 bg-[#181C25] rounded-xl lg:rounded-full w-full lg:w-max mb-6 border border-[#232832]">
-                {[
-                    { id: 'LEVERAGE', icon: Zap, label: 'Leverage' },
-                    { id: 'SPOT', icon: ShoppingCart, label: 'Spot' },
-                    { id: 'DEGEN', icon: Rocket, label: 'Degen' },
-                    { id: 'IL', icon: Percent, label: 'IL Risk' },
-                    { id: 'CONVERTER', icon: ArrowRightLeft, label: 'Converter' }
-                ].map((t: any) => (
-                    <button
-                        key={t.id}
-                        onClick={() => setMode(t.id)}
-                        className={`flex-1 lg:flex-none px-6 py-2.5 rounded-lg lg:rounded-full flex items-center justify-center gap-2 text-[14px] font-black uppercase tracking-wider transition-all ${mode === t.id ? 'bg-alphabag-yellow text-black shadow-[0_2px_15px_rgba(252,213,53,0.3)]' : 'text-[#848E9C] hover:text-white hover:bg-white/5'}`}
-                    >
-                        <t.icon size={16} /> {t.label}
-                    </button>
-                ))}
+            <div className="glass-panel p-2 rounded-2xl w-full mb-6 border-white/10 overflow-hidden">
+                <div className="flex gap-2 px-1 py-1">
+                    {[
+                        { id: 'LEVERAGE', label: 'Leverage' },
+                        { id: 'SPOT', label: 'Spot' },
+                        { id: 'DEGEN', label: 'Degen' },
+                        { id: 'IL', label: 'IL Risk' },
+                        { id: 'CONVERTER', label: 'Converter' }
+                    ].map((t: any) => (
+                        <button
+                            key={t.id}
+                            onClick={() => setMode(t.id)}
+                            className={`flex-1 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.18em] transition-all duration-200 whitespace-nowrap ${
+                                mode === t.id
+                                    ? 'bg-alphabag-yellow text-alphabag-black shadow-[0_0_20px_rgba(252,213,53,0.35)] scale-[1.02]'
+                                    : 'bg-black/30 border border-white/[0.06] text-alphabag-subtext hover:text-white hover:bg-white/[0.06] hover:border-white/10'
+                            }`}
+                        >
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="mb-6">

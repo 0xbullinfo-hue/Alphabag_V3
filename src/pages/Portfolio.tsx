@@ -86,7 +86,22 @@ export const Portfolio: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6 animate-fade-in pb-20 max-w-7xl mx-auto text-alphabag-text">
+        <div className="space-y-8 animate-fade-in pb-20 max-w-7xl mx-auto px-4 md:px-8 text-alphabag-text">
+
+            {/* Hero Header */}
+            <div className="text-center space-y-6 relative mb-12">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-alphabag-yellow/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+                
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-alphabag-yellow/10 border border-alphabag-yellow/30 rounded-full text-[10px] text-alphabag-yellow font-black uppercase tracking-[0.3em] shadow-[0_0_15px_rgba(252,213,53,0.2)]">
+                    📊 Portfolio Analytics
+                </div>
+                <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight uppercase leading-none">
+                    Wealth <span className="text-transparent bg-clip-text bg-gradient-to-r from-alphabag-yellow to-yellow-600 drop-shadow-[0_0_20px_rgba(252,213,53,0.3)]">Dashboard</span>
+                </h1>
+                <p className="text-alphabag-subtext max-w-2xl mx-auto font-medium text-sm leading-relaxed">
+                    Multi-chain portfolio tracking across 100+ blockchains. Real-time performance metrics and whale analytics.
+                </p>
+            </div>
 
             {/* 1. Header Area */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-4 border-b border-alphabag-gray gap-4">
@@ -94,7 +109,7 @@ export const Portfolio: React.FC = () => {
                     <div className="flex items-center gap-3 mb-1">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-alphabag-yellow to-alphabag-yellowHover flex items-center justify-center text-alphabag-black font-bold">MP</div>
                         <h1 className="text-xl font-semibold text-alphabag-text">My Main Portfolio</h1>
-                        <span className="text-[10px] bg-alphabag-yellow/20 text-alphabag-yellow px-2 py-0.5 rounded-full font-bold uppercase">Default</span>
+                        <span className="text-[10px] bg-alphabag-yellow/20 text-alphabag-yellow px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">Default</span>
                     </div>
 
                     <div className="flex items-baseline gap-3 mt-4 overflow-hidden">
@@ -162,65 +177,69 @@ export const Portfolio: React.FC = () => {
                     {/* 2. Metrics 4-Card Row */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* All-time profit */}
-                        <div className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-5 hover:bg-alphabag-gray/50 transition-colors overflow-hidden">
-                            <div className="flex items-center text-alphabag-subtext text-xs font-semibold mb-2 gap-1 uppercase tracking-wider">
+                        <div className="glass-panel bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 hover:border-alphabag-yellow/30 transition-all group relative overflow-hidden rounded-xl p-5">
+                            <div className="absolute -top-6 -right-6 w-16 h-16 bg-alphabag-yellow/10 rounded-full blur-xl group-hover:bg-alphabag-yellow/20 transition-all duration-700"></div>
+                            <div className="flex items-center text-alphabag-subtext text-[9px] font-black mb-2 gap-1 uppercase tracking-widest">
                                 All-time profit <Eye size={12} />
                             </div>
-                            <div className={`text-xl xl:text-2xl font-bold mb-1 tracking-tighter truncate ${totalPnL >= 0 ? 'text-alphabag-green' : 'text-alphabag-red'}`} title={`$${totalPnL.toLocaleString()}`}>
+                            <div className={`text-2xl font-black mb-1 tracking-tight truncate relative z-10 ${totalPnL >= 0 ? 'text-alphabag-green' : 'text-alphabag-red'}`} title={`$${totalPnL.toLocaleString()}`}>
                                 {totalPnL >= 0 ? '+' : '-'}${Math.abs(totalPnL).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
-                            <div className={`text-xs font-bold flex items-center ${totalPnL >= 0 ? 'text-alphabag-green' : 'text-alphabag-red'}`}>
+                            <div className={`text-[9px] font-bold flex items-center uppercase tracking-widest ${totalPnL >= 0 ? 'text-alphabag-green' : 'text-alphabag-red'}`}>
                                 {totalPnL >= 0 ? <ChevronUp size={14} /> : <ChevronDown size={14} />} {Math.abs(totalPnLPercent).toFixed(2)}%
                             </div>
                         </div>
 
                         {/* Assets */}
-                        <div className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-5 hover:bg-alphabag-gray/50 transition-colors overflow-hidden">
-                            <div className="flex items-center justify-between text-alphabag-subtext text-xs font-semibold mb-2 uppercase tracking-wider">
+                        <div className="glass-panel bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 hover:border-alphabag-yellow/30 transition-all group relative overflow-hidden rounded-xl p-5">
+                            <div className="absolute -top-6 -right-6 w-16 h-16 bg-alphabag-yellow/10 rounded-full blur-xl group-hover:bg-alphabag-yellow/20 transition-all duration-700"></div>
+                            <div className="flex items-center justify-between text-alphabag-subtext text-[9px] font-black mb-2 uppercase tracking-widest relative z-10">
                                 <span>Assets</span>
                                 <Layers size={14} className="text-alphabag-subtext" />
                             </div>
-                            <div className="text-xl xl:text-2xl font-bold text-alphabag-text tracking-tighter truncate">
+                            <div className="text-2xl font-black text-white tracking-tight truncate relative z-10">
                                 {portfolioItems.length} Tokens
                             </div>
-                            <div className="text-[10px] text-alphabag-subtext mt-1 font-medium">Unique assets on chain</div>
+                            <div className="text-[8px] text-alphabag-subtext mt-1 font-bold uppercase tracking-widest">Unique assets on chain</div>
                         </div>
 
                         {/* Best Performer */}
-                        <div className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-5 hover:bg-alphabag-gray/50 transition-colors overflow-hidden">
-                            <div className="text-alphabag-subtext text-xs font-semibold mb-2 uppercase tracking-wider">Best Performer</div>
+                        <div className="glass-panel bg-gradient-to-br from-alphabag-green/5 to-transparent border border-alphabag-green/20 hover:border-alphabag-green/40 transition-all group relative overflow-hidden rounded-xl p-5 shadow-[0_4px_30px_rgba(16,185,129,0.05)]">
+                            <div className="absolute -bottom-6 -right-6 w-16 h-16 bg-alphabag-green/10 rounded-full blur-xl group-hover:bg-alphabag-green/20 transition-all duration-700"></div>
+                            <div className="text-alphabag-subtext text-[9px] font-black mb-2 uppercase tracking-widest relative z-10">Best Performer</div>
                             {bestPerformer ? (
                                 <>
-                                    <div className="flex items-center gap-2 mb-1 overflow-hidden">
+                                    <div className="flex items-center gap-2 mb-1 overflow-hidden relative z-10">
                                         <img src={bestPerformer.image} alt={bestPerformer.symbol} className="w-5 h-5 rounded-full shrink-0" />
-                                        <span className="text-lg font-bold text-alphabag-text leading-none truncate">{bestPerformer.symbol}</span>
+                                        <span className="text-lg font-black text-white leading-none truncate">{bestPerformer.symbol}</span>
                                     </div>
-                                    <div className="text-alphabag-green text-xs font-bold flex items-center gap-1 truncate">
+                                    <div className="text-alphabag-green text-[9px] font-black flex items-center gap-1 truncate uppercase tracking-widest">
                                         +${bestPerformer.pnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                         <span className="flex items-center"><ChevronUp size={14} /> {bestPerformer.pnlPercent.toFixed(1)}%</span>
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-alphabag-subtext text-sm mt-2">No data</div>
+                                <div className="text-alphabag-subtext text-sm mt-2 relative z-10">No data</div>
                             )}
                         </div>
 
                         {/* Worst Performer */}
-                        <div className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-5 hover:bg-alphabag-gray/50 transition-colors overflow-hidden">
-                            <div className="text-alphabag-subtext text-xs font-semibold mb-2 uppercase tracking-wider">Worst Performer</div>
+                        <div className="glass-panel bg-gradient-to-br from-alphabag-red/5 to-transparent border border-alphabag-red/20 hover:border-alphabag-red/40 transition-all group relative overflow-hidden rounded-xl p-5 shadow-[0_4px_30px_rgba(239,68,68,0.05)]">
+                            <div className="absolute -bottom-6 -right-6 w-16 h-16 bg-alphabag-red/10 rounded-full blur-xl group-hover:bg-alphabag-red/20 transition-all duration-700"></div>
+                            <div className="text-alphabag-subtext text-[9px] font-black mb-2 uppercase tracking-widest relative z-10">Worst Performer</div>
                             {worstPerformer ? (
                                 <>
-                                    <div className="flex items-center gap-2 mb-1 overflow-hidden">
+                                    <div className="flex items-center gap-2 mb-1 overflow-hidden relative z-10">
                                         <img src={worstPerformer.image} alt={worstPerformer.symbol} className="w-5 h-5 rounded-full shrink-0" />
-                                        <span className="text-lg font-bold text-alphabag-text leading-none truncate">{worstPerformer.symbol}</span>
+                                        <span className="text-lg font-black text-white leading-none truncate">{worstPerformer.symbol}</span>
                                     </div>
-                                    <div className="text-alphabag-red text-xs font-bold flex items-center gap-1 truncate">
+                                    <div className="text-alphabag-red text-[9px] font-black flex items-center gap-1 truncate uppercase tracking-widest">
                                         {worstPerformer.pnl < 0 ? '-' : ''}${Math.abs(worstPerformer.pnl).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                         <span className="flex items-center"><ChevronDown size={14} /> {Math.abs(worstPerformer.pnlPercent).toFixed(1)}%</span>
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-alphabag-subtext text-sm mt-2">No data</div>
+                                <div className="text-alphabag-subtext text-sm mt-2 relative z-10">No data</div>
                             )}
                         </div>
                     </div>
@@ -230,18 +249,18 @@ export const Portfolio: React.FC = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                             {/* History Chart */}
-                            <div className="lg:col-span-2 bg-alphabag-dark border border-alphabag-gray rounded-xl p-5">
+                            <div className="lg:col-span-2 glass-panel bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all">
                                 <div className="flex justify-between items-center mb-6">
                                     <div className="flex items-center gap-2">
-                                        <h3 className="font-semibold text-alphabag-text">History</h3>
+                                        <h3 className="font-black text-white uppercase tracking-tight">History</h3>
                                         <Eye size={14} className="text-alphabag-subtext" />
                                     </div>
-                                    <div className="flex space-x-1 bg-alphabag-gray p-1 rounded-lg">
+                                    <div className="flex space-x-1 bg-black/40 p-1 rounded-lg border border-white/5">
                                         {['24H', '7D', '30D', '90D', 'ALL'].map((tf) => (
                                             <button
                                                 key={tf}
                                                 onClick={() => setTimeframe(tf as any)}
-                                                className={`px-3 py-1.5 text-[11px] font-bold uppercase rounded-md transition-all ${timeframe === tf ? 'bg-[#334155] text-alphabag-text shadow-sm' : 'text-alphabag-subtext hover:text-alphabag-text'}`}
+                                                className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-lg transition-all tracking-widest ${timeframe === tf ? 'bg-alphabag-yellow/20 text-alphabag-yellow border border-alphabag-yellow/50 shadow-[0_0_15px_rgba(252,213,53,0.2)]' : 'text-alphabag-subtext hover:text-white border border-transparent'}`}
                                             >
                                                 {tf}
                                             </button>
@@ -279,8 +298,8 @@ export const Portfolio: React.FC = () => {
                             </div>
 
                             {/* Allocation Donut */}
-                            <div className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-5 flex flex-col justify-between">
-                                <h3 className="font-semibold text-alphabag-text mb-4">Allocation</h3>
+                            <div className="glass-panel bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 rounded-xl p-5 flex flex-col justify-between hover:border-white/20 transition-all">
+                                <h3 className="font-black text-white mb-4 uppercase tracking-tight">Allocation</h3>
                                 <div className="flex-1 flex flex-row items-center justify-center gap-6">
 
                                     <div className="w-1/2 h-[180px] relative">
@@ -320,9 +339,12 @@ export const Portfolio: React.FC = () => {
                     )}
 
                     {/* 4. Assets Table Area */}
-                    <div className="mt-8">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-lg text-alphabag-text">Assets</h3>
+                    <div className="mt-8 glass-panel bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all">
+                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
+                            <div>
+                                <h3 className="font-black text-white text-xl uppercase tracking-tight">Assets</h3>
+                                <p className="text-[11px] text-alphabag-subtext mt-1 max-w-xl">Track your top holdings, profit drivers, and chain exposure across your connected wallets.</p>
+                            </div>
                             <Button
                                 variant="ghost"
                                 size="sm"

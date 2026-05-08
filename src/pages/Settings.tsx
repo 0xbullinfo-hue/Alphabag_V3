@@ -63,7 +63,7 @@ const ManualHoldingsSection: React.FC = () => {
     const totalValue = holdings.reduce((acc, h) => acc + h.amount * h.buyPrice, 0);
 
     return (
-        <section className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-6 shadow-xl">
+        <section className="glass-panel p-6 rounded-xl shadow-xl">
             <div className="flex items-center justify-between mb-2">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
                     <Plus size={18} className="text-alphabag-yellow" /> Manual Holdings
@@ -79,7 +79,7 @@ const ManualHoldingsSection: React.FC = () => {
             </p>
 
             {/* Add Form */}
-            <div className="bg-alphabag-black/40 rounded-xl border border-alphabag-gray p-5 mb-6">
+            <div className="glass-panel p-5 rounded-xl border-white/10 mb-6">
                 <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                     <Search size={14} className="text-alphabag-yellow" /> Add Holding
                 </h3>
@@ -87,27 +87,27 @@ const ManualHoldingsSection: React.FC = () => {
                     <input
                         type="text" placeholder="Coin Name (e.g. Bitcoin)" value={coin}
                         onChange={e => setCoin(e.target.value)}
-                        className="bg-alphabag-black border border-alphabag-gray rounded px-3 py-2 text-sm text-white focus:border-alphabag-yellow outline-none"
+                        className="bg-alphabag-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow/40 outline-none"
                     />
                     <input
                         type="text" placeholder="Ticker (e.g. BTC)" value={symbol}
                         onChange={e => setSymbol(e.target.value)}
-                        className="bg-alphabag-black border border-alphabag-gray rounded px-3 py-2 text-sm text-white focus:border-alphabag-yellow outline-none uppercase"
+                        className="bg-alphabag-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow/40 outline-none uppercase"
                     />
                     <input
                         type="number" placeholder="Amount held" value={amount}
                         onChange={e => setAmount(e.target.value)}
-                        className="bg-alphabag-black border border-alphabag-gray rounded px-3 py-2 text-sm text-white focus:border-alphabag-yellow outline-none"
+                        className="bg-alphabag-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow/40 outline-none"
                     />
                     <input
                         type="number" placeholder="Avg Buy Price ($)" value={buyPrice}
                         onChange={e => setBuyPrice(e.target.value)}
-                        className="bg-alphabag-black border border-alphabag-gray rounded px-3 py-2 text-sm text-white focus:border-alphabag-yellow outline-none"
+                        className="bg-alphabag-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow/40 outline-none"
                     />
                     <input
                         type="text" placeholder="Notes (optional)" value={notes}
                         onChange={e => setNotes(e.target.value)}
-                        className="bg-alphabag-black border border-alphabag-gray rounded px-3 py-2 text-sm text-white focus:border-alphabag-yellow outline-none"
+                        className="bg-alphabag-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow/40 outline-none"
                     />
                 </div>
                 {formError && <div className="text-alphabag-red text-xs mb-3 flex items-center gap-2"><AlertCircle size={12} />{formError}</div>}
@@ -265,8 +265,10 @@ export const Settings: React.FC = () => {
     };
 
     return (
-        <div className="space-y-8 animate-fade-in">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-8 animate-fade-in">
+            <div className="relative overflow-hidden rounded-[2rem] bg-alphabag-black/50 border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.35)] p-8">
+                <div className="absolute inset-0 bg-gradient-to-br from-alphabag-yellow/10 via-transparent to-transparent blur-3xl pointer-events-none"></div>
+                <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-white">Membership & Connection Hub</h1>
                     <p className="text-alphabag-subtext mt-1">Configure your professional data feeds and membership status.</p>
@@ -281,17 +283,18 @@ export const Settings: React.FC = () => {
                     </div>
                 </div>
             </div>
+            </div>
 
-            <section className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-6 shadow-xl">
+            <section className="glass-panel p-6 rounded-xl shadow-xl">
                 <h2 className="text-lg font-bold text-white mb-6">Portfolio Connections</h2>
-                <div className="bg-alphabag-black/40 p-6 rounded-xl border border-alphabag-gray mb-8">
+                <div className="glass-panel p-6 rounded-xl border-white/10 mb-8">
                     <h3 className="text-sm font-bold text-white mb-4 flex items-center">
                         <Search size={16} className="mr-2 text-alphabag-yellow" /> Add New Address Tracking
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-                        <input type="text" placeholder="Wallet Address (0x...)" value={newAddress} onChange={(e) => setNewAddress(e.target.value)} className="bg-alphabag-black border border-alphabag-gray rounded px-3 py-2 text-sm text-white focus:border-alphabag-yellow outline-none md:col-span-1" />
-                        <input type="text" placeholder="Label (e.g. Binance Whale)" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} className="bg-alphabag-black border border-alphabag-gray rounded px-3 py-2 text-sm text-white focus:border-alphabag-yellow outline-none" />
-                        <select value={newChain} onChange={(e) => setNewChain(e.target.value as Chain)} className="bg-alphabag-black border border-alphabag-gray rounded px-3 py-2 text-sm text-white focus:border-alphabag-yellow outline-none font-mono">
+                        <input type="text" placeholder="Wallet Address (0x...)" value={newAddress} onChange={(e) => setNewAddress(e.target.value)} className="bg-alphabag-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow/40 outline-none md:col-span-1" />
+                        <input type="text" placeholder="Label (e.g. Binance Whale)" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} className="bg-alphabag-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow/40 outline-none" />
+                        <select value={newChain} onChange={(e) => setNewChain(e.target.value as Chain)} className="bg-alphabag-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow/40 outline-none font-mono">
                             <option value="BSC">BSC</option>
                             <option value="ETH">ETH</option>
                             <option value="SOL">SOL</option>
@@ -299,7 +302,7 @@ export const Settings: React.FC = () => {
                             <option value="AVAX">AVAX</option>
                             <option value="ARB">ARB</option>
                         </select>
-                        <select value={addType} onChange={(e) => setAddType(e.target.value as any)} className="bg-alphabag-black border border-alphabag-gray rounded px-3 py-2 text-sm text-white focus:border-alphabag-yellow outline-none">
+                        <select value={addType} onChange={(e) => setAddType(e.target.value as any)} className="bg-alphabag-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-alphabag-yellow/40 outline-none">
                             <option value="PORTFOLIO">Portfolio</option>
                             <option value="WHALE">Whale Watch</option>
                         </select>
@@ -312,10 +315,10 @@ export const Settings: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                        <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-widest flex items-center"><Zap size={14} className="mr-2 text-alphabag-green" /> Portfolio Connections ({portfolioCount}/{limits.maxPortfolios})</h4>
-                        <div className="space-y-2">
+                        <h4 className="text-white font-black text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Zap size={14} className="text-alphabag-green" /> Portfolio Connections ({portfolioCount}/{limits.maxPortfolios})</h4>
+                        <div className="space-y-3">
                             {trackedWallets.filter(w => w.type === 'PORTFOLIO').map(w => (
-                                <div key={w.id} className="flex justify-between items-center p-4 bg-alphabag-black/50 rounded-xl border border-alphabag-gray hover:border-alphabag-subtext transition-colors">
+                                <div key={w.id} className="flex justify-between items-center p-4 glass-panel rounded-xl hover:border-alphabag-subtext transition-all">
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <div className="text-white font-bold text-sm">{w.label}</div>
@@ -330,9 +333,9 @@ export const Settings: React.FC = () => {
                     </div>
                     <div>
                         <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-widest flex items-center"><Eye size={14} className="mr-2 text-alphabag-yellow" /> Whale Watch Slots ({whaleCount}/{limits.maxWhales})</h4>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {trackedWallets.filter(w => w.type === 'WHALE').map(w => (
-                                <div key={w.id} className="flex justify-between items-center p-4 bg-alphabag-black/50 rounded-xl border border-alphabag-gray hover:border-alphabag-subtext transition-colors">
+                                <div key={w.id} className="flex justify-between items-center p-4 glass-panel rounded-xl hover:border-alphabag-green/30 transition-all">
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <div className="text-white font-bold text-sm">{w.label}</div>
@@ -349,7 +352,7 @@ export const Settings: React.FC = () => {
             </section>
 
             {/* ─── CEX Exchange APIs ─── */}
-            <section className="bg-alphabag-dark border border-alphabag-gray rounded-xl p-6 shadow-xl">
+            <section className="glass-panel p-6 rounded-xl shadow-xl">
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h2 className="text-lg font-bold text-white flex items-center gap-2"><Key size={18} className="text-alphabag-yellow" /> CEX Exchange APIs</h2>
@@ -365,7 +368,7 @@ export const Settings: React.FC = () => {
                 {connectedCex.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                         {connectedCex.map(cex => (
-                            <div key={cex.id} className="flex items-center justify-between p-4 bg-alphabag-black/50 rounded-xl border border-alphabag-gray hover:border-alphabag-subtext transition-colors">
+                            <div key={cex.id} className="flex items-center justify-between p-4 glass-panel rounded-xl hover:border-alphabag-yellow/30 transition-all">
                                 <div className="flex items-center gap-3">
                                     <img src={cex.icon} alt={cex.name} className="w-8 h-8 rounded-full bg-white p-0.5" />
                                     <div>
@@ -416,7 +419,7 @@ export const Settings: React.FC = () => {
 
             {/* ─── Membership Status ─── */}
             <section>
-                <h2 className="text-lg font-bold text-white mb-4 flex items-center"><Crown className="mr-2 text-alphabag-yellow" size={20} /> Membership Status</h2>
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Crown className="text-alphabag-yellow" size={20} /> Membership Status</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <TierCard level="FREE" minTokens="0" current={tier === 'FREE'} />
                     <TierCard level="ULTIMATE" minTokens="100k" current={tier === 'ULTIMATE'} />

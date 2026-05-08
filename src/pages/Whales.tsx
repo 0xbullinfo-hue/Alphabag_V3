@@ -40,8 +40,8 @@ const WhaleListItem: React.FC<{ whale: any, removeTrackedWallet: (id: string) =>
     }, [whale.address]);
 
     return (
-        <div key={whale.id} className="bg-alphabag-dark border border-alphabag-gray rounded-2xl p-6 hover:border-alphabag-yellow/50 transition-all group relative overflow-hidden shadow-sm">
-            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+        <div key={whale.id} className="glass-panel rounded-xl p-6 hover:border-alphabag-yellow/40 transition-all group relative overflow-hidden shadow-lg">
+            <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
                 <Eye size={100} />
             </div>
 
@@ -106,8 +106,10 @@ export const Whales: React.FC = () => {
     const limits = getLimits();
 
     return (
-        <div className="space-y-6 animate-fade-in">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-6 animate-fade-in">
+            <div className="relative overflow-hidden rounded-[2rem] bg-alphabag-black/50 border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.35)] p-8">
+                <div className="absolute inset-0 bg-gradient-to-br from-alphabag-yellow/10 via-transparent to-transparent blur-3xl pointer-events-none"></div>
+                <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-white flex items-center">
                         <Eye className="mr-3 text-alphabag-yellow" size={28} />
@@ -126,9 +128,10 @@ export const Whales: React.FC = () => {
                     </Link>
                 </div>
             </div>
+            </div>
 
             {/* Info Banner */}
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-start space-x-3">
+            <div className="glass-panel p-4 rounded-xl flex items-start space-x-3 border-blue-500/20 bg-blue-500/10 shadow-[0_10px_40px_rgba(96,165,250,0.08)]">
                 <ShieldAlert className="text-blue-400 shrink-0 mt-0.5" size={18} />
                 <div className="text-sm text-blue-100/80">
                     Whale Watch allows you to track major and retail "whales". Our AI engine alerts you when these addresses make significant trades.
@@ -138,7 +141,7 @@ export const Whales: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {whaleWallets.length === 0 ? (
-                    <div className="col-span-full py-20 bg-alphabag-dark border border-dashed border-alphabag-gray rounded-2xl text-center">
+                    <div className="col-span-full py-20 glass-panel rounded-xl border-dashed border-alphabag-gray/40 text-center">
                         <Eye size={48} className="mx-auto mb-4 text-alphabag-subtext opacity-30" />
                         <h3 className="text-lg font-bold text-white mb-2">No Whales Tracked</h3>
                         <p className="text-alphabag-subtext max-w-xs mx-auto mb-6">Start following smart money by adding a wallet address to your watch list.</p>
@@ -159,7 +162,7 @@ export const Whales: React.FC = () => {
 
                 {/* Limit Card if Basic/Premium */}
                 {whaleWallets.length < limits.maxWhales && (
-                    <Link to="/settings" className="bg-alphabag-black/30 border border-dashed border-alphabag-gray rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:bg-alphabag-gray/10 transition-colors group">
+                    <Link to="/settings" className="glass-panel rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-alphabag-yellow/30 transition-all group">
                         <div className="w-10 h-10 bg-alphabag-gray rounded-full flex items-center justify-center text-alphabag-subtext mb-3 group-hover:bg-alphabag-yellow group-hover:text-black transition-all">
                             <Plus size={20} />
                         </div>
@@ -170,7 +173,7 @@ export const Whales: React.FC = () => {
             </div>
 
             {tier === 'BASIC' && (
-                <div className="bg-gradient-to-r from-alphabag-yellow/20 to-alphabag-dark border border-alphabag-yellow/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between shadow-lg">
+                <div className="bg-gradient-to-r from-alphabag-yellow/20 to-alphabag-dark border border-alphabag-yellow/30 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between shadow-lg">
                     <div className="mb-4 md:mb-0">
                         <h4 className="text-lg font-bold text-white">Unlock More Whale Slots</h4>
                         <p className="text-sm text-alphabag-subtext">Premium members can track up to 10 whales simultaneously.</p>
