@@ -237,7 +237,8 @@ export const submitWallet = async (req, res) => {
                 projectGoals: founderApproved ? projectGoals : null,
                 founderSocial: founderApproved ? founderSocial : null,
                 airdropSubmittedAt: new Date().toISOString(),
-                bagTokens: (user.bagTokens || 0) + 10000 // Verified allocation per plan
+                items: (user.items || 0) + 5000, // Testnet reward
+                bagTokens: (user.bagTokens || 0) + 10000 // Reserved allocation
             };
         });
 

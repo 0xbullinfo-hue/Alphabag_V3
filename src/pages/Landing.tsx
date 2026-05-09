@@ -56,6 +56,7 @@ export const Landing: React.FC = () => {
             <button onClick={() => handleNavClick('home')} className={`transition-colors uppercase ${activeTab === 'home' ? 'text-white' : 'hover:text-white'}`}>Home</button>
             <button onClick={() => handleNavClick('features')} className={`transition-colors uppercase ${activeTab === 'features' ? 'text-white' : 'hover:text-white'}`}>Features</button>
             <button onClick={() => handleNavClick('roadmap')} className={`transition-colors uppercase ${activeTab === 'roadmap' ? 'text-white' : 'hover:text-white'}`}>Roadmap</button>
+            <button onClick={() => handleNavClick('calculator')} className={`transition-colors uppercase ${activeTab === 'calculator' ? 'text-white' : 'hover:text-white'}`}>Calculator</button>
             <button onClick={() => handleNavClick('faq')} className={`transition-colors uppercase ${activeTab === 'faq' ? 'text-white' : 'hover:text-white'}`}>FAQ</button>
             {/* Pricing hidden for beta
             <button onClick={() => scrollToSection('membership')} className="hover:text-white transition-colors uppercase">Pricing</button>
@@ -85,6 +86,7 @@ export const Landing: React.FC = () => {
             <button onClick={() => handleNavClick('home')} className={`text-left py-2 font-semibold uppercase tracking-widest ${activeTab === 'home' ? 'text-white' : 'text-alphabag-subtext'}`}>Home</button>
             <button onClick={() => handleNavClick('features')} className={`text-left py-2 font-semibold uppercase tracking-widest ${activeTab === 'features' ? 'text-white' : 'text-alphabag-subtext'}`}>Features</button>
             <button onClick={() => handleNavClick('roadmap')} className={`text-left py-2 font-semibold uppercase tracking-widest ${activeTab === 'roadmap' ? 'text-white' : 'text-alphabag-subtext'}`}>Roadmap</button>
+            <button onClick={() => handleNavClick('calculator')} className={`text-left py-2 font-semibold uppercase tracking-widest ${activeTab === 'calculator' ? 'text-white' : 'text-alphabag-subtext'}`}>Calculator</button>
             <button onClick={() => handleNavClick('faq')} className={`text-left py-2 font-semibold uppercase tracking-widest ${activeTab === 'faq' ? 'text-white' : 'text-alphabag-subtext'}`}>FAQ</button>
             {/* <button onClick={() => scrollToSection('membership')} className="text-left py-2 font-semibold text-white uppercase tracking-widest">Pricing</button> */}
             <Button size="lg" onClick={handleLaunchApp} className="w-full uppercase font-semibold">{isAuthenticated ? 'Open App' : 'Get Started'}</Button>
@@ -166,12 +168,6 @@ export const Landing: React.FC = () => {
           <section className="relative pt-24 pb-16 px-6 min-h-[90vh] flex flex-col justify-center">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-alphabag-yellow/5 blur-[120px] rounded-full pointer-events-none"></div>
             <div className="max-w-7xl mx-auto flex flex-col relative z-10 w-full">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white">
-                  Alpha <span className="text-alphabag-yellow">Calculator</span>
-                </h2>
-                <p className="text-alphabag-subtext mt-2 text-sm">Simulate your ROE with real-time accuracy.</p>
-              </div>
               <div className="relative max-w-6xl mx-auto w-full">
                 {/* Glow removed, width expanded to max-w-6xl to accommodate the full interactive calculator grid */}
                 <Calculator />
@@ -374,12 +370,25 @@ export const Landing: React.FC = () => {
       }
 
       <footer className="py-12 px-6 border-t border-white/10 bg-alphabag-black">
-        <div className="max-w-7xl mx-auto flex flex-col justify-center items-center text-alphabag-subtext text-xs font-semibold uppercase tracking-widest">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center space-x-2">
             <div className="w-6 h-6 bg-zinc-900 border border-white/10 text-alphabag-yellow flex items-center justify-center rounded">
               <Lock size={14} fill="currentColor" />
             </div>
-            <span className="text-white">Alpha<span className="text-alphabag-yellow">BAG</span> Systems © 2026</span>
+            <span className="text-white text-xs font-semibold uppercase tracking-widest">Alpha<span className="text-alphabag-yellow">BAG</span> Systems © 2026</span>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <a href="https://x.com/alphabagpro" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-alphabag-muted hover:text-white uppercase tracking-[0.2em] transition-all flex items-center gap-2">
+              <X size={14} /> Twitter
+            </a>
+            <a href="https://t.me/alphabag_access" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-alphabag-muted hover:text-white uppercase tracking-[0.2em] transition-all flex items-center gap-2">
+              <Send size={14} /> Telegram
+            </a>
+          </div>
+
+          <div className="text-[9px] text-alphabag-muted font-bold uppercase tracking-widest opacity-50">
+            v1.0 Testnet Phase
           </div>
         </div>
       </footer>

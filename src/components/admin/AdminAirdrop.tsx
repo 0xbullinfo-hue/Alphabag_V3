@@ -483,7 +483,7 @@ export const AdminAirdrop: React.FC = () => {
                                 <thead className="bg-white/5 text-[9px] uppercase text-alphabag-muted font-black tracking-widest">
                                     <tr>
                                         <th className="p-6">Member Identity (Alias)</th>
-                                        <th className="p-6">BSC Wallet / Proof</th>
+                                        <th className="p-6">Feedback / Review</th>
                                         <th className="p-6">Recruits</th>
                                         <th className="p-6 text-center">Status</th>
                                         <th className="p-6 text-right">Power (ITEMS)</th>
@@ -501,6 +501,11 @@ export const AdminAirdrop: React.FC = () => {
                                                             Proof Link <ExternalLink size={10} />
                                                         </a>
                                                     )}
+                                                </div>
+                                            </td>
+                                            <td className="p-6">
+                                                <div className="max-w-[200px] text-[10px] text-zinc-400 italic line-clamp-2" title={p.reviewComment}>
+                                                    {p.reviewComment || <span className="text-zinc-600">Pending Feedback...</span>}
                                                 </div>
                                             </td>
                                             <td className="p-6 font-black text-white">{p.referralCount || 0}</td>

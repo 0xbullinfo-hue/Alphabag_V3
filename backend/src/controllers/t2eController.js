@@ -265,24 +265,25 @@ export const claimMission = async (req, res) => {
         await store.create('t2e_claims', newClaim);
 
         // Update User Balance (ITEMS) & Legacy Fields for Frontend
-        const nowStr = new Date().toISOString().split('T')[0];
+        const fullNow = now.toISOString();
         await store.update('users', u => u.id.toLowerCase() === userId.toLowerCase(), (u) => {
             const updates = {
                 items: (Number(u.items) || 0) + Number(mission.rewardTokens),
                 lifetimeEarned: (Number(u.lifetimeEarned) || 0) + Number(mission.rewardTokens)
             };
 
-            // Legacy support for Airdrop.tsx UI
-            if (mission.frequency === 'DAILY') {
-                updates.lastDailyTaskAt = nowStr;
+            // Strict binding for the Daily Terminal Reward timer
+            if (mission.id === 't2e_daily_claim') {
+                updates.lastDailyTaskAt = fullNow;
+            }
+            if (mission.frequency === 'WEEKLY') {
+                updates.lastWeeklyTaskAt = fullNow;
+                const weeklyTasks = u.weeklyTasks || {};
+                weeklyTasks[mission.id] = { date: fullNow };
+                updates.weeklyTasks = weeklyTasks;
             }
             if (mission.frequency === 'ONCE') {
                 updates.completedTasks = [...(u.completedTasks || []), mission.id];
-            }
-            if (mission.frequency === 'WEEKLY') {
-                const weeklyTasks = u.weeklyTasks || {};
-                weeklyTasks[mission.id] = { date: now.toISOString() };
-                updates.weeklyTasks = weeklyTasks;
             }
 
             return updates;

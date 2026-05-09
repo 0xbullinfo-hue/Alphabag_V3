@@ -161,7 +161,30 @@
     "referralCount": 0,
     "tier": "ULTIMATE",
     "isAdmin": false,
-    "lastActive": "2026-05-08T18:13:48.725Z",
-    "createdAt": "2026-04-15T15:28:22.399Z"
+    "lastActive": "2026-05-09T00:03:42.808Z",
+    "createdAt": "2026-04-15T15:28:22.399Z",
+    "items": 600,
+    "lifetimeEarned": 600,
+    "completedTasks": [
+      "testnet_calc_001",
+      "t2e_social_006",
+      "t2e_social_001"
+    ],
+    "lastDailyTaskAt": "2026-05-09",
+    "airdropSubmitted": true,
+    "submittedWallet": "ryrtyrtyrtytyrtytytryrtyrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+    "xLink": "",
+    "reviewComment": "ryryrt",
+    "isFounderAirdrop": false,
+    "projectName": null,
+    "projectTicker": null,
+    "projectManifesto": null,
+    "projectSocial": null,
+    "projectWebsite": null,
+    "projectContract": null,
+    "projectGoals": null,
+    "founderSocial": null,
+    "airdropSubmittedAt": "2026-05-08T23:59:06.476Z",
+    "bagTokens": 10000
   }
 ]

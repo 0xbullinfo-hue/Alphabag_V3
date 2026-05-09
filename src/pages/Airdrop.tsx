@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Gift, Twitter, Send, CheckCircle2, Lock, Timer, MousePointer2, 
-    ArrowRight, Shield, ShieldAlert, Zap, ExternalLink, Users, BarChart3, Copy, Star, ChevronRight, Bell, 
+    ArrowRight, Shield, ShieldAlert, Zap, ExternalLink, Users, BarChart3, Copy, Star, ChevronRight, Bell, X,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
@@ -25,14 +25,15 @@ export const Airdrop: React.FC = () => {
 
 
     // Live countdowns for daily/weekly reset
-    const [dailyCountdown, setDailyCountdown] = useState('');
-    const [weeklyCountdown, setWeeklyCountdown] = useState('');
+    const [dailyCountdown, setDailyCountdown] = useState('00:00:00:00');
+    const [weeklyCountdown, setWeeklyCountdown] = useState('00:00:00:00');
     const formatCountdown = (ms: number) => {
-        if (ms <= 0) return 'AVAILABLE NOW';
-        const h = Math.floor(ms / 3600000);
-        const m = Math.floor((ms % 3600000) / 60000);
-        const s = Math.floor((ms % 60000) / 1000);
-        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        if (ms <= 0) return '00:00:00:00';
+        const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((ms % (1000 * 60)) / 1000);
+        return `${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
 
@@ -42,7 +43,9 @@ export const Airdrop: React.FC = () => {
     const [xLink, setXLink] = useState('');
     const [review, setReview] = useState('');
     const [taskLinks, setTaskLinks] = useState<Record<string, string>>({});
+    const [taskFeedback, setTaskFeedback] = useState<Record<string, string>>({});
     const handleTaskLinkChange = (id: string, value: string) => setTaskLinks(prev => ({ ...prev, [id]: value }));
+    const handleTaskFeedbackChange = (id: string, value: string) => setTaskFeedback(prev => ({ ...prev, [id]: value }));
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(() => {
         // Persist submission state per user so form can't be re-submitted
@@ -65,23 +68,23 @@ export const Airdrop: React.FC = () => {
     // Live countdown interval for daily/weekly missions
     useEffect(() => {
         const tick = () => {
-            const dailyTask = tasks.find((t: any) => t.type === 'daily');
-            const weeklyTask = tasks.find((t: any) => t.type === 'weekly');
+            const hasDaily = tasks.some((t: any) => t.frequency?.toUpperCase() === 'DAILY' || t.type?.toUpperCase() === 'DAILY');
+            const hasWeekly = tasks.some((t: any) => t.frequency?.toUpperCase() === 'WEEKLY' || t.type?.toUpperCase() === 'WEEKLY');
 
-            if (dailyTask && (user as any)?.lastDailyTaskAt) {
-                const lastDaily = new Date((user as any).lastDailyTaskAt + 'T00:00:00');
-                const nextDaily = new Date(lastDaily.getTime() + 24 * 60 * 60 * 1000);
-                setDailyCountdown(formatCountdown(nextDaily.getTime() - Date.now()));
+            if (hasDaily && (user as any)?.lastDailyTaskAt) {
+                const lastDaily = new Date((user as any).lastDailyTaskAt).getTime();
+                const diff = (lastDaily + 24 * 60 * 60 * 1000) - Date.now();
+                setDailyCountdown(formatCountdown(diff));
             } else {
-                setDailyCountdown('AVAILABLE NOW');
+                setDailyCountdown('00:00:00:00');
             }
 
-            if (weeklyTask && (user as any)?.weeklyTasks?.[weeklyTask.id]?.date) {
-                const lastWeekly = new Date((user as any).weeklyTasks[weeklyTask.id].date);
-                const nextWeekly = new Date(lastWeekly.getTime() + 7 * 24 * 60 * 60 * 1000);
-                setWeeklyCountdown(formatCountdown(nextWeekly.getTime() - Date.now()));
+            if (hasWeekly && (user as any)?.lastWeeklyTaskAt) {
+                const lastWeekly = new Date((user as any).lastWeeklyTaskAt).getTime();
+                const diff = (lastWeekly + 7 * 24 * 60 * 60 * 1000) - Date.now();
+                setWeeklyCountdown(formatCountdown(diff));
             } else {
-                setWeeklyCountdown('AVAILABLE NOW');
+                setWeeklyCountdown('00:00:00:00');
             }
         };
 
@@ -113,8 +116,13 @@ export const Airdrop: React.FC = () => {
         const fetchTasks = async () => {
             try {
                 const res = await api.get('/api/airdrop/tasks');
-                setTasks(Array.isArray(res.data) ? res.data : []);
-            } catch {}
+                // Backend returns { missions: [], total: X, ... }
+                const taskData = Array.isArray(res.data) ? res.data : (res.data.missions || []);
+                setTasks(taskData);
+            } catch (err) {
+                console.error("Failed to fetch mission hub tasks", err);
+                setTasks([]);
+            }
         };
 
         const fetchReferrals = async () => {
@@ -184,7 +192,11 @@ export const Airdrop: React.FC = () => {
 
         setIsTaskLoading(true);
         try {
-            const res = await api.post('/api/airdrop/tasks/complete', { taskId, taskLink: link });
+            const res = await api.post('/api/airdrop/tasks/complete', { 
+                taskId, 
+                taskLink: link,
+                feedback: taskFeedback[taskId] 
+            });
             if (res.data.success) {
                 Swal.fire({
                     title: 'MISSION COMPLETE',
@@ -200,12 +212,13 @@ export const Airdrop: React.FC = () => {
                 }
                 // Refresh tasks and stats in-place
                 const [newTasks, newStats] = await Promise.all([
-                    api.get('/api/airdrop/tasks').then(r => r.data).catch(() => tasks),
+                    api.get('/api/airdrop/tasks').then(r => r.data.missions || []).catch(() => tasks),
                     api.get('/api/airdrop/stats').then(r => r.data).catch(() => stats),
                 ]);
                 setTasks(newTasks);
                 setStats(newStats);
                 setTaskLinks(prev => ({ ...prev, [taskId]: '' }));
+                setTaskFeedback(prev => ({ ...prev, [taskId]: '' }));
                 // Sync user context in the background
                 await refreshUser();
             }
@@ -299,13 +312,21 @@ export const Airdrop: React.FC = () => {
                 projectWebsite,
                 projectContract,
                 projectGoals,
-                founderSocial
+                founderSocial,
+                grantReward: true // Triggers +5000 ITEMS +10000 bagTokens
             });
 
             if (res.data.success) {
                 const key = `alphabag_submitted_${user?.id || 'guest'}`;
                 localStorage.setItem(key, 'true');
                 setSubmitted(true);
+                
+                // Immediately apply the 5000 ITEM reward
+                if (res.data.items !== undefined) {
+                    setItemsBalance(res.data.items);
+                }
+                await refreshUser();
+
                 Swal.fire({
                     title: 'DATA SYNCED',
                     text: 'Your mission details have been submitted successfully.',
@@ -349,7 +370,7 @@ export const Airdrop: React.FC = () => {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-alphabag-yellow/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
                 
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-alphabag-yellow/10 border border-alphabag-yellow/30 rounded-full text-[10px] text-alphabag-yellow font-black uppercase tracking-[0.3em] shadow-[0_0_15px_rgba(252,213,53,0.2)]">
-                    <Zap size={12} fill="currentColor" className="animate-pulse" /> Phase 1: AlphaBAG Genesis
+                    <Zap size={12} fill="currentColor" className="animate-pulse" /> v1.0 Testnet Phase
                 </div>
                 <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase relative mb-6">
                     Mission Control: <span className="text-transparent bg-clip-text bg-gradient-to-r from-alphabag-yellow to-yellow-600 drop-shadow-[0_0_15px_rgba(252,213,53,0.3)]">AlphaBAG</span>
@@ -396,7 +417,17 @@ export const Airdrop: React.FC = () => {
                                 <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                                     <div className="h-full rounded-full transition-all duration-700 bg-alphabag-yellow" style={{width: `${progress}%`}}></div>
                                 </div>
-                                <div className="text-[8px] text-alphabag-muted font-bold">{myTeamSize} / 100 MAX</div>
+                                <div className="text-[8px] text-alphabag-muted font-bold mb-4">{myTeamSize} / 100 MAX</div>
+                            </div>
+
+                            {/* Status Row */}
+                            <div className="mt-4 pt-4 border-t border-white/5">
+                                <div className="bg-red-500/10 p-2.5 rounded-lg border border-red-500/20 flex justify-between items-center">
+                                    <div className="text-[8px] font-bold uppercase tracking-widest text-red-400">Status Strike Protocol</div>
+                                    <div className="text-sm font-black text-red-400">
+                                        {(user as any)?.strikes || 0}/5
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     );
@@ -411,25 +442,23 @@ export const Airdrop: React.FC = () => {
                         <span className="text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full border bg-alphabag-yellow/10 text-alphabag-yellow border-alphabag-yellow/40">ELIGIBLE</span>
                     </div>
 
-                    {/* Main Balance */}
-                    <div className="mb-3">
-                        <div className="text-3xl font-black text-white tracking-tight mb-1">
-                            {itemsBalance.toLocaleString()}
+                    {/* Main Balance (Total) */}
+                    <div className="mb-4">
+                        <div className="text-[9px] text-alphabag-muted font-bold uppercase tracking-widest mb-1">Total ITEMS Earned</div>
+                        <div className="text-4xl font-black text-white tracking-tight drop-shadow-md">
+                            {(itemsBalance + bagBalance).toLocaleString()}
                         </div>
-                        <div className="text-[10px] text-alphabag-muted font-bold uppercase tracking-widest">ITEMS accumulated</div>
                     </div>
 
-                    {/* Status Row */}
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                        <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-                            <div className="text-[7px] text-alphabag-muted font-bold uppercase tracking-widest mb-0.5">TGE Reserve</div>
-                            <div className="text-sm font-black text-alphabag-yellow">{bagBalance.toLocaleString()}</div>
+                    {/* Breakdown */}
+                    <div className="flex gap-4 mb-4 pb-4 border-b border-white/5">
+                        <div className="flex-1">
+                            <div className="text-[8px] text-alphabag-muted font-bold uppercase tracking-widest mb-0.5">Earned ITEMS</div>
+                            <div className="text-lg font-black text-white/90">{itemsBalance.toLocaleString()}</div>
                         </div>
-                        <div className="bg-red-500/10 p-2 rounded-lg border border-red-500/20">
-                            <div className="text-[7px] font-bold uppercase tracking-widest mb-0.5 text-red-400">Status Strike</div>
-                            <div className="text-sm font-black text-red-400">
-                                {(user as any)?.strikes || 0}/5
-                            </div>
+                        <div className="flex-1">
+                            <div className="text-[8px] text-alphabag-yellow font-bold uppercase tracking-widest mb-0.5">Reserve ITEMS</div>
+                            <div className="text-lg font-black text-alphabag-yellow drop-shadow-[0_0_8px_rgba(252,213,53,0.3)]">{bagBalance.toLocaleString()}</div>
                         </div>
                     </div>
 
@@ -464,7 +493,7 @@ export const Airdrop: React.FC = () => {
                     )}
                 </div>
 
-                <div className="glass-panel p-3 bg-gradient-to-br from-alphabag-green/5 to-transparent border border-alphabag-green/20 relative overflow-hidden rounded-xl shadow-[0_4px_30px_rgba(0,255,163,0.05)]">
+                <div className="glass-panel p-3 bg-gradient-to-br from-alphabag-green/5 to-transparent border border-alphabag-green/20 relative overflow-hidden rounded-xl shadow-[0_4px_30px_rgba(0,255,163,0.05)] flex flex-col">
                     <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-alphabag-green/10 rounded-full blur-xl opacity-50"></div>
                     <div className="flex justify-between items-start mb-3">
                         <div className="text-[9px] text-alphabag-muted font-black uppercase tracking-widest">TGE EVENT</div>
@@ -472,14 +501,34 @@ export const Airdrop: React.FC = () => {
                     </div>
 
                     {stats?.tgeDate ? (
-                        <>
-                            <TGECountdown targetDate={stats.tgeDate} />
-                            <div className="mt-2 text-center text-[8px] text-alphabag-muted font-bold uppercase tracking-widest">
-                                Target: {new Date(stats.tgeDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        <div className="flex flex-col flex-1">
+                            <div>
+                                {campaignEnded ? (
+                                    <div className="animate-in fade-in zoom-in duration-500">
+                                        <div className="text-[8px] text-alphabag-yellow font-black uppercase tracking-[0.2em] text-center mb-2">Wallet Distribution Protocol</div>
+                                        <TGECountdown targetDate={new Date(new Date(stats.tgeDate).getTime() + 72 * 60 * 60 * 1000).toISOString()} />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <TGECountdown targetDate={stats.tgeDate} />
+                                        <div className="mt-2 text-center text-[8px] text-alphabag-muted font-bold uppercase tracking-widest">
+                                            Target: {new Date(stats.tgeDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        </div>
+                                    </>
+                                )}
                             </div>
-                        </>
+
+                            <div className="mt-auto pb-2 border-b border-alphabag-green/20">
+                                <div className={`text-[8px] font-black uppercase tracking-[0.2em] text-center mb-1 ${campaignEnded ? 'text-alphabag-yellow animate-pulse' : 'text-alphabag-green'}`}>
+                                    {campaignEnded ? "Final $BAG Allocation" : "Projected $BAG Allocation"}
+                                </div>
+                                <div className={`text-center font-black transition-all duration-700 tracking-tight py-2 ${campaignEnded ? 'text-3xl text-alphabag-yellow drop-shadow-[0_0_10px_rgba(252,213,53,0.5)]' : 'text-2xl text-white/30 blur-[2px] tracking-[0.3em]'}`}>
+                                    {campaignEnded ? (bagBalance + (itemsBalance * (itemsToBagRate || 0))).toLocaleString() : "????"}
+                                </div>
+                            </div>
+                        </div>
                     ) : (
-                        <div className="py-2 text-center">
+                        <div className="py-2 text-center mt-auto">
                             <div className="text-lg font-black text-alphabag-green/60 tracking-tight">TBA</div>
                             <div className="text-[8px] text-alphabag-muted font-bold uppercase tracking-widest mt-0.5">Announcement incoming</div>
                         </div>
@@ -556,24 +605,31 @@ export const Airdrop: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {tasks.filter((t: any) => t.type !== 'unlimited').map((task: any) => {
-                            const type = task.frequency?.toLowerCase() || task.type?.toLowerCase();
                             const isCompleted = (() => {
                                 if (!user) return false;
-                                if (type === 'once') return (user as any).completedTasks?.includes(task.id);
-                                if (type === 'daily') {
-                                    const today = new Date().toISOString().split('T')[0];
-                                    return (user as any).lastDailyTaskAt === today;
+                                const freq = (task.frequency || '').toUpperCase();
+                                const taskId = task.id;
+
+                                // Aggressive check for DAILY/WEEKLY tasks
+                                if (freq === 'DAILY') {
+                                    const lastClaimAt = (user as any).lastDailyTaskAt;
+                                    if (!lastClaimAt) return false;
+                                    const lastTime = new Date(lastClaimAt).getTime();
+                                    const timeDiff = Date.now() - lastTime;
+                                    return timeDiff >= 0 && timeDiff < (24 * 60 * 60 * 1000);
                                 }
-                                if (type === 'weekly') {
-                                    const weeklyObj = (user as any).weeklyTasks ? (user as any).weeklyTasks[task.id] : null;
-                                    if (!weeklyObj) return false;
-                                    const lastDate = new Date(weeklyObj.date);
-                                    const diffTime = Math.abs(new Date().getTime() - lastDate.getTime());
-                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                    return diffDays <= 7;
+                                
+                                if (freq === 'WEEKLY') {
+                                    const lastClaimAt = (user as any).lastWeeklyTaskAt;
+                                    if (!lastClaimAt) return false;
+                                    const lastTime = new Date(lastClaimAt).getTime();
+                                    const timeDiff = Date.now() - lastTime;
+                                    return timeDiff >= 0 && timeDiff < (7 * 24 * 60 * 60 * 1000);
                                 }
-                                return false;
+
+                                return (user as any).completedTasks?.includes(taskId) || (user as any).completedMissions?.includes(taskId);
                             })();
+                            const type = task.frequency?.toLowerCase() || task.type?.toLowerCase();
                             return (
                                 <div key={task.id} className={`flex flex-col justify-between h-full p-6 rounded-2xl border transition-all group relative overflow-hidden ${isCompleted ? 'bg-alphabag-green/5 border-alphabag-green/20' : 'bg-white/[0.02] border-white/5 hover:border-alphabag-yellow/30'}`}>
                                     <div className="flex justify-between items-start mb-4">
@@ -593,21 +649,37 @@ export const Airdrop: React.FC = () => {
                                     <div className="flex-1"><h3 className="font-black text-white uppercase tracking-wider mb-1">{task.title}</h3>
                                     <p className="text-xs text-alphabag-subtext mb-2 leading-relaxed">{task.description}</p></div>
 
-                                    {/* Countdown Timer for daily/weekly tasks */}
-                                    {isCompleted && (type === 'daily' || type === 'weekly') && (
-                                        <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-black/40 border border-white/5 rounded-lg">
-                                            <Timer size={12} className="text-alphabag-muted shrink-0" />
-                                            <div className="text-[9px] font-black uppercase tracking-widest text-alphabag-muted">Next:</div>
-                                            <div className="text-[10px] font-black tracking-widest text-white font-mono">
-                                                {type === 'daily' ? dailyCountdown : weeklyCountdown}
-                                            </div>
+
+                                    {task.actionUrl && !isCompleted && (
+                                        <div className="mb-3">
+                                            <Button
+                                                onClick={() => window.open(task.actionUrl, '_blank')}
+                                                className="w-full py-2 bg-white/5 text-white/70 hover:text-white border border-white/10 hover:border-alphabag-yellow/50 text-[9px] font-black tracking-widest uppercase transition-all flex items-center justify-center gap-2"
+                                                variant="secondary"
+                                                size="sm"
+                                            >
+                                                {task.title.toLowerCase().includes('telegram') ? <Send size={12} className="text-[#229ED9]" /> : <X size={12} className="text-white" />}
+                                                Execute Mission ↗
+                                            </Button>
                                         </div>
                                     )}
-                                    {!isCompleted && (type === 'daily' || type === 'weekly') && (
-                                        <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-alphabag-yellow/5 border border-alphabag-yellow/20 rounded-lg">
-                                            <Timer size={12} className="text-alphabag-yellow shrink-0" />
-                                            <div className="text-[9px] font-black text-alphabag-yellow uppercase tracking-widest">
-                                                {type === 'daily' ? dailyCountdown : weeklyCountdown}
+
+                                    {((isCompleted && task.id === 't2e_daily_claim') || (task.id === 't2e_daily_claim' && (user as any)?.lastDailyTaskAt)) && (
+                                        <div className="mb-4">
+                                            <div className="text-[8px] text-alphabag-muted font-black uppercase tracking-[0.2em] mb-2 text-center opacity-50">Next Transmission Window</div>
+                                            <div className="flex gap-2 justify-center">
+                                                {(task.frequency?.toUpperCase() === 'DAILY' ? dailyCountdown : weeklyCountdown).split(':').map((val, idx) => (
+                                                    <div key={idx} className="flex flex-col items-center">
+                                                        <div className="bg-black/60 border border-white/10 rounded-lg w-12 h-12 flex items-center justify-center mb-1 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                                                            <span className="text-xl font-black text-alphabag-yellow tabular-nums drop-shadow-[0_0_15px_rgba(252,213,53,0.6)]">
+                                                                {val || '00'}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[8px] font-black text-alphabag-muted uppercase tracking-widest">
+                                                            {idx === 0 ? 'Day' : idx === 1 ? 'Hrs' : idx === 2 ? 'Min' : 'Sec'}
+                                                        </span>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     )}
@@ -615,8 +687,8 @@ export const Airdrop: React.FC = () => {
                                     {task.requiresLink && !isCompleted && (
                                         <div className="mb-4">
                                             <input 
-                                                type="url" 
-                                                placeholder="X Activity Proof Link: https://x.com/..."
+                                                type="text" 
+                                                placeholder={task.title.toLowerCase().includes('telegram') ? "@Telegram_Username" : "Activity Proof Link: https://..."}
                                                 className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-[10px] text-white focus:border-alphabag-yellow/50 outline-none transition-all"
                                                 value={taskLinks[task.id] || ''}
                                                 onChange={(e) => handleTaskLinkChange(task.id, e.target.value)}
@@ -624,19 +696,35 @@ export const Airdrop: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {!isCompleted && (
+                                    {task.requiresFeedback && !isCompleted && (
+                                        <div className="mb-4">
+                                            <textarea 
+                                                placeholder="Provide your mission feedback here..."
+                                                className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-[10px] text-white h-20 resize-none focus:border-alphabag-yellow/50 outline-none transition-all"
+                                                value={taskFeedback[task.id] || ''}
+                                                onChange={(e) => handleTaskFeedbackChange(task.id, e.target.value)}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {!isCompleted ? (
                                         <Button
                                             onClick={() => {
-                                                if (task.actionUrl && !task.requiresLink) {
-                                                    window.open(task.actionUrl, '_blank');
-                                                }
                                                 handleCompleteTask(task.id, task.requiresLink);
                                             }}
-                                            className={`w-full py-2.5 text-[10px] font-black tracking-[0.2em] uppercase transition-all ${missionPaused || (task.requiresLink && !taskLinks[task.id]) ? 'bg-white/5 text-alphabag-muted cursor-not-allowed opacity-50' : 'bg-alphabag-yellow text-black hover:scale-[1.02] shadow-[0_5px_15px_rgba(252,213,53,0.3)]'}`}
+                                            className={`w-full py-2.5 text-[10px] font-black tracking-[0.2em] uppercase transition-all ${missionPaused || (task.requiresLink && !taskLinks[task.id]) || (task.requiresFeedback && !taskFeedback[task.id]) ? 'bg-white/5 text-alphabag-muted cursor-not-allowed opacity-50' : task.frequency?.toUpperCase() === 'DAILY' ? 'bg-green-500 text-black hover:scale-[1.02] shadow-[0_5px_15px_rgba(34,197,94,0.3)]' : 'bg-alphabag-yellow text-black hover:scale-[1.02] shadow-[0_5px_15px_rgba(252,213,53,0.3)]'}`}
                                             size="sm"
-                                            disabled={isTaskLoading || missionPaused || (task.requiresLink && !taskLinks[task.id])}
+                                            disabled={isTaskLoading || missionPaused || (task.requiresLink && !taskLinks[task.id]) || (task.requiresFeedback && !taskFeedback[task.id])}
                                         >
-                                            {missionPaused ? '⏸ MISSION PAUSED' : isTaskLoading ? 'Syncing...' : (task.type === 'daily' ? `CLAIM ${task.rewardTokens || 50} ITEMS DAILY` : task.type === 'weekly' ? `CLAIM ${task.rewardTokens || 150} ITEMS` : `Execute Mission ${task.actionUrl && !task.requiresLink ? '↗' : ''}`)}
+                                            {missionPaused ? '⏸ MISSION PAUSED' : isTaskLoading ? 'Syncing...' : `CLAIM ${task.rewardTokens || 50} ITEMS`}
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            className="w-full py-2.5 text-[10px] font-black tracking-[0.2em] uppercase bg-white/5 text-alphabag-muted cursor-not-allowed border border-white/10"
+                                            size="sm"
+                                            disabled
+                                        >
+                                            {'MISSION COMPLETE ✓'}
                                         </Button>
                                     )}
                                 </div>
@@ -685,11 +773,18 @@ export const Airdrop: React.FC = () => {
                             </div>
 
                             <Button 
-                                type="submit"
-                                disabled={isSubmitting || submitted}
-                                className="w-full h-16 bg-gradient-to-r from-alphabag-yellow to-yellow-600 text-black font-black uppercase tracking-[0.3em] rounded-2xl hover:brightness-110 active:scale-95 transition-all shadow-[0_10px_30px_rgba(252,213,53,0.2)]"
+                                type="submit" 
+                                disabled={isSubmitting || !review}
+                                className="w-full py-4 bg-alphabag-yellow text-black font-black uppercase tracking-[0.4em] rounded-2xl hover:scale-[1.01] transition-all shadow-[0_20px_80px_rgba(252,213,53,0.15)] flex items-center justify-center gap-4 group"
                             >
-                                {isSubmitting ? 'TRANSMITTING...' : 'INITIALIZE FINAL SYNC'}
+                                {isSubmitting ? 'SYNCING DATA...' : (
+                                    <div className="flex flex-col items-center text-center">
+                                        <span className="text-xs md:text-sm font-black tracking-[0.2em] mb-1">INITIALIZE FINAL SYNC</span>
+                                        <span className="text-[9px] font-bold opacity-80 group-hover:opacity-100 group-hover:text-black transition-all uppercase tracking-[0.1em]">
+                                            Earn 5,000 ITEMS for Feedback
+                                        </span>
+                                    </div>
+                                )}
                             </Button>
                         </form>
                     </div>
