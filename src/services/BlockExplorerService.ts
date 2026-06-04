@@ -54,7 +54,7 @@ export class BlockExplorerService {
         console.log(`[BlockExplorerService] Found ${transactions.length} transactions`);
 
         // Transform to consistent format
-        return transactions.map(tx => ({
+        return transactions.map((tx: any) => ({
           hash: tx.hash,
           timestamp: parseInt(tx.timeStamp),
           from: tx.from,
@@ -162,7 +162,7 @@ export class BlockExplorerService {
 
         console.log(`[BlockExplorerService] Found ${transactions.length} token transactions`);
 
-        return transactions.map(tx => ({
+        return transactions.map((tx: any) => ({
           hash: tx.hash,
           timestamp: parseInt(tx.timeStamp),
           from: tx.from,

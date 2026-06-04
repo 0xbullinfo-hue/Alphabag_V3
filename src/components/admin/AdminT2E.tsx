@@ -247,7 +247,7 @@ export const AdminT2E: React.FC = () => {
                                         onChange={e => setMinClaim(e.target.value)} 
                                         className="flex-1 bg-black border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm focus:border-alphabag-yellow outline-none transition-all" 
                                     />
-                                    <Button onClick={handleSaveConfig} isLoading={isLoading} className="bg-alphabag-yellow text-[#000] font-black uppercase tracking-widest py-3 px-8 rounded-xl hover:scale-105 transition-all text-[10px] shadow-lg shadow-alphabag-yellow/5">
+                                    <Button onClick={() => handleSaveConfig()} isLoading={isLoading} className="bg-alphabag-yellow text-[#000] font-black uppercase tracking-widest py-3 px-8 rounded-xl hover:scale-105 transition-all text-[10px] shadow-lg shadow-alphabag-yellow/5">
                                         SYNC FLOOR
                                     </Button>
                                 </div>

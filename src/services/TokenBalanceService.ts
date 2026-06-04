@@ -101,7 +101,7 @@ export class TokenBalanceService {
    * @returns 'PREMIUM' or 'FREE'
    */
   static getTier(balance: number, minimumRequired: number): 'PREMIUM' | 'FREE' {
-    return this.isQualifiedForPremium(balance, minimumRequired) ? 'PREMIUM' : 'FREE';
+    return this.isQualifiedForPremium(balance) ? 'PREMIUM' : 'FREE';
   }
 
   /**

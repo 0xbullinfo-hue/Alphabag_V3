@@ -48,7 +48,7 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { open } = useWeb3Modal();
-  const { address: wagmiAddress, isConnected: wagmiIsConnected, chainId } = useAccount();
+  const { address: wagmiAddress, isConnected: wagmiIsConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { user, upgradeToUltimate } = useAuth();
 
@@ -108,8 +108,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const qualified = TokenBalanceService.isQualifiedForPremium(balance);
       setIsPremium(qualified);
 
-      if (qualified && user?.tier !== 'PREMIUM') {
-        await upgradeToUltimate();
+      if (qualified && user?.tier !== 'ULTIMATE') {
+        await upgradeToUltimate(address);
       }
     } catch (error) {
       console.error('Token balance check failed:', error);

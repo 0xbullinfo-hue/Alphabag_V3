@@ -29,7 +29,7 @@ export const TOKEN_GATING_CONFIG = {
   // Centralized single source of truth - replaces hardcoded wallets everywhere
   ADMIN_WALLETS: (import.meta.env.VITE_ADMIN_WALLETS || '')
     .split(',')
-    .map(w => w.trim())
+    .map((w: string) => w.trim())
     .filter(Boolean),
   
   // ===== FEATURE FLAGS =====
