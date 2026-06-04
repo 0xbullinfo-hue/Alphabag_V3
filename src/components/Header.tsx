@@ -87,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, isSidebarOpen }) 
           </button>
 
           <Link to="/" className="flex items-center space-x-2 group">
-            <img src="/logo.png" alt="AlphaBAG Logo" className="w-8 h-8 object-contain rounded-md group-hover:scale-105 transition-transform" />
+            <img src="/logo.png" alt="AlphaBAG Logo" className="w-8 h-8 object-contain rounded-full group-hover:scale-105 transition-transform" />
             <span className="text-xl font-bold text-[#eaecef] tracking-tight">AlphaBAG</span>
           </Link>
 

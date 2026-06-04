@@ -97,7 +97,7 @@ export const Landing: React.FC = () => {
       <nav className="fixed top-0 w-full z-50 bg-alphabag-black/80 backdrop-blur-xl border-b border-white/5 shadow-glass">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => handleNavClick('home')}>
-            <img src="/logo.png" alt="AlphaBAG Logo" className="w-9 h-9 object-contain rounded-lg shadow-[0_0_20px_rgba(252,213,53,0.1)]" />
+            <img src="/logo.png" alt="AlphaBAG Logo" className="w-9 h-9 object-contain rounded-full shadow-[0_0_20px_rgba(252,213,53,0.1)]" />
             <span className="text-xl font-semibold tracking-tighter text-white">Alpha<span className="text-alphabag-yellow">BAG</span></span>
           </div>
 
