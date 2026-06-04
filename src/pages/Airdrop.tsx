@@ -21,6 +21,7 @@ export const Airdrop: React.FC = () => {
     const [itemsBalance, setItemsBalance] = useState<number>(0);
     const [itemsToBagRate, setItemsToBagRate] = useState<number | null>(null);
     const [campaignEnded, setCampaignEnded] = useState(false);
+    const [payoutRequest, setPayoutRequest] = useState<any>(null); // user's current payout request
 
 
 
@@ -128,61 +129,38 @@ export const Airdrop: React.FC = () => {
             } catch {}
         };
 
-        // Check mission pause state and itemsToBagRate (public)
-        const checkMissionStatus = async () => {
-            try {
-                const res = await api.get('/api/airdrop/status');
-                if (res.data.settings?.isPaused) {
-                    setMissionPaused(true);
-                }
-                if (res.data.settings?.itemsToBagRate) {
-                    setItemsToBagRate(res.data.settings.itemsToBagRate);
-                }
-            } catch {}
-        };
-
         // Always fetch tasks — public endpoint, needed for mission card rendering
         fetchStats();
         fetchTasks();
-        checkMissionStatus();
 
-        if (user) {
-            fetchReferrals();
-            
-            // Check submission status
-            const checkStatus = async () => {
-                try {
-                    const res = await api.get('/api/airdrop/status');
-                    if (res.data.userStatus?.walletSubmitted) {
-                        setSubmitted(true);
-                    }
-                    if (res.data.settings?.isPaused) {
-                        setMissionPaused(true);
-                    }
-                    if (res.data.settings?.itemsToBagRate) {
-                        setItemsToBagRate(res.data.settings.itemsToBagRate);
-                    }
-                } catch {}
-            };
-            checkStatus();
-        }
+        // Unified status check (works for both authed and public)
+        const checkStatus = async () => {
+            try {
+                const res = await api.get('/api/airdrop/status');
+                const settings = res.data.settings || {};
+                if (settings.isPaused) setMissionPaused(true);
+                if (settings.itemsToBagRate) setItemsToBagRate(settings.itemsToBagRate);
+                // Server-authoritative campaign ended flag
+                if (settings.campaignEnded) setCampaignEnded(true);
+
+                if (user && res.data.userStatus) {
+                    const us = res.data.userStatus;
+                    if (us.walletSubmitted) setSubmitted(true);
+                    if (us.payoutRequest) setPayoutRequest(us.payoutRequest);
+                }
+            } catch {}
+        };
+        checkStatus();
+
+        if (user) fetchReferrals();
     }, [user]);
 
-    // Live TGE end checker
+    // TGE date fallback: only triggers if backend hasn't already set campaignEnded
     useEffect(() => {
-        if (!stats?.tgeDate) return;
-
-        const checkTGE = () => {
-            const now = new Date().getTime();
-            const tge = new Date(stats.tgeDate).getTime();
-            if (now >= tge && !campaignEnded) {
-                setCampaignEnded(true);
-            }
-        };
-
-        checkTGE();
-        const interval = setInterval(checkTGE, 1000);
-        return () => clearInterval(interval);
+        if (!stats?.tgeDate || campaignEnded) return;
+        const now = new Date().getTime();
+        const tge = new Date(stats.tgeDate).getTime();
+        if (now >= tge) setCampaignEnded(true);
     }, [stats?.tgeDate, campaignEnded]);
 
     const handleCompleteTask = async (taskId: string, requiresLink?: boolean) => {
@@ -531,18 +509,16 @@ export const Airdrop: React.FC = () => {
 
                             <div className="mt-auto pt-6 border-t border-[#2b3139]">
                                 <div className={`text-[10px] font-semibold uppercase text-center mb-1 ${campaignEnded ? 'text-[#fcd535]' : 'text-[#848e9c]'}`}>
-                                    {campaignEnded ? "Final Allocation" : "Projected Allocation"}
+                                    {campaignEnded ? "Final Allocation" : "Final Allocation"}
                                 </div>
-                                <div className={`text-center font-semibold transition-all duration-700 py-1 ${campaignEnded ? 'text-3xl text-[#fcd535]' : 'text-2xl text-[#eaecef] relative flex justify-center'}`}>
+                                <div className="text-center font-semibold transition-all duration-700 py-1 text-2xl text-[#eaecef] relative flex justify-center">
                                     {campaignEnded ? (
-                                        (bagBalance + (itemsBalance * (itemsToBagRate || 0))).toLocaleString()
+                                        <span className="text-3xl text-[#fcd535]">{(bagBalance + (itemsBalance * (itemsToBagRate || 0))).toLocaleString()} <span className="text-base">$BAG</span></span>
                                     ) : (
                                         <div className="relative w-fit mx-auto flex justify-center items-center select-none">
-                                            <span className="text-[#848e9c] text-2xl blur-[5px] opacity-40">
-                                                {(bagBalance + (itemsBalance * (itemsToBagRate || 1))).toLocaleString()}
-                                            </span>
-                                            <div className="absolute inset-0 flex items-center justify-center font-black tracking-widest text-[#848e9c] text-xl z-10 pointer-events-none">
-                                                ???
+                                            <span className="text-[#848e9c] text-2xl blur-[5px] opacity-40 select-none">00000</span>
+                                            <div className="absolute inset-0 flex items-center justify-center font-black tracking-widest text-[#848e9c] text-lg z-10 pointer-events-none">
+                                                <Lock size={12} className="mr-1" /> LOCKED
                                             </div>
                                         </div>
                                     )}
@@ -558,7 +534,85 @@ export const Airdrop: React.FC = () => {
                 </div>
             </div>
 
-            {/* --- Protocol Notice --- */}
+            {/* ── $BAG Withdrawal Status — always visible above protocol verification ── */}
+            {user && (
+                <div className={`rounded-lg border p-5 animate-in slide-in-from-top-2 duration-500 mb-0 ${
+                    payoutRequest?.status === 'SENT'     ? 'bg-[#0ecb81]/10 border-[#0ecb81]/30' :
+                    payoutRequest?.status === 'APPROVED' ? 'bg-blue-500/10 border-blue-500/20' :
+                    payoutRequest?.status === 'REJECTED' ? 'bg-[#f6465d]/10 border-[#f6465d]/20' :
+                    payoutRequest?.status === 'PENDING'  ? 'bg-[#fcd535]/5 border-[#fcd535]/20' :
+                                                          'bg-[#1e2329] border-[#2b3139]'
+                }`}>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                                payoutRequest?.status === 'SENT'     ? 'bg-[#0ecb81]/20 text-[#0ecb81]' :
+                                payoutRequest?.status === 'APPROVED' ? 'bg-blue-500/20 text-blue-400' :
+                                payoutRequest?.status === 'REJECTED' ? 'bg-[#f6465d]/20 text-[#f6465d]' :
+                                payoutRequest?.status === 'PENDING'  ? 'bg-[#fcd535]/10 text-[#fcd535]' :
+                                                                       'bg-[#2b3139] text-[#848e9c]'
+                            }`}>
+                                {payoutRequest?.status === 'SENT' ? <CheckCircle2 size={20} /> :
+                                 payoutRequest?.status === 'REJECTED' ? <Shield size={20} /> :
+                                 payoutRequest?.status === 'PENDING' || payoutRequest?.status === 'APPROVED' ? <Timer size={20} /> :
+                                 <Bell size={20} />}
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-[#848e9c] mb-0.5">$BAG Withdrawal Status</div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-lg font-semibold text-[#eaecef] tabular-nums">
+                                        {payoutRequest ? Number(payoutRequest.expectedTokens).toLocaleString() : '0,000'} <span className="text-sm text-[#848e9c]">$BAG</span>
+                                    </span>
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase ${
+                                        payoutRequest?.status === 'SENT'     ? 'text-[#0ecb81] bg-[#0ecb81]/10 border-[#0ecb81]/30' :
+                                        payoutRequest?.status === 'APPROVED' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
+                                        payoutRequest?.status === 'REJECTED' ? 'text-[#f6465d] bg-[#f6465d]/10 border-[#f6465d]/20' :
+                                        payoutRequest?.status === 'PENDING'  ? 'text-[#fcd535] bg-[#fcd535]/10 border-[#fcd535]/20' :
+                                                                               'text-[#848e9c] bg-[#2b3139] border-[#2b3139]'
+                                    }`}>{payoutRequest?.status || 'NO REQUEST'}</span>
+                                </div>
+                                <div className="text-[10px] text-[#848e9c] mt-1">
+                                    {!payoutRequest && 'No withdrawal request submitted yet. Convert your ITEMS after campaign ends.'}
+                                    {payoutRequest?.status === 'PENDING'  && 'Your request is queued for admin review. Processing typically takes 48–72hrs.'}
+                                    {payoutRequest?.status === 'APPROVED' && 'Approved ✓ — Transfer to your BSC wallet is being prepared.'}
+                                    {payoutRequest?.status === 'SENT'     && `Delivered to your BSC wallet.${payoutRequest.txReference ? ` TX: ${payoutRequest.txReference}` : ''}`}
+                                    {payoutRequest?.status === 'REJECTED' && 'This request was not approved. Please contact support for details.'}
+                                </div>
+                            </div>
+                        </div>
+                        {payoutRequest && (
+                            <div className="text-right text-[9px] text-[#848e9c] font-mono shrink-0">
+                                <div>Requested: {new Date(payoutRequest.createdAt).toLocaleDateString()}</div>
+                                {payoutRequest.sentAt && <div className="text-[#0ecb81] mt-0.5">Sent: {new Date(payoutRequest.sentAt).toLocaleDateString()}</div>}
+                                <div className="mt-1 text-[8px] opacity-50">{payoutRequest.walletAddress?.slice(0, 10)}...</div>
+                            </div>
+                        )}
+                    </div>
+                    {payoutRequest && (payoutRequest.status === 'PENDING' || payoutRequest.status === 'APPROVED') && (
+                        <div className="mt-4 flex items-center gap-2">
+                            {['PENDING', 'APPROVED', 'SENT'].map((step, i) => (
+                                <React.Fragment key={step}>
+                                    <div className={`flex items-center gap-1.5 text-[9px] font-bold uppercase ${
+                                        (step === payoutRequest.status) ? 'text-[#fcd535]' :
+                                        (['PENDING','APPROVED','SENT'].indexOf(step) < ['PENDING','APPROVED','SENT'].indexOf(payoutRequest.status)) ? 'text-[#0ecb81]' :
+                                        'text-[#2b3139]'
+                                    }`}>
+                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center text-[7px] ${
+                                            (step === payoutRequest.status) ? 'border-[#fcd535] bg-[#fcd535]/20 text-[#fcd535]' :
+                                            (['PENDING','APPROVED','SENT'].indexOf(step) < ['PENDING','APPROVED','SENT'].indexOf(payoutRequest.status)) ? 'border-[#0ecb81] bg-[#0ecb81]/20 text-[#0ecb81]' :
+                                            'border-[#2b3139] text-[#2b3139]'
+                                        }`}>{i + 1}</div>
+                                        {step}
+                                    </div>
+                                    {i < 2 && <div className={`flex-1 h-px ${['PENDING','APPROVED','SENT'].indexOf(step) < ['PENDING','APPROVED','SENT'].indexOf(payoutRequest.status) - 1 ? 'bg-[#0ecb81]' : 'bg-[#2b3139]'}`} />}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* --- Protocol Verification Notice --- */}
             <div className="mb-4 p-3 rounded-xl bg-blue-500/5 border border-blue-500/15 relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
                     <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20 shrink-0 mt-0.5">
@@ -827,8 +881,82 @@ export const Airdrop: React.FC = () => {
                     </div>
                     <div>
                         <h2 className="text-xl font-semibold text-[#eaecef] uppercase">Identity Synchronized</h2>
-                        <p className="text-sm text-[#848e9c] mt-1">Your mission data and application have been secured.</p>
+                        <p className="text-sm text-[#848e9c] mt-1">Your mission data and BSC wallet have been secured. You will receive your $BAG once the campaign ends and admin confirms your transfer.</p>
                     </div>
+                </div>
+            )}
+
+            {/* ── Payout Status Tracker moved above Protocol Verification — see above ── */}
+            {user && payoutRequest && false && (
+                <div className={`rounded-lg border p-6 animate-in slide-in-from-bottom-4 duration-500 ${
+                    payoutRequest.status === 'SENT'     ? 'bg-[#0ecb81]/10 border-[#0ecb81]/30' :
+                    payoutRequest.status === 'APPROVED' ? 'bg-blue-500/10 border-blue-500/20' :
+                    payoutRequest.status === 'REJECTED' ? 'bg-[#f6465d]/10 border-[#f6465d]/20' :
+                                                          'bg-[#fcd535]/5 border-[#fcd535]/20'
+                }`}>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                                payoutRequest.status === 'SENT'     ? 'bg-[#0ecb81]/20 text-[#0ecb81]' :
+                                payoutRequest.status === 'APPROVED' ? 'bg-blue-500/20 text-blue-400' :
+                                payoutRequest.status === 'REJECTED' ? 'bg-[#f6465d]/20 text-[#f6465d]' :
+                                                                      'bg-[#fcd535]/10 text-[#fcd535]'
+                            }`}>
+                                {payoutRequest.status === 'SENT' ? <CheckCircle2 size={22} /> :
+                                 payoutRequest.status === 'REJECTED' ? <Shield size={22} /> :
+                                 <Timer size={22} />}
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-[#848e9c] mb-0.5">$BAG Withdrawal Status</div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-lg font-semibold text-[#eaecef]">
+                                        {Number(payoutRequest.expectedTokens).toLocaleString()} $BAG
+                                    </span>
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase ${
+                                        payoutRequest.status === 'SENT'     ? 'text-[#0ecb81] bg-[#0ecb81]/10 border-[#0ecb81]/30' :
+                                        payoutRequest.status === 'APPROVED' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
+                                        payoutRequest.status === 'REJECTED' ? 'text-[#f6465d] bg-[#f6465d]/10 border-[#f6465d]/20' :
+                                                                              'text-[#fcd535] bg-[#fcd535]/10 border-[#fcd535]/20'
+                                    }`}>{payoutRequest.status}</span>
+                                </div>
+                                <div className="text-[10px] text-[#848e9c] mt-1">
+                                    {payoutRequest.status === 'PENDING'  && 'Your request is queued for admin review. We typically process within 24–48hrs.'}
+                                    {payoutRequest.status === 'APPROVED' && 'Approved ✓ — Transfer to your BSC wallet is in progress.'}
+                                    {payoutRequest.status === 'SENT'     && `Delivered to your BSC wallet.${payoutRequest.txReference ? ` TX: ${payoutRequest.txReference}` : ''}`}
+                                    {payoutRequest.status === 'REJECTED' && 'This request was not approved. Please contact support for details.'}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="text-right text-[9px] text-[#848e9c] font-mono shrink-0">
+                            <div>Requested: {new Date(payoutRequest.createdAt).toLocaleDateString()}</div>
+                            {payoutRequest.sentAt && <div className="text-[#0ecb81] mt-0.5">Sent: {new Date(payoutRequest.sentAt).toLocaleDateString()}</div>}
+                            <div className="mt-1 text-[8px] opacity-50">{payoutRequest.walletAddress?.slice(0, 10)}...</div>
+                        </div>
+                    </div>
+                    {/* Progress bar for pending/approved */}
+                    {(payoutRequest.status === 'PENDING' || payoutRequest.status === 'APPROVED') && (
+                        <div className="mt-4 flex items-center gap-2">
+                            {['PENDING', 'APPROVED', 'SENT'].map((step, i) => (
+                                <React.Fragment key={step}>
+                                    <div className={`flex items-center gap-1.5 text-[9px] font-bold uppercase ${
+                                        (step === payoutRequest.status) ? 'text-[#fcd535]' :
+                                        (['PENDING','APPROVED','SENT'].indexOf(step) < ['PENDING','APPROVED','SENT'].indexOf(payoutRequest.status)) ? 'text-[#0ecb81]' :
+                                        'text-[#2b3139]'
+                                    }`}>
+                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center text-[7px] ${
+                                            (step === payoutRequest.status) ? 'border-[#fcd535] bg-[#fcd535]/20 text-[#fcd535]' :
+                                            (['PENDING','APPROVED','SENT'].indexOf(step) < ['PENDING','APPROVED','SENT'].indexOf(payoutRequest.status)) ? 'border-[#0ecb81] bg-[#0ecb81]/20 text-[#0ecb81]' :
+                                            'border-[#2b3139] text-[#2b3139]'
+                                        }`}>{i + 1}</div>
+                                        {step}
+                                    </div>
+                                    {i < 2 && <div className={`flex-1 h-px ${
+                                        ['PENDING','APPROVED','SENT'].indexOf(step) < ['PENDING','APPROVED','SENT'].indexOf(payoutRequest.status) - 1 ? 'bg-[#0ecb81]' : 'bg-[#2b3139]'
+                                    }`} />}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 

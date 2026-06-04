@@ -12,11 +12,6 @@ import { AuthModal } from './components/AuthModal';
 import { UpgradeModal } from './components/UpgradeModal';
 import { AirdropOnboarding } from './components/AirdropOnboarding';
 
-// Teaser mode: when VITE_LAUNCH_MODE=teaser, show only the landing page.
-// All routes redirect to '/' and no backend is required.
-// Flip to full app: remove VITE_LAUNCH_MODE from Netlify env vars (or set to 'full').
-const IS_TEASER_MODE = import.meta.env.VITE_LAUNCH_MODE === 'teaser';
-
 // Solana Imports
 import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
@@ -36,7 +31,7 @@ const DexBag = lazy(() => import('./pages/DexBag').then(m => ({ default: m.DexBa
 const Calculator = lazy(() => import('./pages/Calculator').then(m => ({ default: m.Calculator })));
 const AlphasFeed = lazy(() => import('./pages/AlphasFeed').then(m => ({ default: m.AlphasFeed })));
 const AdminProjectDashboard = lazy(() => import('./pages/AdminProjectDashboard').then(m => ({ default: m.AdminProjectDashboard })));
-const LivePairs = lazy(() => import('./pages/LivePairs').then(m => ({ default: m.LivePairs })));
+// LivePairs removed
 
 const Markets = lazy(() => import('./pages/Markets').then(m => ({ default: m.Markets })));
 const CoinDetail = lazy(() => import('./pages/CoinDetail').then(m => ({ default: m.CoinDetail })));
@@ -55,6 +50,8 @@ const GenesisLanding = lazy(() => import('./pages/GenesisLanding').then(m => ({ 
 const GenesisManifesto = lazy(() => import('./pages/GenesisManifesto').then(m => ({ default: m.GenesisManifesto })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Airdrop = lazy(() => import('./pages/Airdrop').then(m => ({ default: m.Airdrop })));
+const Portfolio = lazy(() => import('./pages/Portfolio').then(m => ({ default: m.Portfolio })));
+const AlphaScreener = lazy(() => import('./pages/AlphaScreener').then(m => ({ default: m.AlphaScreener })));
 
 const GlobalLoader = () => (
   <div className="min-h-screen bg-alphabag-black flex flex-col items-center justify-center space-y-6">
@@ -109,21 +106,6 @@ const AppContent = () => {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const { isConnected } = useAccount();
 
-  // ── TEASER MODE: render only the landing page, block all other routes ──
-  if (IS_TEASER_MODE) {
-    return (
-      <>
-        <AirdropTracker />
-        <Suspense fallback={<GlobalLoader />}>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </>
-    );
-  }
-
   // Automatic SIWE Trigger after connection — but skip if already authenticated
   useEffect(() => {
     if (isConnected && !isAuthenticated && !isLoading) {
@@ -173,6 +155,9 @@ const AppContent = () => {
           <Route path="/cex-bag" element={<PrivateRoute><CexBag /></PrivateRoute>} />
           <Route path="/dex-bag" element={<PrivateRoute><DexBag /></PrivateRoute>} />
           <Route path="/calculator" element={<PrivateRoute><Calculator /></PrivateRoute>} />
+          <Route path="/portfolio" element={<PrivateRoute><Portfolio /></PrivateRoute>} />
+          <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
+          <Route path="/alpha-screener" element={<PrivateRoute><AlphaScreener /></PrivateRoute>} />
 
           <Route path="/markets" element={<Layout><Markets /></Layout>} />
           <Route path="/markets/:id" element={<Layout><CoinDetail /></Layout>} />
@@ -185,7 +170,7 @@ const AppContent = () => {
           <Route path="/alpha-calls" element={<Layout><AlphaCalls /></Layout>} />
           <Route path="/alphas-feed" element={<PrivateRoute><AlphasFeed /></PrivateRoute>} />
           <Route path="/admin/projects" element={<AdminRoute><AdminProjectDashboard /></AdminRoute>} />
-          <Route path="/live-pairs" element={<PrivateRoute><LivePairs /></PrivateRoute>} />
+          // LivePairs route removed
           <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />

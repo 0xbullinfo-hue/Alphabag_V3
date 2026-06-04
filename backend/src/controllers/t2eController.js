@@ -49,7 +49,7 @@ export const getUserEarnProfile = async (req, res) => {
     try {
         const userId = req.user.id;
         const users = await store.read('users');
-        const user = users.find(u => u.id.toLowerCase() === userId.toLowerCase());
+        const user = users.find(u => u.id && typeof u.id === 'string' && userId && typeof userId === 'string' && u.id.toLowerCase() === userId.toLowerCase());
         const config = await store.findOne('t2e_config', { id: 'global_config' });
         const claims = await store.read('t2e_claims');
 
@@ -185,7 +185,7 @@ export const getLeaderboard = async (req, res) => {
             .slice(0, 10);
 
         const formatted = sorted.map(s => {
-            const user = users.find(u => u.id.toLowerCase() === s.userId.toLowerCase());
+            const user = users.find(u => u.id && typeof u.id === 'string' && s.userId && typeof s.userId === 'string' && u.id.toLowerCase() === s.userId.toLowerCase());
             const address = user?.verifiedWallet || user?.id || 'Unknown Node';
             return {
                 handle: address.startsWith('0x') ? `${address.slice(0, 6)}...${address.slice(-4)}` : address,
@@ -206,6 +206,11 @@ export const claimMission = async (req, res) => {
     try {
         const userId = req.user.id;
         let { missionId, proofLink, feedback, taskId, taskLink } = req.body;
+        
+        const userObj = await store.findOne('users', { id: userId });
+        if (userObj && userObj.isBanned) {
+            return res.status(403).json({ error: 'Your account has been permanently suspended from the T2E program due to protocol violations.' });
+        }
         
         // Aliases for backward compatibility with Airdrop.tsx
         missionId = missionId || taskId;
@@ -266,7 +271,7 @@ export const claimMission = async (req, res) => {
 
         // Update User Balance (ITEMS) & Legacy Fields for Frontend
         const fullNow = now.toISOString();
-        await store.update('users', u => u.id.toLowerCase() === userId.toLowerCase(), (u) => {
+        await store.update('users', u => u.id && typeof u.id === 'string' && userId && typeof userId === 'string' && u.id.toLowerCase() === userId.toLowerCase(), (u) => {
             const updates = {
                 items: (Number(u.items) || 0) + Number(mission.rewardTokens),
                 lifetimeEarned: (Number(u.lifetimeEarned) || 0) + Number(mission.rewardTokens)
@@ -290,7 +295,7 @@ export const claimMission = async (req, res) => {
         });
 
         const users = await store.read('users');
-        const user = users.find(u => u.id.toLowerCase() === userId.toLowerCase());
+        const user = users.find(u => u.id && typeof u.id === 'string' && userId && typeof userId === 'string' && u.id.toLowerCase() === userId.toLowerCase());
         const activity = {
             id: Math.random().toString(36).substr(2, 9),
             userHandle: user?.verifiedWallet?.slice(0, 8) || userId.slice(0, 8),
@@ -319,7 +324,7 @@ export const requestBagPayout = async (req, res) => {
         const minimum = config?.minimumClaimBalance ?? 500;
 
         const users = await store.read('users');
-        const user = users.find(u => u.id.toLowerCase() === userId.toLowerCase());
+        const user = users.find(u => u.id && typeof u.id === 'string' && userId && typeof userId === 'string' && u.id.toLowerCase() === userId.toLowerCase());
         if (!user) return res.status(404).json({ error: 'User not found in T2E Registry' });
 
         if ((Number(user.items) || 0) < minimum) {
@@ -485,6 +490,30 @@ export const approveTokenRequest = async (req, res) => {
     } catch (error) {
         console.error('[T2E] Approve Request Error:', error);
         res.status(500).json({ error: 'Approval failed' });
+    }
+};
+
+// Admin marks a payout request as SENT (reward physically sent to user BSC wallet)
+export const markPayoutDone = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { txReference } = req.body; // optional manual tx reference
+
+        const request = await store.findOne('t2e_payout_requests', { id });
+        if (!request) return res.status(404).json({ error: 'Payout request not found' });
+        if (request.status === 'SENT') return res.status(400).json({ error: 'Already marked as SENT' });
+
+        await store.update('t2e_payout_requests', r => r.id === id, () => ({
+            status: 'SENT',
+            sentAt: new Date().toISOString(),
+            txReference: txReference || null,
+            processedBy: req.user?.id || 'admin'
+        }));
+
+        res.json({ success: true, message: 'Payout marked as SENT. User will see updated status on their dashboard.' });
+    } catch (error) {
+        console.error('[T2E] Mark Done Error:', error);
+        res.status(500).json({ error: 'Failed to mark payout as done' });
     }
 };
 

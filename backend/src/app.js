@@ -40,19 +40,65 @@ app.use(helmet({
     contentSecurityPolicy: false,
 }));
 app.use(cors({
-    origin: process.env.FRONTEND_URL || '*', 
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, etc)
+        if (!origin) return callback(null, true);
+        const allowed = [
+            process.env.FRONTEND_URL,
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://localhost:3002',
+            'http://localhost:3003',
+            'http://localhost:3004',
+            'http://localhost:3005',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+            'http://127.0.0.1:3002',
+            'http://127.0.0.1:3003',
+            'http://127.0.0.1:3004',
+            'http://127.0.0.1:3005',
+        ].filter(Boolean);
+        if (allowed.includes(origin) || process.env.FRONTEND_URL === '*') {
+            return callback(null, true);
+        }
+        callback(new Error(`CORS blocked: ${origin}`));
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 app.use(express.json());
 
-// Rate Limiting (Basic)
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+// Rate Limiting — tiered by route sensitivity
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20, // Strict: 20 login/register attempts per 15min per IP
+    message: { error: 'Too many authentication attempts. Please wait 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
 });
-app.use('/api', limiter);
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300, // Dashboard loads 10+ endpoints simultaneously — allow headroom
+    message: { error: 'Rate limit exceeded. Please slow down.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.path.startsWith('/api/admin'), // admin has own limiter
+});
+
+const adminLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500, // Admin panel polls every 30s across multiple tabs
+    message: { error: 'Admin rate limit exceeded.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/admin', adminLimiter);
+app.use('/api', apiLimiter);
 
 // App Routes
 app.use('/api/auth', authRoutes);

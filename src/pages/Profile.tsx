@@ -414,6 +414,52 @@ export const Profile: React.FC = () => {
                             <div className="text-[7px] font-bold text-alphabag-muted uppercase">Verified</div>
                         </div>
                     </div>
+
+                    {/* Referral Link — only on own profile */}
+                    {isOwnProfile && (() => {
+                        const refCode = profileUser?.referralCode || profileUser?.id?.slice(0, 8) || 'ALPHABAG';
+                        const refUrl = `${window.location.origin}/#/?ref=${refCode}`;
+                        const [copied, setCopied] = React.useState(false);
+                        const handleCopy = () => {
+                            navigator.clipboard.writeText(refUrl).then(() => {
+                                setCopied(true);
+                                setTimeout(() => setCopied(false), 2500);
+                            });
+                        };
+                        return (
+                            <div className="mt-4 pt-4 border-t border-white/5">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Users size={13} className="text-alphabag-yellow" />
+                                    <span className="text-[10px] font-black text-alphabag-yellow uppercase tracking-widest">Referral Link</span>
+                                    {profileUser?.referralCount > 0 && (
+                                        <span className="ml-auto text-[9px] font-bold text-alphabag-muted uppercase">
+                                            {profileUser.referralCount} referral{profileUser.referralCount !== 1 ? 's' : ''} · Bonus ITEMS earned
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2.5">
+                                    <span className="flex-1 font-mono text-[11px] text-zinc-400 truncate">{refUrl}</span>
+                                    <button
+                                        onClick={handleCopy}
+                                        className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                                            copied
+                                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                                : 'bg-alphabag-yellow/10 text-alphabag-yellow border border-alphabag-yellow/20 hover:bg-alphabag-yellow hover:text-black'
+                                        }`}
+                                    >
+                                        {copied ? (
+                                            <><CheckCircle2 size={11} /> Copied!</>
+                                        ) : (
+                                            <><Share2 size={11} /> Copy</>
+                                        )}
+                                    </button>
+                                </div>
+                                <p className="text-[9px] text-alphabag-muted mt-1.5 font-medium">
+                                    Share this link — each signup earns you bonus ITEMS in the active campaign.
+                                </p>
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* Timeline Tabs */}

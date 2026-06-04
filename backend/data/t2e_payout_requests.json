@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "qwes50i03",
+    "userId": "0xdaf603fb0a7ff6b23e6beab22a9e53225b6bb23a",
+    "expectedTokens": 5200,
+    "walletAddress": "0xDAf603fb0a7ff6B23e6beAB22A9E53225b6Bb23a",
+    "status": "PENDING",
+    "createdAt": "2026-06-04T11:43:54.087Z"
+  }
+]

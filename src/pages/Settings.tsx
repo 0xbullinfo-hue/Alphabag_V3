@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { useWallet } from '../context/WalletContext';
 import { Button } from '../components/ui/Button';
-import { Trash2, Plus, Shield, Crown, Zap, AlertCircle, Radio, Loader2, Search, Eye, Key, ShieldCheck, Link as LinkIcon } from 'lucide-react';
+import { Trash2, Plus, Shield, Crown, Zap, AlertCircle, Radio, Loader2, Search, Eye, Key, ShieldCheck, Link as LinkIcon, ExternalLink, Database, TrendingUp, Wallet } from 'lucide-react';
 import { UserTier, Chain } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useCexConnections } from '../hooks/useCexConnections';
 import { SUPPORTED_CEX } from './CexBag';
 import { CexConnectModal } from '../components/CexConnectModal';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 const MANUAL_HOLDINGS_KEY = 'alphabag_manual_holdings';
@@ -175,6 +176,7 @@ export const Settings: React.FC = () => {
 
     const { user } = useAuth();
     const tier = user?.tier || 'FREE';
+    const navigate = useNavigate();
 
     const [newAddress, setNewAddress] = useState('');
     const [newLabel, setNewLabel] = useState('');
@@ -289,8 +291,61 @@ export const Settings: React.FC = () => {
             </div>
 
             <section className="rounded-lg border border-[#2b3139] bg-[#1e2329] p-6">
-                <h2 className="text-sm font-semibold text-[#eaecef] mb-6 uppercase tracking-wider">Portfolio Connections</h2>
-                <div className="bg-[#0b0e11] border border-[#2b3139] p-6 rounded-lg mb-8">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-sm font-semibold text-[#eaecef] uppercase tracking-wider">Portfolio Connections</h2>
+                    <button
+                        onClick={() => navigate('/integrations')}
+                        className="flex items-center gap-1.5 text-[10px] text-[#fcd535] font-semibold uppercase tracking-wider hover:text-[#e0bd2e] transition-colors"
+                    >
+                        View All <ExternalLink size={11} />
+                    </button>
+                </div>
+
+                {/* Count Summary Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                    <div className="bg-[#0b0e11] border border-[#2b3139] rounded-lg p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-md bg-[#0ecb81]/10 flex items-center justify-center shrink-0">
+                            <Wallet size={18} className="text-[#0ecb81]" />
+                        </div>
+                        <div>
+                            <div className="text-[10px] text-[#848e9c] font-semibold uppercase tracking-wider mb-0.5">DEX Wallets</div>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-semibold text-[#eaecef] tabular-nums">{portfolioCount}</span>
+                                <span className="text-[10px] text-[#848e9c]">/ {limits.maxPortfolios} max</span>
+                            </div>
+                            <div className="text-[9px] text-[#0ecb81] font-semibold mt-0.5">Portfolio Wallets</div>
+                        </div>
+                    </div>
+                    <div className="bg-[#0b0e11] border border-[#2b3139] rounded-lg p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-md bg-[#fcd535]/10 flex items-center justify-center shrink-0">
+                            <Eye size={18} className="text-[#fcd535]" />
+                        </div>
+                        <div>
+                            <div className="text-[10px] text-[#848e9c] font-semibold uppercase tracking-wider mb-0.5">Whale Watch</div>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-semibold text-[#eaecef] tabular-nums">{whaleCount}</span>
+                                <span className="text-[10px] text-[#848e9c]">/ {limits.maxWhales} max</span>
+                            </div>
+                            <div className="text-[9px] text-[#fcd535] font-semibold mt-0.5">Wallet Trackers</div>
+                        </div>
+                    </div>
+                    <div className="bg-[#0b0e11] border border-[#2b3139] rounded-lg p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0">
+                            <Database size={18} className="text-blue-400" />
+                        </div>
+                        <div>
+                            <div className="text-[10px] text-[#848e9c] font-semibold uppercase tracking-wider mb-0.5">Total Connected</div>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-semibold text-[#eaecef] tabular-nums">{portfolioCount + whaleCount}</span>
+                                <span className="text-[10px] text-[#848e9c]">wallets</span>
+                            </div>
+                            <div className="text-[9px] text-blue-400 font-semibold mt-0.5">All Networks</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Add New Wallet Form */}
+                <div className="bg-[#0b0e11] border border-[#2b3139] p-6 rounded-lg">
                     <h3 className="text-sm font-bold text-white mb-4 flex items-center">
                         <Search size={16} className="mr-2 text-alphabag-yellow" /> Add New Address Tracking
                     </h3>
@@ -315,42 +370,7 @@ export const Settings: React.FC = () => {
                         </Button>
                     </div>
                     {error && <div className="text-alphabag-red text-xs mt-2 bg-alphabag-red/10 p-2 rounded flex items-center"><AlertCircle size={12} className="mr-2" /> {error}</div>}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <h4 className="text-white font-black text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Zap size={14} className="text-alphabag-green" /> Portfolio Connections ({portfolioCount}/{limits.maxPortfolios})</h4>
-                        <div className="space-y-3">
-                            {trackedWallets.filter(w => w.type === 'PORTFOLIO').map(w => (
-                                <div key={w.id} className="flex justify-between items-center p-4 glass-panel rounded-xl hover:border-alphabag-subtext transition-all">
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="text-white font-bold text-sm">{w.label}</div>
-                                            <div className="text-[10px] bg-alphabag-yellow/10 text-alphabag-yellow px-1.5 py-0.5 rounded font-mono font-bold">{w.chain || 'ETH'}</div>
-                                        </div>
-                                        <div className="text-alphabag-subtext text-[10px] font-mono">{w.address}</div>
-                                    </div>
-                                    <button onClick={() => removeTrackedWallet(w.id)} className="text-alphabag-subtext hover:text-alphabag-red transition-colors"><Trash2 size={16} /></button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div>
-                        <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-widest flex items-center"><Eye size={14} className="mr-2 text-alphabag-yellow" /> Whale Watch Slots ({whaleCount}/{limits.maxWhales})</h4>
-                        <div className="space-y-3">
-                            {trackedWallets.filter(w => w.type === 'WHALE').map(w => (
-                                <div key={w.id} className="flex justify-between items-center p-4 glass-panel rounded-xl hover:border-alphabag-green/30 transition-all">
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="text-white font-bold text-sm">{w.label}</div>
-                                            <div className="text-[10px] bg-alphabag-yellow/10 text-alphabag-yellow px-1.5 py-0.5 rounded font-mono font-bold">{w.chain || 'ETH'}</div>
-                                        </div>
-                                        <div className="text-alphabag-subtext text-[10px] font-mono">{w.address}</div>
-                                    </div>
-                                    <button onClick={() => removeTrackedWallet(w.id)} className="text-alphabag-subtext hover:text-alphabag-red transition-colors"><Trash2 size={16} /></button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <p className="text-[10px] text-[#848e9c] mt-3">To view or remove connected wallets, go to the <button onClick={() => navigate('/integrations')} className="text-[#fcd535] underline hover:no-underline">Integrations page</button>.</p>
                 </div>
             </section>
 
@@ -361,32 +381,60 @@ export const Settings: React.FC = () => {
                         <h2 className="text-lg font-bold text-white flex items-center gap-2"><Key size={18} className="text-alphabag-yellow" /> CEX Exchange APIs</h2>
                         <p className="text-alphabag-subtext text-xs mt-1">Connect read-only API keys to track centralized exchange balances. <span className="text-alphabag-yellow font-bold">Max {MAX_CEX} exchanges.</span></p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-alphabag-muted text-[10px] font-black uppercase tracking-widest">{connectedCex.length}/{MAX_CEX}</span>
-                        <ShieldCheck size={14} className="text-alphabag-green" />
+                    <button
+                        onClick={() => navigate('/integrations')}
+                        className="flex items-center gap-1.5 text-[10px] text-[#fcd535] font-semibold uppercase tracking-wider hover:text-[#e0bd2e] transition-colors"
+                    >
+                        Manage <ExternalLink size={11} />
+                    </button>
+                </div>
+
+                {/* CEX Count Card */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-[#0b0e11] border border-[#2b3139] rounded-lg p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-md bg-[#fcd535]/10 flex items-center justify-center shrink-0">
+                            <Key size={18} className="text-[#fcd535]" />
+                        </div>
+                        <div>
+                            <div className="text-[10px] text-[#848e9c] font-semibold uppercase tracking-wider mb-0.5">CEX APIs Connected</div>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-semibold text-[#eaecef] tabular-nums">{connectedCex.length}</span>
+                                <span className="text-[10px] text-[#848e9c]">/ {MAX_CEX} max</span>
+                            </div>
+                            <div className="flex items-center gap-1 mt-0.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#0ecb81] shadow-[0_0_4px_rgba(14,203,129,0.8)]"></span>
+                                <span className="text-[9px] text-[#0ecb81] font-semibold">{connectedCex.length > 0 ? 'Live Read-Only' : 'None Connected'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-[#0b0e11] border border-[#2b3139] rounded-lg p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-md bg-[#0ecb81]/10 flex items-center justify-center shrink-0">
+                            <TrendingUp size={18} className="text-[#0ecb81]" />
+                        </div>
+                        <div>
+                            <div className="text-[10px] text-[#848e9c] font-semibold uppercase tracking-wider mb-0.5">Available Slots</div>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-semibold text-[#eaecef] tabular-nums">{MAX_CEX - connectedCex.length}</span>
+                                <span className="text-[10px] text-[#848e9c]">remaining</span>
+                            </div>
+                            <div className="text-[9px] text-[#848e9c] font-semibold mt-0.5">Add via Integrations page</div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Connected List */}
+                {/* Quick icons for connected exchanges */}
                 {connectedCex.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                        {connectedCex.map(cex => (
-                            <div key={cex.id} className="flex items-center justify-between p-4 glass-panel rounded-xl hover:border-alphabag-yellow/30 transition-all">
-                                <div className="flex items-center gap-3">
-                                    <img src={cex.icon} alt={cex.name} className="w-8 h-8 rounded-full bg-white p-0.5" />
-                                    <div>
-                                        <div className="font-bold text-white text-sm flex items-center gap-2">
-                                            {cex.name}
-                                            <span className="flex items-center text-[9px] text-alphabag-green font-bold uppercase tracking-widest">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-alphabag-green mr-1 shadow-[0_0_4px_rgba(52,211,153,0.8)]"></span>Live
-                                            </span>
-                                        </div>
-                                        <div className="text-alphabag-muted text-[10px] font-mono">Key: {cex.apiKey}</div>
-                                    </div>
+                    <div className="mb-6">
+                        <div className="text-[10px] text-[#848e9c] font-semibold uppercase tracking-wider mb-3">Connected Exchanges</div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {connectedCex.map(cex => (
+                                <div key={cex.id} className="flex items-center gap-2 bg-[#0b0e11] border border-[#2b3139] rounded-lg px-3 py-2">
+                                    <img src={cex.icon} alt={cex.name} className="w-5 h-5 rounded-full bg-white p-0.5" />
+                                    <span className="text-[10px] font-semibold text-[#eaecef]">{cex.name}</span>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0ecb81] shadow-[0_0_4px_rgba(14,203,129,0.8)]"></span>
                                 </div>
-                                <button onClick={() => removeCex(cex.id)} className="text-alphabag-subtext hover:text-alphabag-red transition-colors p-2"><Trash2 size={14} /></button>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 )}
 
@@ -414,6 +462,7 @@ export const Settings: React.FC = () => {
                             <p className="text-alphabag-green font-bold text-sm">All {MAX_CEX} slots filled!</p>
                         </div>
                     )}
+                    <p className="text-[10px] text-[#848e9c] mt-3">To remove a connected exchange, go to the <button onClick={() => navigate('/integrations')} className="text-[#fcd535] underline hover:no-underline">Integrations page</button>.</p>
                 </div>
             </section>
 

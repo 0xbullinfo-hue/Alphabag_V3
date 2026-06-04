@@ -7,10 +7,10 @@ export const MobileNav: React.FC = () => {
   const location = useLocation();
 
   const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Home' },
-    { to: '/dex-bag', icon: Wallet, label: 'Portfolio' },
+    { to: '/airdrop', icon: LayoutDashboard, label: 'Missions' },
+    { to: '/portfolio', icon: Wallet, label: 'Portfolio' },
     { to: '/alpha-calls', icon: Radio, label: 'Calls' },
-    { to: '/alpha-ai', icon: Bot, label: 'Ai' },
+    { to: '/alpha-ai', icon: Bot, label: 'AI' },
     { to: '/markets', icon: BarChart3, label: 'Markets' },
   ];
 

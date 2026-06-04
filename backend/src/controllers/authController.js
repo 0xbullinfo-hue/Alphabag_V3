@@ -5,7 +5,7 @@ import { store } from '../services/storeService.js';
 import { config } from '../config/env.js';
 
 export const register = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, refCode } = req.body;
 
     // Prevent Admin Registration via UI entirely
     if (email.toLowerCase() === 'adminbx1p@alphabagpro.com' || email.toLowerCase().includes('admin')) {
@@ -18,11 +18,32 @@ export const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    let referredBy = null;
+
+    // Credit referrer if a valid ref code was supplied
+    if (refCode && typeof refCode === 'string') {
+        const userArr = await store.read('users');
+        const referrer = userArr.find(u => u.referralCode === refCode.toUpperCase());
+        if (referrer && (referrer.referralCount || 0) < 1000) {
+            referredBy = referrer.id;
+            await store.update('users', u => u.id === referrer.id, r => ({
+                items: (r.items || 0) + 100,
+                referralCount: (r.referralCount || 0) + 1
+            }));
+        }
+    }
+
     const newUser = await store.create('users', {
         email,
         password: hashedPassword,
         tier: 'FREE',
-        isAdmin: false
+        isAdmin: false,
+        referralCode,
+        referredBy,
+        referralCount: 0,
+        items: 0,
+        bagTokens: 0
     });
 
     const token = jwt.sign({ id: newUser.id, email: newUser.email, isAdmin: false }, config.jwtSecret, { expiresIn: '24h' });
@@ -30,6 +51,7 @@ export const register = async (req, res) => {
 
     res.json({ token, user: userSafe });
 };
+
 
 export const login = async (req, res) => {
     const { email, password, portal } = req.body; // portal: 'main' | 'admin'
@@ -125,7 +147,7 @@ export const siweAuth = async (req, res) => {
         // 2. Find or Create User (Normalize to Lowercase)
         const normalizedId = address.toLowerCase();
         let userArr = await store.read('users');
-        let user = userArr.find(u => u.id.toLowerCase() === normalizedId);
+        let user = userArr.find(u => u.id && typeof u.id === 'string' && u.id.toLowerCase() === normalizedId);
         let isNew = false;
 
         if (!user) {
@@ -165,7 +187,7 @@ export const siweAuth = async (req, res) => {
             };
             await store.create('users', user);
         } else {
-            user = await store.update('users', u => u.id.toLowerCase() === normalizedId, u => ({
+            user = await store.update('users', u => u.id && typeof u.id === 'string' && u.id.toLowerCase() === normalizedId, u => ({
                 lastActive: new Date().toISOString()
             }));
         }
@@ -214,7 +236,7 @@ export const getMe = async (req, res) => {
     try {
         const userId = req.user.id;
         const users = await store.read('users');
-        const user = users.find(u => u.id.toLowerCase() === userId.toLowerCase());
+        const user = users.find(u => u.id && typeof u.id === 'string' && userId && typeof userId === 'string' && u.id.toLowerCase() === userId.toLowerCase());
         
         if (!user) return res.status(404).json({ error: 'User not found' });
         
@@ -233,7 +255,7 @@ export const updateProfile = async (req, res) => {
 
     try {
         const updatedUser = await store.update('users', 
-            u => u.id.toLowerCase() === userId.toLowerCase(), 
+            u => u.id && typeof u.id === 'string' && userId && typeof userId === 'string' && u.id.toLowerCase() === userId.toLowerCase(), 
             u => ({
                 bio: bio !== undefined ? bio : u.bio,
                 website: website !== undefined ? website : u.website,

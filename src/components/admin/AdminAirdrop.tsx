@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
 export const AdminAirdrop: React.FC = () => {
     const [tasks, setTasks] = useState<any[]>([]);
     const [participants, setParticipants] = useState<any[]>([]);
-    const [viewMode, setViewMode] = useState<'missions' | 'intelligence' | 'founders' | 'protocol'>('missions');
+    const [viewMode, setViewMode] = useState<'missions' | 'intelligence' | 'founders' | 'protocol' | 'enforcement'>('missions');
     const [isLoading, setIsLoading] = useState(false);
     const [missionPaused, setMissionPaused] = useState(false);
     const [tgeDate, setTgeDate] = useState('');
@@ -27,9 +27,23 @@ export const AdminAirdrop: React.FC = () => {
         type: 'once' 
     });
 
+    // Campaign Activator Form State
+    const [tokenTicker, setTokenTicker] = useState('BAG');
+    const [genesisReward, setGenesisReward] = useState(5000);
+    const [phaseDuration, setPhaseDuration] = useState(10);
+
+    // Enforcement / Strikes State
+    const [strikeLogs, setStrikeLogs] = useState<any[]>([]);
+
     useEffect(() => {
-        if (viewMode === 'missions') fetchTasks();
-        else fetchParticipants();
+        if (viewMode === 'missions') {
+            fetchTasks();
+        } else if (viewMode === 'enforcement') {
+            fetchParticipants();
+            fetchStrikeLogs();
+        } else {
+            fetchParticipants();
+        }
         fetchMissionStatus();
     }, [viewMode]);
 
@@ -41,6 +55,15 @@ export const AdminAirdrop: React.FC = () => {
             setTasks(taskData);
         } catch (error) {
             console.error("Failed to fetch missions", error);
+        }
+    };
+
+    const fetchStrikeLogs = async () => {
+        try {
+            const res = await api.get('/api/airdrop/admin/strikes');
+            setStrikeLogs(res.data || []);
+        } catch (error) {
+            console.error("Failed to fetch strike logs", error);
         }
     };
 
@@ -304,6 +327,91 @@ export const AdminAirdrop: React.FC = () => {
     };
 
 
+    const handleIssueStrike = async (userId: string, currentWallet: string) => {
+        const { value: reason } = await Swal.fire({
+            title: 'ISSUE STRIKE PROTOCOL',
+            text: `Describe the violation for node: ${currentWallet || userId}`,
+            input: 'text',
+            inputPlaceholder: 'Reason for strike (e.g. invalid proof link, spam)',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'ISSUE STRIKE',
+            background: '#0a0a0a',
+            color: '#fff'
+        });
+
+        if (reason !== undefined) {
+            try {
+                const res = await api.post('/api/airdrop/admin/strike', { userId, reason });
+                Swal.fire({
+                    title: 'STRIKE ISSUED',
+                    text: res.data.message,
+                    icon: 'warning',
+                    background: '#0a0a0a',
+                    color: '#fff'
+                });
+                fetchParticipants();
+                fetchStrikeLogs();
+            } catch (error: any) {
+                Swal.fire('Error', error.response?.data?.error || 'Failed to issue strike', 'error');
+            }
+        }
+    };
+
+    const handleUnbanUser = async (userId: string, currentWallet: string) => {
+        const confirm = await Swal.fire({
+            title: 'UNBAN MEMBER',
+            text: `Are you sure you want to reinstate node: ${currentWallet || userId}? This resets their strikes to 0.`,
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            confirmButtonText: 'REINSTATE',
+            background: '#0a0a0a',
+            color: '#fff'
+        });
+
+        if (confirm.isConfirmed) {
+            try {
+                const res = await api.post('/api/airdrop/admin/unban', { userId });
+                Swal.fire({
+                    title: 'REINSTATED',
+                    text: res.data.message,
+                    icon: 'success',
+                    background: '#0a0a0a',
+                    color: '#fff'
+                });
+                fetchParticipants();
+                fetchStrikeLogs();
+            } catch (error: any) {
+                Swal.fire('Error', error.response?.data?.error || 'Failed to unban user', 'error');
+            }
+        }
+    };
+
+    const handleStartCampaign = async () => {
+        try {
+            const res = await api.post('/api/airdrop/admin/campaigns', {
+                tokenTicker,
+                pointsPerClaim: genesisReward,
+                durationDays: phaseDuration,
+                status: 'ACTIVE',
+                isSubmissionActive: true
+            });
+            if (res.data.success) {
+                Swal.fire({
+                    title: 'CAMPAIGN LAUNCHED',
+                    text: `Active campaign for $${tokenTicker} initialized.`,
+                    icon: 'success',
+                    background: '#0a0a0a',
+                    color: '#fff'
+                });
+                fetchMissionStatus();
+            }
+        } catch (error: any) {
+            Swal.fire('Error', error.response?.data?.error || 'Failed to launch campaign', 'error');
+        }
+    };
+
+
     const exportCSV = () => {
         let csvContent = "data:text/csv;charset=utf-8,Wallet,ITEMS,Referrals,Tier\n";
         participants.forEach(p => {
@@ -351,6 +459,7 @@ export const AdminAirdrop: React.FC = () => {
                     </h2>
                     <div className="flex gap-4">
                         <Button 
+                            onClick={triggerSnapshot}
                             className="bg-alphabag-yellow !text-black font-black tracking-widest text-[10px] hover:scale-105 transition-all shadow-lg shadow-alphabag-yellow/5"
                         >
                             AWARD TOP 100 REFERRALS
@@ -508,25 +617,47 @@ export const AdminAirdrop: React.FC = () => {
                                                     {p.reviewComment || <span className="text-zinc-600">Pending Feedback...</span>}
                                                 </div>
                                             </td>
-                                            <td className="p-6 font-black text-white">{p.referralCount || 0}</td>
+                                            <td className="p-6">
+                                                <div className="flex flex-col">
+                                                    <span className="font-black text-white">{p.referralCount || 0}</span>
+                                                    <span className="text-[8px] text-zinc-500 font-bold">Missions: {p.completedTasksCount || 0}</span>
+                                                </div>
+                                            </td>
                                             <td className="p-6">
                                                 <div className="flex justify-center flex-col items-center gap-1">
-                                                    <span className={`px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest ${p.isFounderAirdrop ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-alphabag-green/10 text-alphabag-green border-alphabag-green/20'}`}>
-                                                        {p.isFounderAirdrop ? 'FOUNDER' : 'MISSION READY'}
+                                                    <span className={`px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest ${p.isBanned ? 'bg-red-500/10 text-red-500 border-red-500/20' : p.isFounderAirdrop ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-alphabag-green/10 text-alphabag-green border-alphabag-green/20'}`}>
+                                                        {p.isBanned ? 'BANNED' : p.isFounderAirdrop ? 'FOUNDER' : 'MISSION READY'}
                                                     </span>
-                                                    {p.airdropSubmittedAt && <span className="text-[7px] text-zinc-500 font-bold">{new Date(p.airdropSubmittedAt).toLocaleDateString()}</span>}
+                                                    <span className="text-[8px] text-zinc-500 font-bold">Strikes: {p.strikes || 0}/5</span>
                                                 </div>
                                             </td>
                                             <td className="p-6 text-right">
                                                 <span className="text-lg font-black text-alphabag-yellow group-hover:drop-shadow-[0_0_10px_rgba(252,213,53,0.3)] transition-all">{(p.points || 0).toLocaleString()} ITEMS</span>
                                             </td>
                                             <td className="p-6 text-right">
-                                                <button 
-                                                    onClick={() => handleGrantBonus(p.id, p.wallet)}
-                                                    className="px-4 py-2 bg-alphabag-yellow hover:bg-alphabag-yellowHover !text-black border border-alphabag-yellow/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-alphabag-yellow/10"
-                                                >
-                                                    + GRANT BONUS
-                                                </button>
+                                                <div className="flex gap-2 justify-end">
+                                                    <button 
+                                                        onClick={() => handleGrantBonus(p.id, p.wallet)}
+                                                        className="px-3 py-1.5 bg-alphabag-yellow hover:bg-alphabag-yellowHover !text-black border border-alphabag-yellow/20 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-md shadow-alphabag-yellow/10"
+                                                    >
+                                                        BONUS
+                                                    </button>
+                                                    {p.isBanned ? (
+                                                        <button 
+                                                            onClick={() => handleUnbanUser(p.id, p.wallet)}
+                                                            className="px-3 py-1.5 bg-green-500/20 hover:bg-green-500 hover:text-black border border-green-500/30 text-green-400 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                                                        >
+                                                            UNBAN
+                                                        </button>
+                                                    ) : (
+                                                        <button 
+                                                            onClick={() => handleIssueStrike(p.id, p.wallet)}
+                                                            className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500 hover:text-white border border-red-500/30 text-red-400 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                                                        >
+                                                            STRIKE
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -585,7 +716,7 @@ export const AdminAirdrop: React.FC = () => {
                             </div>
                         )}
                     </div>
-                ) : (
+                ) : viewMode === 'protocol' ? (
                     <div className="space-y-8">
                         {/* Protocol Control Content */}
                         {/* TGE Countdown Timer */}
@@ -640,20 +771,20 @@ export const AdminAirdrop: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-alphabag-muted uppercase tracking-widest pl-1">Token Ticker</label>
-                                    <input type="text" defaultValue="BAG" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" />
+                                    <input type="text" value={tokenTicker} onChange={e => setTokenTicker(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-alphabag-muted uppercase tracking-widest pl-1">Genesis Reward (ITEMS)</label>
-                                    <input type="number" defaultValue="5000" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" />
+                                    <input type="number" value={genesisReward} onChange={e => setGenesisReward(parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-alphabag-muted uppercase tracking-widest pl-1">Phase Duration (Days)</label>
-                                    <input type="number" defaultValue="10" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" />
+                                    <input type="number" value={phaseDuration} onChange={e => setPhaseDuration(parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" />
                                 </div>
                             </div>
 
                             <div className="flex justify-center pt-4">
-                                <Button className="bg-alphabag-green !text-black font-black uppercase tracking-[0.3em] text-[11px] px-12 h-14 rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.2)]">
+                                <Button onClick={handleStartCampaign} className="bg-alphabag-green !text-black font-black uppercase tracking-[0.3em] text-[11px] px-12 h-14 rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.2)]">
                                     START CAMPAIGN
                                 </Button>
                             </div>
@@ -706,6 +837,124 @@ export const AdminAirdrop: React.FC = () => {
                                 </div>
                             </div>
                             <Button onClick={handleReset} variant="danger" className="bg-red-600 hover:bg-red-500 text-white font-black uppercase px-8 h-12 text-[10px]">EXECUTE RESET</Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-6 animate-in fade-in duration-500">
+                        {/* Enforcement Header */}
+                        <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-8 space-y-6">
+                            <div>
+                                <h3 className="text-lg font-black text-white uppercase tracking-tighter flex items-center gap-2">
+                                    <AlertTriangle className="text-red-500" size={20} /> Enforcement Protocol & Moderation
+                                </h3>
+                                <p className="text-[10px] text-alphabag-muted font-bold uppercase tracking-widest mt-1">
+                                    Manage fraudulent nodes, issue strikes, and inspect violation logs.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Node Enforcement Matrix */}
+                        <div className="bg-black/40 border border-white/5 rounded-2xl overflow-hidden">
+                            <div className="p-6 border-b border-white/5">
+                                <h4 className="font-black text-white uppercase tracking-widest">Active Moderation Matrix</h4>
+                            </div>
+                            <div className="overflow-x-auto custom-scrollbar">
+                                <table className="w-full text-left">
+                                    <thead className="bg-white/5 text-[9px] uppercase text-alphabag-muted font-black tracking-widest">
+                                        <tr>
+                                            <th className="p-6">Node Identity (Wallet)</th>
+                                            <th className="p-6">Strike Level</th>
+                                            <th className="p-6">Status</th>
+                                            <th className="p-6 text-right">Moderation Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5 text-xs">
+                                        {participants.map((p, i) => (
+                                            <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                                                <td className="p-6 font-mono text-zinc-400 text-[10px]">{p.wallet || 'No Wallet'}</td>
+                                                <td className="p-6">
+                                                    <div className="flex items-center gap-1.5">
+                                                        {[1, 2, 3, 4, 5].map((lvl) => (
+                                                            <span 
+                                                                key={lvl} 
+                                                                className={`w-3 h-3 rounded-full border ${
+                                                                    (p.strikes || 0) >= lvl 
+                                                                        ? 'bg-red-500 border-red-600 shadow-[0_0_8px_rgba(239,68,68,0.5)]' 
+                                                                        : 'bg-zinc-800 border-zinc-700'
+                                                                }`}
+                                                            ></span>
+                                                        ))}
+                                                        <span className="text-[10px] text-zinc-400 font-bold ml-2">{(p.strikes || 0)} / 5</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-6">
+                                                    <span className={`px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest ${p.isBanned ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20'}`}>
+                                                        {p.isBanned ? 'SUSPENDED (BANNED)' : 'COMPLIANT (ACTIVE)'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-6 text-right">
+                                                    <div className="flex gap-2 justify-end">
+                                                        {p.isBanned ? (
+                                                            <button 
+                                                                onClick={() => handleUnbanUser(p.id, p.wallet)}
+                                                                className="px-4 py-2 bg-green-500 text-black border border-green-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/20"
+                                                            >
+                                                                REINSTATE
+                                                            </button>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={() => handleIssueStrike(p.id, p.wallet)}
+                                                                className="px-4 py-2 bg-red-600 text-white border border-red-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-red-500 hover:shadow-lg hover:shadow-red-500/20"
+                                                            >
+                                                                ISSUE STRIKE
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {participants.length === 0 && (
+                                            <tr>
+                                                <td colSpan={4} className="p-12 text-center text-alphabag-muted italic">No node participants registered.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Strike Log */}
+                        <div className="bg-black/40 border border-white/5 rounded-2xl overflow-hidden">
+                            <div className="p-6 border-b border-white/5">
+                                <h4 className="font-black text-white uppercase tracking-widest">Strike Audit Logs</h4>
+                            </div>
+                            <div className="overflow-x-auto custom-scrollbar">
+                                <table className="w-full text-left">
+                                    <thead className="bg-white/5 text-[9px] uppercase text-alphabag-muted font-black tracking-widest">
+                                        <tr>
+                                            <th className="p-6">Node Target</th>
+                                            <th className="p-6">Issued By (Admin)</th>
+                                            <th className="p-6">Reason / Violation</th>
+                                            <th className="p-6 text-right">Timestamp</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5 text-xs">
+                                        {strikeLogs.map((log, i) => (
+                                            <tr key={i} className="hover:bg-white/[0.01]">
+                                                <td className="p-6 font-mono text-zinc-400 text-[10px]">{log.userId}</td>
+                                                <td className="p-6 font-mono text-zinc-400 text-[10px]">{log.adminId}</td>
+                                                <td className="p-6 text-zinc-300 font-medium">{log.reason}</td>
+                                                <td className="p-6 text-right text-zinc-500 font-semibold">{new Date(log.timestamp).toLocaleString()}</td>
+                                            </tr>
+                                        ))}
+                                        {strikeLogs.length === 0 && (
+                                            <tr>
+                                                <td colSpan={4} className="p-12 text-center text-alphabag-muted italic">No moderation events logged.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}

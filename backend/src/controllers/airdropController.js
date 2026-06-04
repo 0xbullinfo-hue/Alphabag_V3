@@ -29,6 +29,8 @@ export const getAirdropStatus = async (req, res) => {
         const sorted = [...campaigns].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
         let currentCampaign = sorted.length > 0 ? sorted[0] : null;
 
+        let campaignEnded = false;
+
         if (currentCampaign) {
             const start = new Date(currentCampaign.startDate || now);
             const end = new Date(start.getTime() + (currentCampaign.durationDays * 24 * 60 * 60 * 1000));
@@ -39,9 +41,14 @@ export const getAirdropStatus = async (req, res) => {
                     currentCampaign = { ...currentCampaign, status: 'ACTIVE', endDate: end.toISOString() };
                 } else if (now >= end && now < nextCycleDate) {
                     currentCampaign = { ...currentCampaign, status: 'WAITING', nextCycleDate: nextCycleDate.toISOString() };
+                    campaignEnded = true;
                 } else {
                     currentCampaign = { ...currentCampaign, status: 'ENDED', endDate: end.toISOString() };
+                    campaignEnded = true;
                 }
+            } else if (currentCampaign.status === 'ENDED') {
+                campaignEnded = true;
+                currentCampaign = { ...currentCampaign, endDate: end.toISOString() };
             } else {
                 currentCampaign = { ...currentCampaign, endDate: end.toISOString() };
             }
@@ -57,11 +64,14 @@ export const getAirdropStatus = async (req, res) => {
 
         const revealData = await store.read('reveal') || { isRevealed: false };
         const missionSettings = await store.read('missionSettings') || { isPaused: false };
+        const t2eConfig = await store.findOne('t2e_config', { id: 'global_config' }) || {};
 
         const response = {
             settings: {
                 ...responseSettings,
-                isPaused: !!missionSettings.isPaused
+                isPaused: !!missionSettings.isPaused,
+                itemsToBagRate: t2eConfig.itemsToBagRate !== undefined ? t2eConfig.itemsToBagRate : null,
+                campaignEnded  // ← server-authoritative flag
             },
             reveal: revealData,
             userStatus: null
@@ -87,11 +97,33 @@ export const getAirdropStatus = async (req, res) => {
                 }
             }
 
+            // Fetch user's most recent payout request (all statuses)
+            let payoutRequest = null;
+            try {
+                const allRequests = await store.read('t2e_payout_requests') || [];
+                const userRequests = allRequests
+                    .filter(r => r.userId === user.id)
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                if (userRequests.length > 0) {
+                    const r = userRequests[0];
+                    payoutRequest = {
+                        id: r.id,
+                        status: r.status,
+                        expectedTokens: r.expectedTokens,
+                        walletAddress: r.walletAddress,
+                        createdAt: r.createdAt,
+                        sentAt: r.sentAt || null,
+                        txReference: r.txReference || null
+                    };
+                }
+            } catch (_) {}
+
             response.userStatus = {
                 points: totalPoints,
                 canClaim,
                 lastClaimTime,
-                walletSubmitted: user.submittedWallet || null
+                walletSubmitted: user.submittedWallet || user.verifiedWallet || null,
+                payoutRequest  // ← null if none, or { status, expectedTokens, sentAt, txReference }
             };
         }
 
@@ -101,6 +133,7 @@ export const getAirdropStatus = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch status', details: error.message });
     }
 };
+
 
 // Claim Points (User)
 export const claimPoints = async (req, res) => {
@@ -171,9 +204,12 @@ export const claimPoints = async (req, res) => {
         res.json({
             success: true,
             points: updatedUser.bagTokens,
+            items: updatedUser.items || 0,
+            rewardTokens: activeCampaign.pointsPerClaim,
             lastClaimTime: now.toISOString(),
             message: `Claimed ${activeCampaign.pointsPerClaim} points!`
         });
+
 
     } catch (error) {
         console.error('[AIRDROP] claimPoints Error:', error.stack || error);
@@ -303,15 +339,15 @@ export const getCampaigns = async (req, res) => {
 
 export const createCampaign = async (req, res) => {
     try {
-        const { tokenTicker, pointsPerClaim, durationDays } = req.body;
+        const { tokenTicker, pointsPerClaim, durationDays, status, isSubmissionActive } = req.body;
         const newCamp = {
             id: Math.random().toString(36).substr(2, 9),
             tokenTicker: tokenTicker || '🔒',
             pointsPerClaim: pointsPerClaim || 50,
             durationDays: durationDays || 7,
             startDate: new Date().toISOString(),
-            status: 'INACTIVE',
-            isSubmissionActive: false
+            status: status || 'ACTIVE',
+            isSubmissionActive: isSubmissionActive !== undefined ? isSubmissionActive : true
         };
 
         let campaigns = await store.read('airdrop');
@@ -636,6 +672,21 @@ export const grantBonusXP = async (req, res) => {
 
         if (!updatedUser) return res.status(404).json({ error: 'Member not found' });
         
+        if (amount < 0) {
+            try {
+                const newLog = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    userId,
+                    adminId: req.user?.id || 'admin',
+                    reason: `Balance Deduction: ${amount} ITEMS`,
+                    timestamp: new Date().toISOString()
+                };
+                await store.create('strike_log', newLog);
+            } catch (logErr) {
+                console.error('Failed to log strike in grantBonusXP:', logErr);
+            }
+        }
+        
         let message = amount >= 0 
             ? `Successfully injected ${amount} ITEMS into member profile.`
             : `Deducted ${Math.abs(amount)} ITEMS. Strike count: ${updatedUser.strikes}/5.`;
@@ -766,5 +817,127 @@ export const fullMissionWipe = async (req, res) => {
     } catch (error) {
         console.error('Full Wipe Error:', error);
         res.status(500).json({ error: 'Full wipe failed' });
+    }
+};
+
+// Convert User ITEMS to BAG Tokens
+export const convertItemsToBag = async (req, res) => {
+    try {
+        if (!req.user || !req.user.id) return res.status(401).json({ error: 'Unauthorized' });
+
+        const user = await store.findOne('users', { id: req.user.id });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const t2eConfig = await store.findOne('t2e_config', { id: 'global_config' }) || {};
+        const itemsToBagRate = t2eConfig.itemsToBagRate;
+
+        if (!itemsToBagRate || itemsToBagRate <= 0) {
+            return res.status(400).json({ error: 'The conversion rate has not been set yet. Please check back later.' });
+        }
+
+        const itemsBalance = user.items || 0;
+        if (itemsBalance <= 0) {
+            return res.status(400).json({ error: 'You have no ITEMS to convert.' });
+        }
+
+        const convertedBag = itemsBalance * itemsToBagRate;
+        const newBagTokens = (user.bagTokens || 0) + convertedBag;
+
+        const updatedUser = await store.update('users', u => u.id === req.user.id, (u) => {
+            return {
+                items: 0,
+                bagTokens: newBagTokens
+            };
+        });
+
+        if (!updatedUser) return res.status(500).json({ error: 'Failed to update user balances' });
+
+        res.json({
+            success: true,
+            message: `Successfully converted ${itemsBalance} ITEMS to ${convertedBag} $BAG at a 1:${itemsToBagRate} rate.`,
+            items: 0,
+            bagTokens: newBagTokens
+        });
+    } catch (error) {
+        console.error('Convert ITEMS to BAG Error:', error);
+        res.status(500).json({ error: 'Conversion failed', details: error.message });
+    }
+};
+
+// Issue Strike to User
+export const issueStrike = async (req, res) => {
+    try {
+        const { userId, reason } = req.body;
+        if (!userId) return res.status(400).json({ error: 'User ID is required' });
+
+        const adminId = req.user?.id || 'admin';
+
+        const updatedUser = await store.update('users', u => u.id === userId, (user) => {
+            const newStrikes = (user.strikes || 0) + 1;
+            return {
+                strikes: newStrikes,
+                isBanned: newStrikes >= 5
+            };
+        });
+
+        if (!updatedUser) return res.status(404).json({ error: 'User not found' });
+
+        // Log strike
+        const newLog = {
+            id: Math.random().toString(36).substr(2, 9),
+            userId,
+            adminId,
+            reason: reason || 'Protocol violation',
+            timestamp: new Date().toISOString()
+        };
+        await store.create('strike_log', newLog);
+
+        res.json({
+            success: true,
+            message: `Strike issued to user. Strikes: ${updatedUser.strikes}/5.${updatedUser.isBanned ? ' User is banned.' : ''}`,
+            strikes: updatedUser.strikes,
+            isBanned: updatedUser.isBanned
+        });
+    } catch (error) {
+        console.error('Issue Strike Error:', error);
+        res.status(500).json({ error: 'Failed to issue strike' });
+    }
+};
+
+// Unban User
+export const unbanUser = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'User ID is required' });
+
+        const updatedUser = await store.update('users', u => u.id === userId, (user) => {
+            return {
+                isBanned: false,
+                strikes: 0 // Reset strikes to allow a fresh start
+            };
+        });
+
+        if (!updatedUser) return res.status(404).json({ error: 'User not found' });
+
+        res.json({
+            success: true,
+            message: 'User unbanned successfully and strikes reset to 0.',
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error('Unban User Error:', error);
+        res.status(500).json({ error: 'Failed to unban user' });
+    }
+};
+
+// Get Strike Log
+export const getStrikeLog = async (req, res) => {
+    try {
+        const logs = await store.read('strike_log') || [];
+        const sorted = logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        res.json(sorted);
+    } catch (error) {
+        console.error('Get Strike Log Error:', error);
+        res.status(500).json({ error: 'Failed to fetch strike logs' });
     }
 };

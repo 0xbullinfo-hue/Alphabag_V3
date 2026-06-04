@@ -168,7 +168,7 @@ export const submitPair = async (req, res) => {
 
         // ─── 1. Tier Gate — ULTIMATE only (all wallet-connected users qualify for testnet) ───
         const users = await store.read('users');
-        const user = users.find(u => u.id.toLowerCase() === userId.toLowerCase());
+        const user = users.find(u => u.id && typeof u.id === 'string' && userId && typeof userId === 'string' && u.id.toLowerCase() === userId.toLowerCase());
 
         if (!user) return res.status(404).json({ error: 'User not found in registry.' });
         if (user.tier !== 'ULTIMATE') {

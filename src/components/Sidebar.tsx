@@ -90,12 +90,15 @@ export const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ is
         <div className="py-2">
           <NavGroup title="Personal">
             <NavItem to="/cex-bag" icon={Layers} label="CEX PORTFOLIO" active={location.pathname === '/cex-bag'} />
-            <NavItem to="/dex-bag" icon={Wallet2} label="DEX PORTFOLIO" active={location.pathname === '/dex-bag'} />
+            <NavItem to="/portfolio" icon={Wallet2} label="DEX PORTFOLIO" active={location.pathname === '/portfolio'} />
 
             <div className="relative">
               <NavItem to="/airdrop" icon={Gift} label="Alpha Missions" active={location.pathname === '/airdrop'} />
               <div className="absolute right-6 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-alphabag-yellow text-black text-[7px] font-black rounded uppercase pointer-events-none">LIVE</div>
             </div>
+            <NavItem to="/alphas-feed" icon={Zap} label="Alphas Feed" active={location.pathname === '/alphas-feed'} />
+            <NavItem to="/alpha-ai" icon={Bot} label="Alpha Intelligence" active={location.pathname === '/alpha-ai'} />
+            <NavItem to="/calculator" icon={Calculator} label="Alpha Calculator" active={location.pathname === '/calculator'} />
             <NavItem to="/settings" icon={LinkIcon} label="Setup Connections" active={location.pathname === '/settings'} />
             <NavItem to="/integrations" icon={Zap} label="Integrations" active={location.pathname === '/integrations'} />
             
@@ -103,15 +106,9 @@ export const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ is
             <NavItem to="/alpha-calls" icon={Radio} label="AlphaCalls" active={location.pathname === '/alpha-calls'} />
           </NavGroup>
 
-          <NavGroup title="Radar Monitoring">
-            <NavItem to="/alphas-feed" icon={Zap} label="Alphas Feed" active={location.pathname === '/alphas-feed'} />
-            <NavItem to="/live-pairs" icon={Radio} label="Live Pairs" active={location.pathname === '/live-pairs'} />
-          </NavGroup>
-
           <NavGroup title="Market Analytics">
+            <NavItem to="/alpha-screener" icon={Flame} label="ALPHA SCREENER" active={location.pathname === '/alpha-screener'} />
             <NavItem to="/markets" icon={BarChart3} label="Global Markets" active={location.pathname === '/markets'} />
-            <NavItem to="/alpha-ai" icon={Bot} label="Alpha Intelligence" active={location.pathname === '/alpha-ai'} />
-            <NavItem to="/calculator" icon={Calculator} label="Alpha Calculator" active={location.pathname === '/calculator'} />
             <NavItem to="/defi" icon={Layers} label="DeFi Tracker" active={location.pathname === '/defi'} />
             <NavItem to="/news" icon={Newspaper} label="News" active={location.pathname === '/news'} />
           </NavGroup>

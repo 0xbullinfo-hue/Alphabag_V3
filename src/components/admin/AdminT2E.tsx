@@ -140,31 +140,34 @@ export const AdminT2E: React.FC = () => {
         }
     };
 
-    const handleApprovePayout = async (id: string) => {
+    const handleApprovePayout = async (id: string, decision: 'APPROVED' | 'REJECTED' = 'APPROVED') => {
+        const isApprove = decision === 'APPROVED';
         const result = await Swal.fire({
-            title: 'AUTHORIZE AIRDROP',
-            text: "This will trigger a live blockchain transaction to the user's preferred wallet.",
-            icon: 'warning',
+            title: isApprove ? 'AUTHORIZE AIRDROP' : 'DENY PAYOUT REQUEST',
+            text: isApprove 
+                ? "This will trigger a live blockchain transaction to the user's preferred wallet."
+                : "Are you sure you want to reject this payout request?",
+            icon: isApprove ? 'warning' : 'error',
             showCancelButton: true,
-            confirmButtonColor: '#fcd535',
-            confirmButtonText: 'SEND TOKENS NOW',
+            confirmButtonColor: isApprove ? '#fcd535' : '#ef4444',
+            confirmButtonText: isApprove ? 'SEND TOKENS NOW' : 'DENY REQUEST',
             background: '#0a0a0a',
             color: '#fff'
         });
 
         if (result.isConfirmed) {
             try {
-                const res = await api.post(`/api/v1/t2e/admin/token-requests/${id}/approve`, { status: 'APPROVED' });
+                const res = await api.post(`/api/v1/t2e/admin/token-requests/${id}/approve`, { status: decision });
                 Swal.fire({
-                    title: 'AIRDROP SUCCESS',
-                    html: `<p class="text-xs text-zinc-400">TX: ${res.data.txHash}</p>`,
+                    title: isApprove ? 'AIRDROP SUCCESS' : 'REQUEST DENIED',
+                    html: isApprove ? `<p class="text-xs text-zinc-400">TX: ${res.data.txHash}</p>` : `<p class="text-xs text-zinc-400">Request has been marked as rejected.</p>`,
                     icon: 'success',
                     background: '#0a0a0a',
                     color: '#fff'
                 });
                 fetchData();
             } catch (err: any) {
-                Swal.fire('BLOCKCHAIN ERROR', err.response?.data?.error || 'Transaction failed', 'error');
+                Swal.fire('ERROR', err.response?.data?.error || 'Action failed', 'error');
             }
         }
     };
@@ -445,6 +448,7 @@ export const AdminT2E: React.FC = () => {
                                     <th className="px-4 pb-4">Task</th>
                                     <th className="px-4 pb-4">Reward</th>
                                     <th className="px-4 pb-4">Proof Link</th>
+                                    <th className="px-4 pb-4">Feedback</th>
                                     <th className="px-4 pb-4">Timestamp</th>
                                 </tr>
                             </thead>
@@ -452,7 +456,15 @@ export const AdminT2E: React.FC = () => {
                                 {activity.map(a => (
                                     <tr key={a.id} className="bg-white/[0.02] hover:bg-white/[0.05] transition-all">
                                         <td className="px-4 py-4 rounded-l-2xl border-l border-t border-b border-white/5">
-                                            <div className="text-[10px] font-bold text-white font-mono">{a.user?.walletAddress?.slice(0, 10)}...</div>
+                                            <div className="flex flex-col gap-1">
+                                                <div className="text-[10px] font-bold text-white font-mono">{a.user?.walletAddress ? `${a.user.walletAddress.slice(0, 8)}...${a.user.walletAddress.slice(-4)}` : (a.userId || 'Unknown').slice(0, 10) + '...'}</div>
+                                                <div className="flex gap-1.5 items-center">
+                                                    <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${a.user?.isBanned ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}>
+                                                        {a.user?.isBanned ? 'BANNED' : 'ACTIVE'}
+                                                    </span>
+                                                    <span className="text-[7px] text-zinc-500 font-bold">Strikes: {a.user?.strikes || 0}/5</span>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-4 border-t border-b border-white/5">
                                             <div className="text-[10px] font-bold text-white uppercase mb-0.5">{a.mission?.title}</div>
@@ -465,6 +477,11 @@ export const AdminT2E: React.FC = () => {
                                                     View Proof <ExternalLink size={10} />
                                                 </a>
                                             ) : <span className="text-[9px] text-alphabag-muted italic">Self-Verified</span>}
+                                        </td>
+                                        <td className="px-4 py-4 border-t border-b border-white/5">
+                                            <div className="text-[10px] text-zinc-400 max-w-[150px] truncate italic" title={a.feedback}>
+                                                {a.feedback || <span className="text-zinc-600">No feedback</span>}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-4 rounded-r-2xl border-r border-t border-b border-white/5 font-mono text-[9px] text-alphabag-muted">
                                             {new Date(a.createdAt).toLocaleString()}
@@ -480,65 +497,161 @@ export const AdminT2E: React.FC = () => {
 
             {/* ── View: Payout Queue ─── */}
             {view === 'payouts' && (
-                <div className="glass-panel p-8 bg-[#0a0a0a] border border-white/5 rounded-3xl">
-                    <div className="flex items-center gap-3 mb-10">
-                        <DollarSign className="text-alphabag-yellow" />
-                        <h3 className="text-xl font-black text-white uppercase tracking-tight">Authorized Distributions</h3>
+                <div className="glass-panel p-8 bg-[#0a0a0a] border border-white/5 rounded-3xl space-y-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <DollarSign className="text-alphabag-yellow" />
+                            <div>
+                                <h3 className="text-xl font-black text-white uppercase tracking-tight">Reward Withdrawal Queue</h3>
+                                <p className="text-[10px] text-alphabag-muted uppercase tracking-widest font-bold mt-0.5">
+                                    Campaign ITEMS → $BAG payout requests. Mark as DONE once BSC transfer is complete.
+                                </p>
+                            </div>
+                        </div>
+                        <button onClick={fetchData} className="p-2 text-alphabag-muted hover:text-white transition-all">
+                            <RefreshCw size={16} />
+                        </button>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4">
-                        {requests.map(r => (
-                            <div key={r.id} className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-alphabag-yellow/20 transition-all">
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-alphabag-yellow/10 rounded-2xl flex items-center justify-center text-alphabag-yellow">
-                                            <Users size={20} />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-bold text-alphabag-muted uppercase mb-0.5">Destination Wallet</p>
-                                            <p className="font-mono text-zinc-200 text-sm italic">{r.walletAddress || r.user?.walletAddress}</p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-[9px] font-bold text-alphabag-muted uppercase mb-0.5">Distribution Payload</p>
-                                        <p className="text-lg font-black text-white">{Number(r.expectedTokens).toLocaleString()} <span className="text-[10px] text-alphabag-yellow uppercase font-bold tracking-[0.2em] ml-1">BAG Tokens</span></p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    {r.status === 'PENDING' ? (
-                                        <>
-                                            <button className="flex items-center gap-2 px-6 py-3 bg-red-500/10 text-red-500 rounded-2xl text-[10px] font-bold uppercase hover:bg-red-500/20 transition-all">
-                                                <XCircle size={14} /> Deny
-                                            </button>
-                                            <button 
-                                                onClick={() => handleApprovePayout(r.id)}
-                                                className="flex items-center gap-2 px-8 py-4 bg-alphabag-yellow text-[#000] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(252,213,53,0.4)]"
-                                            >
-                                                <RefreshCw size={14} /> Authorize Airdrop
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <div className="flex items-center gap-3 bg-alphabag-green/10 px-6 py-3 rounded-2xl border border-alphabag-green/20">
-                                            <CheckCircle2 size={16} className="text-alphabag-green" />
-                                            <div>
-                                                <p className="text-[10px] font-black text-alphabag-green uppercase">Disbursed successfully</p>
-                                                <p className="text-[8px] font-mono text-alphabag-green/60 truncate max-w-[150px]">{r.txHash}</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                    {/* Status Legend */}
+                    <div className="flex flex-wrap gap-3 pb-4 border-b border-white/5">
+                        {[
+                            { label: 'PENDING', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', desc: 'Awaiting admin review' },
+                            { label: 'APPROVED', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', desc: 'Approved, transfer in progress' },
+                            { label: 'SENT', color: 'text-green-400 bg-green-500/10 border-green-500/20', desc: 'Delivered to BSC wallet' },
+                            { label: 'REJECTED', color: 'text-red-400 bg-red-500/10 border-red-500/20', desc: 'Request denied' },
+                        ].map(s => (
+                            <div key={s.label} className="flex items-center gap-2">
+                                <span className={`text-[8px] font-black px-2 py-0.5 rounded border uppercase ${s.color}`}>{s.label}</span>
+                                <span className="text-[9px] text-alphabag-muted">{s.desc}</span>
                             </div>
                         ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3">
+                        {requests.map(r => {
+                            const status = r.status as string;
+                            const isPending = status === 'PENDING';
+                            const isApproved = status === 'APPROVED';
+                            const isSent = status === 'SENT';
+                            const isRejected = status === 'REJECTED';
+
+                            return (
+                                <div key={r.id} className={`p-5 border rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
+                                    isSent ? 'bg-green-500/[0.03] border-green-500/20' :
+                                    isApproved ? 'bg-blue-500/[0.03] border-blue-500/20' :
+                                    isPending ? 'bg-white/[0.02] border-white/5 hover:border-alphabag-yellow/20' :
+                                    'bg-red-500/[0.03] border-red-500/10 opacity-60'
+                                }`}>
+                                    {/* Left: user + amounts */}
+                                    <div className="flex items-start gap-4 flex-1">
+                                        <div className="w-9 h-9 bg-alphabag-yellow/10 rounded-xl flex items-center justify-center text-alphabag-yellow shrink-0">
+                                            <Users size={16} />
+                                        </div>
+                                        <div className="space-y-1 flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className="font-mono text-white text-xs font-bold truncate">
+                                                    {(r.walletAddress || r.user?.submittedWallet || r.user?.walletAddress || 'No wallet').slice(0, 20)}...
+                                                </p>
+                                                {/* Status badge */}
+                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded border uppercase ${
+                                                    isSent ? 'text-green-400 bg-green-500/10 border-green-500/20' :
+                                                    isApproved ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
+                                                    isPending ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' :
+                                                    'text-red-400 bg-red-500/10 border-red-500/20'
+                                                }`}>{status}</span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-4 text-[10px]">
+                                                <span className="text-alphabag-muted">
+                                                    <span className="font-bold text-white">{Number(r.expectedTokens).toLocaleString()}</span> ITEMS earned
+                                                </span>
+                                                <span className="text-alphabag-yellow font-bold">
+                                                    → {Number(r.expectedTokens).toLocaleString()} $BAG payout
+                                                </span>
+                                            </div>
+                                            <div className="text-[9px] font-mono text-alphabag-muted">
+                                                Requested: {new Date(r.createdAt).toLocaleString()}
+                                                {r.sentAt && <span className="ml-3 text-green-400">• Sent: {new Date(r.sentAt).toLocaleString()}</span>}
+                                                {r.txReference && <span className="ml-3 text-alphabag-subtext">TX: {r.txReference}</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right: actions */}
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {isPending && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleApprovePayout(r.id, 'REJECTED')}
+                                                    className="flex items-center gap-1.5 px-4 py-2 bg-red-500/10 text-red-400 rounded-xl text-[10px] font-bold uppercase hover:bg-red-500/20 transition-all border border-red-500/20"
+                                                >
+                                                    <XCircle size={12} /> Reject
+                                                </button>
+                                                <button
+                                                    onClick={() => handleApprovePayout(r.id, 'APPROVED')}
+                                                    className="flex items-center gap-1.5 px-5 py-2 bg-alphabag-yellow text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(252,213,53,0.2)]"
+                                                >
+                                                    <CheckCircle2 size={12} /> Approve
+                                                </button>
+                                            </>
+                                        )}
+                                        {isApproved && (
+                                            <button
+                                                onClick={async () => {
+                                                    const result = await Swal.fire({
+                                                        title: 'CONFIRM TRANSFER DONE',
+                                                        html: `<p class="text-xs text-zinc-400">Enter optional TX reference or leave blank. This tells the user their $BAG has been sent to their BSC wallet.</p>`,
+                                                        input: 'text',
+                                                        inputPlaceholder: 'TX Hash / reference (optional)',
+                                                        inputAttributes: { style: 'background:#1a1a1a;color:white;border:1px solid #444;border-radius:8px;padding:10px;' },
+                                                        icon: 'question',
+                                                        showCancelButton: true,
+                                                        confirmButtonColor: '#22c55e',
+                                                        confirmButtonText: '✓ MARK AS SENT',
+                                                        background: '#0a0a0a',
+                                                        color: '#fff'
+                                                    });
+                                                    if (!result.isConfirmed) return;
+                                                    try {
+                                                        await api.post(`/api/v1/t2e/admin/token-requests/${r.id}/mark-done`, { txReference: result.value || null });
+                                                        Swal.fire({ title: 'MARKED AS SENT', text: 'User dashboard will now show reward delivered.', icon: 'success', background: '#0a0a0a', color: '#fff', confirmButtonColor: '#fcd535' });
+                                                        fetchData();
+                                                    } catch (err: any) {
+                                                        Swal.fire('ERROR', err.response?.data?.error || 'Failed', 'error');
+                                                    }
+                                                }}
+                                                className="flex items-center gap-1.5 px-5 py-2 bg-green-500/10 text-green-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-black transition-all border border-green-500/20"
+                                            >
+                                                <CheckCircle2 size={12} /> Mark DONE
+                                            </button>
+                                        )}
+                                        {isSent && (
+                                            <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 rounded-xl border border-green-500/20">
+                                                <CheckCircle2 size={14} className="text-green-400" />
+                                                <span className="text-[10px] font-black text-green-400 uppercase">Delivered</span>
+                                            </div>
+                                        )}
+                                        {isRejected && (
+                                            <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 rounded-xl border border-red-500/20">
+                                                <XCircle size={14} className="text-red-400" />
+                                                <span className="text-[10px] font-black text-red-400 uppercase">Rejected</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                         {requests.length === 0 && (
                             <div className="py-20 text-center opacity-30 select-none">
                                 <AlertCircle size={48} className="mx-auto mb-4 text-alphabag-muted" />
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-alphabag-muted">Queue Empty — No pending payouts</h4>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-alphabag-muted">No withdrawal requests yet</h4>
+                                <p className="text-[9px] text-alphabag-muted mt-1">Users submit requests after campaign ends and Convert is activated.</p>
                             </div>
                         )}
                     </div>
                 </div>
             )}
+
         </div>
     );
 };

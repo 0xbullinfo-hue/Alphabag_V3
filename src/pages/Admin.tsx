@@ -63,7 +63,7 @@ export const Admin: React.FC = () => {
             case 'overview':
                 return <AdminOverview stats={stats} registeredCount={users.length} activeCount={activeCount} />;
             case 'users':
-                return <AdminUsers users={users} />;
+                return <AdminUsers users={users} onRefresh={fetchAllData} />;
             case 'news':
                 return <AdminNews />;
             case 'signals':
