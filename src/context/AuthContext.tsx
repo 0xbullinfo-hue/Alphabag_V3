@@ -47,9 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user?.id]); // Only re-run when the user identity changes, not every state update
 
-  // Admin Allowlist - Loaded from Config (Production-Safe)
-  const ADMIN_WALLETS = TOKEN_GATING_CONFIG.ADMIN_WALLETS;
-
+  // Admin status is evaluated entirely on the server side via JWT roles.
   const siweLogin = async (address: string, signature: string, message: string) => {
     try {
       setIsLoading(true);

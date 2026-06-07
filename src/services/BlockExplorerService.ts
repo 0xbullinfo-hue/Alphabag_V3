@@ -1,4 +1,5 @@
 import { API_CONFIG } from './config';
+import { api } from './api';
 
 /**
  * BlockExplorerService - Real Transaction History
@@ -24,16 +25,9 @@ export class BlockExplorerService {
     limit: number = 20
   ): Promise<any[]> {
     try {
-      // Get appropriate API key and base URL
-      const apiKey = chainId === 56 ? API_CONFIG.BSCSCAN_API_KEY : API_CONFIG.ETHERSCAN_API_KEY;
-      const baseUrl = chainId === 56
-        ? 'https://api.bscscan.com/api'
-        : 'https://api.etherscan.io/api';
-
-      if (!apiKey) {
-        console.log('[BlockExplorerService] API key not configured. Returning empty history.');
-        return [];
-      }
+      // Get appropriate proxy base URL
+      const baseUrl = '/api/proxy';
+      const proxyEndpoint = chainId === 56 ? 'bscscan' : 'etherscan';
 
       if (!address || !address.startsWith('0x')) {
         console.error('[BlockExplorerService] Invalid wallet address');
@@ -42,11 +36,11 @@ export class BlockExplorerService {
 
       console.log(`[BlockExplorerService] Fetching tx history for ${address.substring(0, 6)}... on chain ${chainId}`);
 
-      const response = await fetch(
-        `${baseUrl}?module=account&action=txlist&address=${address}&sort=desc&page=1&offset=${limit}&apikey=${apiKey}`
+      const response = await api.get(
+        `${baseUrl}/${proxyEndpoint}?module=account&action=txlist&address=${address}&sort=desc&page=1&offset=${limit}`
       );
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.status === '1' && data.result) {
         const transactions = data.result.slice(0, limit);
@@ -93,23 +87,16 @@ export class BlockExplorerService {
     chainId: number = 1
   ): Promise<string> {
     try {
-      const apiKey = chainId === 56 ? API_CONFIG.BSCSCAN_API_KEY : API_CONFIG.ETHERSCAN_API_KEY;
-      const baseUrl = chainId === 56
-        ? 'https://api.bscscan.com/api'
-        : 'https://api.etherscan.io/api';
-
-      if (!apiKey) {
-        console.log('[BlockExplorerService] API key not configured');
-        return '0';
-      }
+      const baseUrl = '/api/proxy';
+      const proxyEndpoint = chainId === 56 ? 'bscscan' : 'etherscan';
 
       console.log(`[BlockExplorerService] Fetching token balance for ${address.substring(0, 6)}...`);
 
-      const response = await fetch(
-        `${baseUrl}?module=account&action=tokenbalance&contractaddress=${tokenAddress}&address=${address}&tag=latest&apikey=${apiKey}`
+      const response = await api.get(
+        `${baseUrl}/${proxyEndpoint}?module=account&action=tokenbalance&contractaddress=${tokenAddress}&address=${address}&tag=latest`
       );
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.status === '1') {
         console.log(`[BlockExplorerService] Token balance: ${data.result}`);
@@ -136,17 +123,10 @@ export class BlockExplorerService {
     chainId: number = 1
   ): Promise<any[]> {
     try {
-      const apiKey = chainId === 56 ? API_CONFIG.BSCSCAN_API_KEY : API_CONFIG.ETHERSCAN_API_KEY;
-      const baseUrl = chainId === 56
-        ? 'https://api.bscscan.com/api'
-        : 'https://api.etherscan.io/api';
+      const baseUrl = '/api/proxy';
+      const proxyEndpoint = chainId === 56 ? 'bscscan' : 'etherscan';
 
-      if (!apiKey) {
-        console.log('[BlockExplorerService] API key not configured');
-        return [];
-      }
-
-      let url = `${baseUrl}?module=account&action=tokentx&address=${address}&sort=desc&apikey=${apiKey}`;
+      let url = `${baseUrl}/${proxyEndpoint}?module=account&action=tokentx&address=${address}&sort=desc`;
 
       if (tokenAddress) {
         url += `&contractaddress=${tokenAddress}`;
@@ -154,8 +134,8 @@ export class BlockExplorerService {
 
       console.log(`[BlockExplorerService] Fetching token tx for ${address.substring(0, 6)}...`);
 
-      const response = await fetch(url);
-      const data = await response.json();
+      const response = await api.get(url);
+      const data = response.data;
 
       if (data.status === '1' && data.result) {
         const transactions = data.result.slice(0, 50); // Limit to 50
@@ -192,21 +172,14 @@ export class BlockExplorerService {
    */
   static async getAccountBalance(address: string, chainId: number = 1): Promise<string> {
     try {
-      const apiKey = chainId === 56 ? API_CONFIG.BSCSCAN_API_KEY : API_CONFIG.ETHERSCAN_API_KEY;
-      const baseUrl = chainId === 56
-        ? 'https://api.bscscan.com/api'
-        : 'https://api.etherscan.io/api';
+      const baseUrl = '/api/proxy';
+      const proxyEndpoint = chainId === 56 ? 'bscscan' : 'etherscan';
 
-      if (!apiKey) {
-        console.log('[BlockExplorerService] API key not configured');
-        return '0';
-      }
-
-      const response = await fetch(
-        `${baseUrl}?module=account&action=balance&address=${address}&tag=latest&apikey=${apiKey}`
+      const response = await api.get(
+        `${baseUrl}/${proxyEndpoint}?module=account&action=balance&address=${address}&tag=latest`
       );
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.status === '1') {
         return data.result || '0';

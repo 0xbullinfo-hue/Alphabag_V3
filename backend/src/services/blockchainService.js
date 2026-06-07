@@ -24,6 +24,14 @@ class BlockchainService {
         // Wallet Client for sending transactions (EVM)
         // Note: PRIVATE_KEY should be in .env
         this.privateKey = process.env.PRIVATE_KEY;
+
+        if (this.privateKey && (process.env.NODE_ENV === 'production' || process.env.VITE_ENVIRONMENT === 'production')) {
+            console.warn('\n=============================================================');
+            console.warn('CRITICAL SECURITY WARNING: Raw PRIVATE_KEY detected in environment.');
+            console.warn('For production, use AWS KMS, HashiCorp Vault, or equivalent.');
+            console.warn('Never store raw private keys in .env for mainnet deployments.');
+            console.warn('=============================================================\n');
+        }
     }
 
     /**

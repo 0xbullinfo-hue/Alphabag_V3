@@ -12,6 +12,18 @@ import { connectDB } from './utils/db.js';
 // Connect to MongoDB if configured
 connectDB();
 
+// ===== STARTUP SECURITY VALIDATIONS =====
+if (process.env.NODE_ENV === 'production' || process.env.VITE_ENVIRONMENT === 'production') {
+    if (process.env.FRONTEND_URL === '*') {
+        console.error('CRITICAL SECURITY ERROR: FRONTEND_URL cannot be "*" in production. This exposes the API to any origin.');
+        process.exit(1);
+    }
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'your_jwt_secret_key_here' || process.env.JWT_SECRET.length < 32) {
+        console.error('CRITICAL SECURITY ERROR: Weak or default JWT_SECRET detected in production. Must be at least 32 characters.');
+        process.exit(1);
+    }
+}
+
 // Routes
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
@@ -20,6 +32,7 @@ import publicRoutes from './routes/publicRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import livePairRoutes from './routes/livePairRoutes.js';
 import t2eRoutes from './routes/t2eRoutes.js';
+import proxyRoutes from './routes/proxyRoutes.js';
 import { marketRouter, whaleRouter, aiRouter, portfolioRouter } from './routes/serviceRoutes.js';
 import { streamNeuralCore } from './controllers/aiController.js';
 
@@ -108,6 +121,7 @@ app.use('/api', publicRoutes); // /api/news, /api/signals
 app.use('/api/projects', projectRoutes);
 app.use('/api/live-pairs', livePairRoutes);
 app.use('/api/v1/t2e', t2eRoutes);
+app.use('/api/proxy', proxyRoutes);
 
 // Service Routes (Legacy Migration)
 app.use('/api/portfolio', portfolioRouter); // Moved up to ensure precedence

@@ -24,14 +24,8 @@ export const TOKEN_GATING_CONFIG = {
   MIN_BAG_REQUIRED: Number(import.meta.env.VITE_MIN_BAG_REQUIRED) || 0,
   
   // ===== ADMIN WALLET CONFIGURATION =====
-  // Comma-separated list of admin wallet addresses
-  // Format: "0x1234...,0x5678...,0xabcd..."
-  // Centralized single source of truth - replaces hardcoded wallets everywhere
-  ADMIN_WALLETS: (import.meta.env.VITE_ADMIN_WALLETS || '')
-    .split(',')
-    .map((w: string) => w.trim())
-    .filter(Boolean),
-  
+  // Handled entirely server-side via JWT claims.
+  // No client-side evaluation of admin wallets.
   // ===== FEATURE FLAGS =====
   // Toggle token gating on/off
   // TESTNET: false (all users get premium for testing)
@@ -55,21 +49,11 @@ export const BLOCKCHAIN_CONFIG = {
   DEFAULT_CHAIN: 56,
 };
 
+// ===== API CONFIGURATION =====
 export const API_CONFIG = {
-  // ===== PREMIUM API KEYS =====
-  // These are optional for testnet but required for mainnet features
-  
-  // Nansen - Real whale transaction tracking
-  NANSEN_API_KEY: import.meta.env.VITE_NANSEN_API_KEY || '',
-  
-  // Block Explorer APIs - Real transaction history
-  ETHERSCAN_API_KEY: import.meta.env.VITE_ETHERSCAN_API_KEY || '',
-  BSCSCAN_API_KEY: import.meta.env.VITE_BSCSCAN_API_KEY || '',
-  
-  // Rate limiting considerations
-  // Etherscan free tier: ~5 calls/sec
-  // BscScan free tier: ~10 calls/sec
-  // Implement caching to avoid hitting limits
+  // Premium API calls (Nansen, Etherscan, Bscscan) 
+  // are now proxied through the backend to protect API keys.
+  PROXY_BASE_URL: import.meta.env.VITE_API_BASE_URL || '/api/proxy',
 };
 
 // ===== TIME CONSTANTS =====
@@ -116,10 +100,7 @@ export function validateConfig() {
     }
   }
 
-  // Warn if no admin wallets configured
-  if (TOKEN_GATING_CONFIG.ADMIN_WALLETS.length === 0) {
-    console.warn('⚠️ No admin wallets configured. Admin features will be unavailable.');
-  }
+  // Backend will enforce admin routes.
 
   if (errors.length > 0) {
     console.warn('Configuration warnings:', errors);
@@ -141,17 +122,17 @@ For Testnet (All features available, no token check):
   VITE_ENVIRONMENT=testnet
   VITE_ENABLE_TOKEN_GATING=false
   VITE_BAG_TOKEN_ADDRESS_TESTNET= (empty - not deployed yet)
-  VITE_ADMIN_WALLETS=0x42916A998c6Bff7F36bE61749Bd1BBA9f473dB96
+  ADMIN_WALLETS=0x_YOUR_ADMIN_WALLET_ADDRESS_HERE (Server-side)
 
 For Mainnet (Real token gating, premium features):
   VITE_ENVIRONMENT=production
   VITE_ENABLE_TOKEN_GATING=true
   VITE_BAG_TOKEN_ADDRESS_MAINNET=0x... (deployed token address)
   VITE_MIN_BAG_REQUIRED=1000
-  VITE_NANSEN_API_KEY=your_key
-  VITE_ETHERSCAN_API_KEY=your_key
-  VITE_BSCSCAN_API_KEY=your_key
-  VITE_ADMIN_WALLETS=0x...,0x...
+  NANSEN_API_KEY=your_key (Server-side)
+  ETHERSCAN_API_KEY=your_key (Server-side)
+  BSCSCAN_API_KEY=your_key (Server-side)
+  ADMIN_WALLETS=0x...,0x... (Server-side)
 
 Update in .env or .env.local file in root directory.
 */

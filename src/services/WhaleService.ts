@@ -1,7 +1,6 @@
 // WhaleService.ts - Fetch transactions and alerts for watched wallets
 
-const BSCSCAN_API_KEY = import.meta.env.VITE_BSCSCAN_API_KEY;
-const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
+
 
 export interface WhaleTransaction {
     hash: string;
@@ -85,19 +84,18 @@ export const WhaleService = {
 
         // 2. Fallback to Etherscan/BscScan (Legacy)
         let url = '';
-        let apiKey = '';
+        const baseUrl = '/api/proxy';
 
         if (chainId === 56) {
-            apiKey = BSCSCAN_API_KEY || 'YourApiKeyToken';
-            url = `https://api.bscscan.com/api?module=account&action=tokentx&address=${address}&page=1&offset=20&sort=desc&apikey=${apiKey}`;
+            url = `${baseUrl}/bscscan?module=account&action=tokentx&address=${address}&page=1&offset=20&sort=desc`;
         } else if (chainId === 1) {
-            apiKey = ETHERSCAN_API_KEY || 'YourApiKeyToken';
-            url = `https://api.etherscan.io/api?module=account&action=tokentx&address=${address}&page=1&offset=20&sort=desc&apikey=${apiKey}`;
+            url = `${baseUrl}/etherscan?module=account&action=tokentx&address=${address}&page=1&offset=20&sort=desc`;
         }
 
         try {
-            const response = await fetch(url);
-            const data = await response.json();
+            const { api } = await import('./api');
+            const response = await api.get(url);
+            const data = response.data;
 
             if (data.status === '1' && Array.isArray(data.result)) {
                 return data.result.map((tx: any) => ({
