@@ -52,7 +52,7 @@ export const Landing: React.FC = () => {
   };
 
   return (
-    <div className="bg-alphabag-black min-h-screen text-alphabag-text font-sans overflow-x-hidden selection:bg-alphabag-yellow selection:text-black">
+    <div className="bg-alphabag-black min-h-screen text-alphabag-text font-mono overflow-x-hidden selection:bg-alphabag-yellow selection:text-black">
 
       {/* ── TEASER TOAST NOTIFICATION ── */}
       <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ${
@@ -98,7 +98,7 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => handleNavClick('home')}>
             <img src="/logo.png" alt="AlphaBAG Logo" className="w-9 h-9 object-contain rounded-full shadow-[0_0_20px_rgba(252,213,53,0.1)]" />
-            <span className="text-xl font-semibold tracking-tighter text-white">Alpha<span className="text-alphabag-yellow">BAG</span></span>
+            <span className="text-xl font-semibold tracking-tighter text-white">ALPHABAG</span>
           </div>
 
           {/* Desktop Nav */}
@@ -120,8 +120,8 @@ export const Landing: React.FC = () => {
                 Complete Login
               </Button>
             ) : (
-              <Button size="sm" onClick={handleLaunchApp} className="uppercase font-semibold px-6 shadow-[0_0_15px_rgba(252,213,53,0.3)] hover:shadow-[0_0_25px_rgba(252,213,53,0.5)] transition-all">
-                {isAuthenticated ? 'Open App' : 'Get Started'}
+              <Button size="sm" onClick={isAuthenticated ? handleLaunchApp : undefined} className="uppercase font-semibold px-6 shadow-[0_0_15px_rgba(252,213,53,0.3)] hover:shadow-[0_0_25px_rgba(252,213,53,0.5)] transition-all">
+                {isAuthenticated ? 'Open App' : 'Coming soon'}
               </Button>
             )}
           </div>
@@ -143,7 +143,7 @@ export const Landing: React.FC = () => {
             <button onClick={() => handleNavClick('calculator')} className={`text-left py-2 font-semibold uppercase tracking-widest ${activeTab === 'calculator' ? 'text-white' : 'text-alphabag-subtext'}`}>Calculator</button>
             <button onClick={() => handleNavClick('faq')} className={`text-left py-2 font-semibold uppercase tracking-widest ${activeTab === 'faq' ? 'text-white' : 'text-alphabag-subtext'}`}>FAQ</button>
             {/* <button onClick={() => scrollToSection('membership')} className="text-left py-2 font-semibold text-white uppercase tracking-widest">Pricing</button> */}
-            <Button size="lg" onClick={handleLaunchApp} className="w-full uppercase font-semibold">{isAuthenticated ? 'Open App' : 'Get Started'}</Button>
+            <Button size="lg" onClick={isAuthenticated ? handleLaunchApp : undefined} className="w-full uppercase font-semibold">{isAuthenticated ? 'Open App' : 'Coming soon'}</Button>
           </div>
         )}
       </nav>
@@ -189,12 +189,14 @@ export const Landing: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <Button size="lg" className="w-full sm:w-auto px-8 py-4 text-base font-semibold bg-alphabag-yellow text-black hover:bg-alphabag-yellowHover border-none shadow-[0_0_20px_rgba(252,213,53,0.3)] transition-all" onClick={handleLaunchApp}>
-                      {isAuthenticated ? 'Open Hub' : 'Start Tracking Free'}
+                    <Button size="lg" className="w-full sm:w-auto px-8 py-4 text-base font-semibold bg-alphabag-yellow text-black hover:bg-alphabag-yellowHover border-none shadow-[0_0_20px_rgba(252,213,53,0.3)] transition-all" onClick={isAuthenticated ? handleLaunchApp : undefined}>
+                      {isAuthenticated ? 'Open Hub' : 'Coming soon'}
                     </Button>
-                    <Button variant="outline" size="lg" className="w-full sm:w-auto px-8 py-4 text-base border-white/10 hover:border-white/20 hover:bg-white/5 backdrop-blur-md text-white font-medium transition-all" onClick={handleViewMarkets}>
-                      Explore Markets
-                    </Button>
+                    <a href="https://t.me/alphabag_access" target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="lg" className="w-full sm:w-auto px-8 py-4 text-base border-white/10 hover:border-white/20 hover:bg-white/5 backdrop-blur-md text-white font-medium transition-all flex items-center gap-2">
+                        <Send size={16} /> Join community
+                      </Button>
+                    </a>
                   </>
                 )}
               </div>
@@ -274,8 +276,8 @@ export const Landing: React.FC = () => {
                 />
                 <FeatureHighlight
                   icon={<Wallet size={32} className="text-purple-400" />}
-                  title="CEX HUB"
-                  desc="Connect your exchange APIs for a truly unified overview of your crypto net worth across 20+ major platforms."
+                  title="CEX/DEX HUB"
+                  desc="Connect your DEX Wallets and exchange APIs for a truly unified overview of your crypto net worth across 20+ major platforms."
                 />
                 <FeatureHighlight
                   icon={<Rocket size={32} className="text-[#D8B4FE]" />}
@@ -350,8 +352,8 @@ export const Landing: React.FC = () => {
             
             <div className="max-w-7xl mx-auto relative z-10 w-full">
               <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-black mb-4 uppercase tracking-[0.2em] text-white">System <span className="text-alphabag-yellow">Tokenomics</span></h2>
-                <p className="text-alphabag-subtext font-mono text-sm uppercase tracking-widest">// Financial_Architecture</p>
+                <h2 className="text-4xl md:text-5xl font-black mb-4 uppercase tracking-[0.2em] text-white">Alphabag <span className="text-alphabag-yellow">Tokenomics</span></h2>
+                <p className="text-alphabag-subtext font-mono text-sm uppercase tracking-widest max-w-4xl mx-auto leading-relaxed">Detailed token distribution and exact tokenomics for Alphabag ecosystem</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -364,24 +366,15 @@ export const Landing: React.FC = () => {
                   <TokenMetricCard label="Contract Address" value="TBA" icon={<Lock />} />
                 </div>
 
-                {/* Right Column: Allocations Masked */}
-                <div className="lg:col-span-2 relative bg-alphabag-dark border border-white/5 rounded-3xl p-8 flex flex-col items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden min-h-[400px]">
-                  <div className="absolute inset-0 opacity-10 flex flex-wrap gap-4 items-center justify-center pointer-events-none">
-                    <div className="w-48 h-48 rounded-full border-[20px] border-white blur-md"></div>
-                    <div className="w-32 h-32 rounded-full border-[15px] border-white blur-md"></div>
-                  </div>
-                  
-                  <div className="absolute inset-0 bg-alphabag-black/80 backdrop-blur-xl z-10 flex flex-col items-center justify-center text-center p-8 border border-white/5">
-                    <div className="w-16 h-16 bg-alphabag-yellow/10 text-alphabag-yellow rounded-2xl flex items-center justify-center mb-6 border border-alphabag-yellow/20 shadow-[0_0_30px_rgba(252,213,53,0.2)]">
-                      <Lock size={32} />
-                    </div>
-                    <h3 className="text-2xl font-black text-white uppercase tracking-[0.2em] mb-3">Allocations Masked</h3>
-                    <p className="text-alphabag-subtext max-w-md mx-auto text-sm leading-relaxed">
-                      Detailed token distribution and exact tokenomics are strictly classified during the Testnet phase to prevent pre-launch front-running.
-                    </p>
-                    <div className="mt-8 px-6 py-2 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-[0.2em] text-alphabag-yellow">
-                      Unlocks at TGE
-                    </div>
+                {/* Right Column: Allocations Unmasked */}
+                <div className="lg:col-span-2 relative bg-alphabag-dark border border-white/5 rounded-3xl p-8 flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full">
+                    <TokenomicsDetailCard title="Liquidity Pool (LP)" percentage="30%" desc="Paired initially with BNB upon PancakeSwap deployment. burnt to secure the market floor." />
+                    <TokenomicsDetailCard title="Trade-to-Earn (T2E)" percentage="35%" desc="Emission-based distribution. Tokens are systematically distributed to users through Our task-to-earn gamification and ecosystem engagement over an extended timeline, eliminating massive upfront supply shocks. Allocation locked for 3months. released to activate the Alpha-drops T2E dapp" />
+                    <TokenomicsDetailCard title="Development & Ecosystem" percentage="15%" desc="Allocated for infrastructure upgrades, API integrations, and core platform development. Automated post-deployment allocation." />
+                    <TokenomicsDetailCard title="Marketing & Strategic Growth" percentage="10%" desc="Distributed directly to designated marketing for ecosystem expansion and strategic partnerships." />
+                    <TokenomicsDetailCard title="Team & Advisors" percentage="10%" desc="Distributed to team custody at deployment, guarded by strict multi-sig parameters and long-term ecosystem commitment thresholds. locked for 12months with stiff unlock strategy (more details soon)" />
+                    <TokenomicsDetailCard title="TOTAL SUPPLY" percentage="100%" subtitle="21,000,000" desc="Strictly hard-capped supply. No mint function exists post-deployment." highlight />
                   </div>
                 </div>
               </div>
@@ -447,9 +440,9 @@ export const Landing: React.FC = () => {
               </div>
 
               <div className="mt-24 flex justify-center">
-                <a href="#" className="bg-alphabag-yellow text-black font-black uppercase tracking-widest px-8 py-4 rounded hover:bg-alphabag-yellowHover transition-all shadow-[0_0_20px_rgba(252,213,53,0.3)] flex items-center gap-3">
-                  <ArrowRight size={18} /> Swap on PancakeSwap
-                </a>
+                <div className="bg-alphabag-dark border border-alphabag-yellow text-alphabag-yellow font-black uppercase tracking-widest px-8 py-4 rounded cursor-not-allowed flex items-center gap-3">
+                  <ArrowRight size={18} /> Swap on PancakeSwap (coming soon)
+                </div>
               </div>
             </div>
           </section>
@@ -488,10 +481,9 @@ export const Landing: React.FC = () => {
                     status="EXECUTING"
                     points={[
                       "Community Onboarding & Genesis Campaign: Launch initial marketing to acquire high-conviction holders.",
-                      "Beta Member Feedback Integration: Release V1 Web App for community review and UI/UX optimization.",
-                      "V2 Beta Deployment: Implement upgraded SocialFi mechanics and premium dashboard features.",
                       "Smart Contract Finalization: Final audit of the automated protection and renounce logic.",
-                      "Utility Token Launch: Deploy $BAG on BSC with pre-set allocations."
+                      "Utility Token Launch: Deploy token on BSC with pre-set allocations. Execute contract renouncement post-launch for immutable security. Burn liquidity.",
+                      "V1 Beta Deployment: Implement upgraded mechanics dashboard features launch for user testing."
                     ]}
                   />
                   <RoadmapStep
@@ -499,18 +491,19 @@ export const Landing: React.FC = () => {
                     title="LIQUIDITY_DEPLOYMENT"
                     status="PENDING"
                     points={[
-                      "Synthetic Utility Token Implementation: Integrate $BAG as the primary engine for platform access.",
-                      "Liquidity Generation Event (LGE): Official PancakeSwap listing with 2-year liquidity lock.",
-                      "Protocol Renunciation: Execute contract renouncement post-launch for immutable security.",
-                      "Strategic Community Collaborations: Partner with institutional data providers to scale the Alpha Radar.",
-                      "Pro-Terminal Release: Launch institutional-grade whale-tracking and SocialFi premium tiers."
+                      "Synthetic Utility Token Implementation: Integrate Utility token as the primary engine for platform features access.",
+                      "Strategic Community Collaborations: Partner with institutional data providers to scale all features in Alphabag.",
+                      "Pro-Terminal Release: Launch top tier functions on Alphabag for tier holders"
                     ]}
                   />
                   <RoadmapStep
                     phase="PHASE_04"
                     title="GLOBAL_DOMINANCE"
                     status="QUEUED"
-                    points={["Global Scaling: Expand narrative reach and platform infrastructure to international markets."]}
+                    points={[
+                      "Global Scaling: Expand narrative reach and platform infrastructure to international markets.",
+                      "Future development: Expand use-case to adapt to mobile usage"
+                    ]}
                   />
                 </div>
               </div>
@@ -609,7 +602,7 @@ export const Landing: React.FC = () => {
             <div className="w-6 h-6 bg-zinc-900 border border-white/10 text-alphabag-yellow flex items-center justify-center rounded">
               <Lock size={14} fill="currentColor" />
             </div>
-            <span className="text-white text-xs font-semibold uppercase tracking-widest">Alpha<span className="text-alphabag-yellow">BAG</span> Systems © 2026</span>
+            <span className="text-white text-xs font-semibold uppercase tracking-widest">ALPHABAG Systems © 2026</span>
           </div>
 
           <div className="flex items-center gap-6">
@@ -743,16 +736,29 @@ const BuyStepCard = ({ step, title, desc }: { step: string, title: React.ReactNo
 );
 
 const TokenMetricCard = ({ label, value, icon, isMasked }: { label: string, value: string, icon: any, isMasked?: boolean }) => (
-  <div className="bg-alphabag-dark border border-white/5 p-3 rounded-xl flex items-center gap-3 hover:border-alphabag-yellow/20 hover:bg-white/5 transition-all group">
-    <div className="w-8 h-8 bg-alphabag-black border border-white/5 rounded-lg flex items-center justify-center text-alphabag-yellow group-hover:scale-110 transition-transform">
-      {React.cloneElement(icon as React.ReactElement, { size: 16 })}
+  <div className="bg-alphabag-dark border border-white/5 p-5 md:p-6 rounded-2xl flex items-center gap-4 md:gap-5 hover:border-alphabag-yellow/20 hover:bg-white/5 transition-all group h-full shadow-lg">
+    <div className="w-12 h-12 shrink-0 bg-alphabag-black border border-white/5 rounded-xl flex items-center justify-center text-alphabag-yellow group-hover:scale-110 transition-transform shadow-inner">
+      {React.cloneElement(icon as React.ReactElement, { size: 24 })}
     </div>
     <div>
-      <div className="text-[9px] text-alphabag-subtext font-black uppercase tracking-widest mb-0.5 opacity-60">{label}</div>
-      <div className={`text-base font-black text-white uppercase tracking-tighter ${isMasked ? 'text-transparent blur-[6px] select-none bg-clip-text bg-white' : ''}`}>
+      <div className="text-xs text-alphabag-subtext font-black uppercase tracking-widest mb-1 opacity-80">{label}</div>
+      <div className={`text-lg md:text-xl font-black text-white uppercase tracking-tighter leading-none ${isMasked ? 'text-transparent blur-[6px] select-none bg-clip-text bg-white' : ''}`}>
         {value}
       </div>
     </div>
+  </div>
+);
+
+const TokenomicsDetailCard = ({ title, percentage, subtitle, desc, highlight }: { title: string, percentage: string, subtitle?: string, desc: string, highlight?: boolean }) => (
+  <div className={`p-6 rounded-2xl border flex flex-col h-full ${highlight ? 'bg-alphabag-yellow/10 border-alphabag-yellow shadow-[0_0_30px_rgba(252,213,53,0.15)]' : 'bg-white/5 border-white/10 hover:border-alphabag-yellow/30'} transition-all`}>
+    <div className="flex justify-between items-start mb-3">
+      <div>
+        <h4 className={`text-sm md:text-base font-black uppercase tracking-tight ${highlight ? 'text-alphabag-yellow' : 'text-white'}`}>{title}</h4>
+        {subtitle && <div className="text-xs md:text-sm font-bold text-alphabag-yellow mt-1">{subtitle}</div>}
+      </div>
+      <div className={`text-xl md:text-2xl font-black ${highlight ? 'text-alphabag-yellow' : 'text-white'}`}>{percentage}</div>
+    </div>
+    <p className="text-xs md:text-sm text-gray-300 leading-relaxed font-medium">{desc}</p>
   </div>
 );
 

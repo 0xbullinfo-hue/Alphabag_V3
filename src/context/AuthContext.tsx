@@ -3,6 +3,7 @@ import { User } from '../types';
 import { useAccount, useDisconnect, useBalance } from 'wagmi';
 import { bsc } from 'wagmi/chains';
 import { TOKEN_GATING_CONFIG } from '../services/config';
+import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +15,7 @@ interface AuthContextType {
   updateAiUsage: (seconds: number) => void;
   completeOnboarding: (accountType: 'FOUNDER' | 'TRADER', profileData: any) => Promise<void>;
   siweLogin: (address: string, signature: string, message: string) => Promise<boolean>;
+  emailLogin: (email: string, password: string, portal?: 'main' | 'admin') => Promise<boolean>;
   refreshUser: () => Promise<void>;
 }
 
@@ -52,8 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      const { api } = await import('../services/api');
-      
       // Get referral code if exists
       const refCode = sessionStorage.getItem('alphabag_ref_code');
       
@@ -79,6 +79,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         console.error("SIWE Network Error:", e.message);
       }
+      setIsLoading(false);
+      throw e;
+    }
+  };
+
+  const emailLogin = async (email: string, password: string, portal: 'main' | 'admin' = 'main') => {
+    try {
+      setIsLoading(true);
+      const res = await api.post('/api/auth/login', { email, password, portal });
+
+      if (res.data.user && res.data.token) {
+        setUser(res.data.user);
+        setToken(res.data.token);
+        sessionStorage.setItem('alphabag_token', res.data.token);
+        sessionStorage.setItem('alphabag_user', JSON.stringify(res.data.user));
+        setIsLoading(false);
+        return true;
+      }
+      return false;
+    } catch (e: any) {
       setIsLoading(false);
       throw e;
     }
@@ -148,7 +168,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUser = async () => {
     try {
-      const { api } = await import('../services/api');
       const res = await api.get('/api/auth/me');
       if (res.data) {
         setUser(res.data);
@@ -178,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={{
       user, isAuthenticated: !!user, isLoading, token,
-      logout, upgradeToUltimate, updateAiUsage, siweLogin, completeOnboarding, refreshUser
+      logout, upgradeToUltimate, updateAiUsage, siweLogin, emailLogin, completeOnboarding, refreshUser
     }}>
       {children}
     </AuthContext.Provider>

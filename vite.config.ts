@@ -2,7 +2,6 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
@@ -24,9 +23,10 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       nodePolyfills({
+        include: ['buffer', 'crypto', 'stream', 'util', 'vm'],
+        globals: { Buffer: true, global: true, process: true },
         protocolImports: true,
-      }),
-      // VitePWA({...})
+      })
     ],
     resolve: {
       alias: {
@@ -40,7 +40,11 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
             web3: ['wagmi', 'viem', '@web3modal/wagmi'],
-            ui: ['lucide-react', 'framer-motion', 'sweetalert2']
+            solana: ['@solana/web3.js', '@solana/wallet-adapter-base', '@solana/wallet-adapter-react'],
+            walletconnect: ['@walletconnect/ethereum-provider'],
+            recharts: ['recharts'],
+            ui: ['lucide-react', 'framer-motion', 'sweetalert2'],
+            ai: ['@google/genai']
           }
         }
       }

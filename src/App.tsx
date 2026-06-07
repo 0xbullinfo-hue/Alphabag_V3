@@ -45,6 +45,7 @@ const Landing = lazy(() => import('./pages/Landing').then(m => ({ default: m.Lan
 const Whales = lazy(() => import('./pages/Whales').then(m => ({ default: m.Whales })));
 const WhaleDetail = lazy(() => import('./pages/WhaleDetail').then(m => ({ default: m.WhaleDetail })));
 const Admin = lazy(() => import('./pages/Admin').then(m => ({ default: m.Admin })));
+const AdminLogin = lazy(() => import('./pages/AdminLogin').then(m => ({ default: m.AdminLogin })));
 const History = lazy(() => import('./pages/History').then(m => ({ default: m.HistoryPage })));
 const GenesisLanding = lazy(() => import('./pages/GenesisLanding').then(m => ({ default: m.GenesisLanding })));
 const GenesisManifesto = lazy(() => import('./pages/GenesisManifesto').then(m => ({ default: m.GenesisManifesto })));
@@ -174,6 +175,7 @@ const AppContent = () => {
           <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+          <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/profile/:id" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/airdrop" element={<Layout><Airdrop /></Layout>} />
